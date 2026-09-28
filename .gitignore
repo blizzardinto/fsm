@@ -1,0 +1,13 @@
+# Object files & build artifacts
+obj/
+build/
+*.o
+*.res
+*.exe
+*.dll
+
+# VS Code
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/c_cpp_properties.json
