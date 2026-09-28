@@ -4,7 +4,7 @@
     {
       "label": "build",
       "type": "shell",
-      "command": "D:\\msys64\\ucrt64\\bin\\mingw32-make.exe",
+      "command": "mingw32-make",
       "args": ["-f", "Makefile"],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -22,7 +22,7 @@
     {
       "label": "clean",
       "type": "shell",
-      "command": "D:\\msys64\\ucrt64\\bin\\mingw32-make.exe",
+      "command": "mingw32-make",
       "args": ["-f", "Makefile", "clean"],
       "options": {
         "cwd": "${workspaceFolder}"
