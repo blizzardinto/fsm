@@ -14,44 +14,50 @@ export PATH := $(MINGW_BIN);$(PATH)
 
 CXX      := $(MINGW_BIN)/g++
 WINDRES  := $(MINGW_BIN)/windres
-CXXFLAGS := -std=c++17 -O2 -Wall -Wno-sign-compare -Wno-unused-variable -fexec-charset=GBK
+INCLUDES := -I. -Icommon -Ientity -Ifsm -Igame -Igraph -Imath -Imessaging
+CXXFLAGS := -std=c++17 -O2 -Wall -Wno-sign-compare -Wno-unused-variable -fexec-charset=GBK $(INCLUDES)
 LDFLAGS  := -mwindows -lgdi32 -luser32 -lwinmm -static
 
 # Intermediate build objects directory (.o, .res)
 OBJ_DIR  := obj
 
 SRC := \
-  Cgdi.cpp \
-  DebugConsole.cpp \
-  EntityBase.cpp \
-  EntityManager.cpp \
-  EntityPlayer.cpp \
-  EntityPlayerGoalkeeper.cpp \
-  EntityPlayerOnField.cpp \
-  FrameCounter.cpp \
-  Goal.cpp \
-  iniFileLoaderBase.cpp \
-  MessageDispatcher.cpp \
-  ParamLoader.cpp \
-  Pathfinder.cpp \
-  PrecisionTimer.cpp \
-  SoccerBall.cpp \
-  SoccerMessages.cpp \
-  SoccerPitch.cpp \
-  SoccerTeam.cpp \
-  StatesPlayerGoalKeeper.cpp \
-  StatesPlayerOnField.cpp \
-  StatesTeam.cpp \
-  SteeringBehaviors.cpp \
-  SupportSpotCalculator.cpp \
-  Vector2d.cpp \
-  WindowUtils.cpp \
+  common/Cgdi.cpp \
+  common/DebugConsole.cpp \
+  common/FrameCounter.cpp \
+  common/iniFileLoaderBase.cpp \
+  common/PrecisionTimer.cpp \
+  common/WindowUtils.cpp \
+  entity/EntityBase.cpp \
+  entity/EntityManager.cpp \
+  entity/EntityPlayer.cpp \
+  entity/EntityPlayerGoalkeeper.cpp \
+  entity/EntityPlayerOnField.cpp \
+  fsm/StatesPlayerGoalKeeper.cpp \
+  fsm/StatesPlayerOnField.cpp \
+  fsm/StatesTeam.cpp \
+  game/Goal.cpp \
+  game/ParamLoader.cpp \
+  game/SoccerBall.cpp \
+  game/SoccerPitch.cpp \
+  game/SoccerTeam.cpp \
+  game/SteeringBehaviors.cpp \
+  game/SupportSpotCalculator.cpp \
+  graph/Pathfinder.cpp \
+  math/C2DMatrix.cpp \
+  math/geometry.cpp \
+  math/Transformations.cpp \
+  math/Vector2d.cpp \
+  messaging/MessageDispatcher.cpp \
+  messaging/SoccerMessages.cpp \
   main.cpp
 
-OBJ := $(patsubst %.cpp, $(OBJ_DIR)/%.o, $(SRC))
+OBJ := $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.cpp=.o)))
 RES := $(OBJ_DIR)/Script1.res
 
 TARGET := SimpleSoccer.exe
+
+vpath %.cpp common entity fsm game graph math messaging .
 
 .PHONY: all clean run
 

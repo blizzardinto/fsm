@@ -1,23 +1,11 @@
-#ifndef GEOMETRY_H
-#define GEOMETRY_H
-
-#include "utils.h"
-#include "Vector2D.h"
-#include "C2DMatrix.h"
-#include "Transformations.h"
-
-#include <math.h>
-#include <vector>
-
-
-
+#include "geometry.h"
 
 //given a plane and a ray this function determins how far along the ray 
 //an interestion occurs. Returns negative if the ray is parallel
-inline double DistanceToRayPlaneIntersection(Vector2D RayOrigin,
-                                             Vector2D RayHeading,
-                                             Vector2D PlanePoint,  //any point on the plane
-                                             Vector2D PlaneNormal)
+double DistanceToRayPlaneIntersection(Vector2D RayOrigin,
+                                     Vector2D RayHeading,
+                                     Vector2D PlanePoint,  //any point on the plane
+                                     Vector2D PlaneNormal)
 {
   
   double d     = - PlaneNormal.Dot(PlanePoint);
@@ -34,10 +22,9 @@ inline double DistanceToRayPlaneIntersection(Vector2D RayOrigin,
 }
 
 //------------------------- WhereIsPoint --------------------------------------
-enum span_type{plane_backside, plane_front, on_plane};
-inline span_type WhereIsPoint(Vector2D point,
-                              Vector2D PointOnPlane, //any point on the plane
-                              Vector2D PlaneNormal) 
+span_type WhereIsPoint(Vector2D point,
+                       Vector2D PointOnPlane, //any point on the plane
+                       Vector2D PlaneNormal) 
 {
  Vector2D dir = PointOnPlane - point;
 
@@ -57,12 +44,11 @@ inline span_type WhereIsPoint(Vector2D point,
 }
 
 
-const double pi = 3.14159;
 //-------------------------- GetRayCircleIntersec -----------------------------
-inline double GetRayCircleIntersect(Vector2D RayOrigin,
-                                    Vector2D RayHeading,
-                                    Vector2D CircleOrigin,
-                                    double  radius)
+double GetRayCircleIntersect(Vector2D RayOrigin,
+                             Vector2D RayHeading,
+                             Vector2D CircleOrigin,
+                             double  radius)
 {
 	
    Vector2D ToCircle = CircleOrigin-RayOrigin;
@@ -78,10 +64,10 @@ inline double GetRayCircleIntersect(Vector2D RayOrigin,
 }
 
 //----------------------------- DoRayCircleIntersect --------------------------
-inline bool DoRayCircleIntersect(Vector2D RayOrigin,
-                                 Vector2D RayHeading,
-                                 Vector2D CircleOrigin,
-                                 double     radius)
+bool DoRayCircleIntersect(Vector2D RayOrigin,
+                          Vector2D RayHeading,
+                          Vector2D CircleOrigin,
+                          double     radius)
 {
 	
    Vector2D ToCircle = CircleOrigin-RayOrigin;
@@ -101,7 +87,7 @@ inline bool DoRayCircleIntersect(Vector2D RayOrigin,
 //
 //  thanks to Dave Eberly for this one.
 //------------------------------------------------------------------------
-inline bool GetTangentPoints (Vector2D C, double R, Vector2D P, Vector2D& T1, Vector2D& T2)
+bool GetTangentPoints (Vector2D C, double R, Vector2D P, Vector2D& T1, Vector2D& T2)
 {
   Vector2D PmC = P - C;
   double SqrLen = PmC.LengthSq();
@@ -131,9 +117,9 @@ inline bool GetTangentPoints (Vector2D C, double R, Vector2D P, Vector2D& T1, Ve
 //  given a line segment AB and a point P, this function calculates the 
 //  perpendicular distance between them
 //------------------------------------------------------------------------
-inline double DistToLineSegment(Vector2D A,
-                                Vector2D B,
-                                Vector2D P)
+double DistToLineSegment(Vector2D A,
+                        Vector2D B,
+                        Vector2D P)
 {
   //if the angle is obtuse between PA and AB is obtuse then the closest
   //vertex must be A
@@ -158,9 +144,9 @@ inline double DistToLineSegment(Vector2D A,
 //
 //  as above, but avoiding sqrt
 //------------------------------------------------------------------------
-inline double DistToLineSegmentSq(Vector2D A,
-                                 Vector2D B,
-                                 Vector2D P)
+double DistToLineSegmentSq(Vector2D A,
+                          Vector2D B,
+                          Vector2D P)
 {
   //if the angle is obtuse between PA and AB is obtuse then the closest
   //vertex must be A
@@ -189,10 +175,10 @@ inline double DistToLineSegmentSq(Vector2D A,
 //
 //----------------------------------------------------------------- 
 
-inline bool LineIntersection2D(Vector2D A,
-                               Vector2D B,
-                               Vector2D C, 
-                               Vector2D D)
+bool LineIntersection2D(Vector2D A,
+                        Vector2D B,
+                        Vector2D C, 
+                        Vector2D D)
 {
   double rTop = (A.y-C.y)*(D.x-C.x)-(A.x-C.x)*(D.y-C.y);
   double sTop = (A.y-C.y)*(B.x-A.x)-(A.x-C.x)*(B.y-A.y);
@@ -226,7 +212,7 @@ inline bool LineIntersection2D(Vector2D A,
 //
 //----------------------------------------------------------------- 
 
-inline bool LineIntersection2D(Vector2D A,
+bool LineIntersection2D(Vector2D A,
                         Vector2D B,
                         Vector2D C, 
                         Vector2D D,
@@ -273,12 +259,12 @@ inline bool LineIntersection2D(Vector2D A,
 //  occurs along AB. Also sets the 2d vector point to the point of
 //  intersection
 //----------------------------------------------------------------- 
-inline bool LineIntersection2D(Vector2D   A,
-                               Vector2D   B,
-                               Vector2D   C, 
-                               Vector2D   D,
-                               double&     dist,
-                               Vector2D&  point)
+bool LineIntersection2D(Vector2D   A,
+                        Vector2D   B,
+                        Vector2D   C, 
+                        Vector2D   D,
+                        double&     dist,
+                        Vector2D&  point)
 {
 
   double rTop = (A.y-C.y)*(D.x-C.x)-(A.x-C.x)*(D.y-C.y);
@@ -317,8 +303,8 @@ inline bool LineIntersection2D(Vector2D   A,
 //
 //  tests two polygons for intersection. *Does not check for enclosure*
 //------------------------------------------------------------------------
-inline bool ObjectIntersection2D(const std::vector<Vector2D>& object1,
-                                 const std::vector<Vector2D>& object2)
+bool ObjectIntersection2D(const std::vector<Vector2D>& object1,
+                          const std::vector<Vector2D>& object2)
 {
   //test each line segment of object1 against each segment of object2
   for (unsigned int r=0; r<object1.size()-1; ++r)
@@ -343,7 +329,7 @@ inline bool ObjectIntersection2D(const std::vector<Vector2D>& object1,
 //  tests a line segment against a polygon for intersection
 //  *Does not check for enclosure*
 //------------------------------------------------------------------------
-inline bool SegmentObjectIntersection2D(const Vector2D& A,
+bool SegmentObjectIntersection2D(const Vector2D& A,
                                  const Vector2D& B,
                                  const std::vector<Vector2D>& object)
 {
@@ -364,7 +350,7 @@ inline bool SegmentObjectIntersection2D(const Vector2D& A,
 //
 //  Returns true if the two circles overlap
 //------------------------------------------------------------------------
-inline bool TwoCirclesOverlapped(double x1, double y1, double r1,
+bool TwoCirclesOverlapped(double x1, double y1, double r1,
                           double x2, double y2, double r2)
 {
   double DistBetweenCenters = sqrt( (x1-x2) * (x1-x2) +
@@ -382,7 +368,7 @@ inline bool TwoCirclesOverlapped(double x1, double y1, double r1,
 //
 //  Returns true if the two circles overlap
 //------------------------------------------------------------------------
-inline bool TwoCirclesOverlapped(Vector2D c1, double r1,
+bool TwoCirclesOverlapped(Vector2D c1, double r1,
                           Vector2D c2, double r2)
 {
   double DistBetweenCenters = sqrt( (c1.x-c2.x) * (c1.x-c2.x) +
@@ -400,7 +386,7 @@ inline bool TwoCirclesOverlapped(Vector2D c1, double r1,
 //
 //  returns true if one circle encloses the other
 //-------------------------------------------------------------------------
-inline bool TwoCirclesEnclosed(double x1, double y1, double r1,
+bool TwoCirclesEnclosed(double x1, double y1, double r1,
                         double x2, double y2, double r2)
 {
   double DistBetweenCenters = sqrt( (x1-x2) * (x1-x2) +
@@ -423,7 +409,7 @@ inline bool TwoCirclesEnclosed(double x1, double y1, double r1,
 //
 // see http://astronomy.swin.edu.au/~pbourke/geometry/2circle/
 //------------------------------------------------------------------------ 
-inline bool TwoCirclesIntersectionPoints(double x1, double y1, double r1,
+bool TwoCirclesIntersectionPoints(double x1, double y1, double r1,
                                   double x2, double y2, double r2,
                                   double &p3X, double &p3Y,
                                   double &p4X, double &p4Y)
@@ -476,7 +462,7 @@ inline bool TwoCirclesIntersectionPoints(double x1, double y1, double r1,
 //
 // see http://mathforum.org/library/drmath/view/54785.html
 //-----------------------------------------------------------------------
-inline double TwoCirclesIntersectionArea(double x1, double y1, double r1,
+double TwoCirclesIntersectionArea(double x1, double y1, double r1,
                                   double x2, double y2, double r2)
 {
   //first calculate the intersection points
@@ -512,7 +498,7 @@ inline double TwoCirclesIntersectionArea(double x1, double y1, double r1,
 //
 //  given the radius, calculates the area of a circle
 //-----------------------------------------------------------------------
-inline double CircleArea(double radius)
+double CircleArea(double radius)
 {
   return pi * radius * radius;
 }
@@ -522,9 +508,9 @@ inline double CircleArea(double radius)
 //
 //  returns true if the point p is within the radius of the given circle
 //------------------------------------------------------------------------
-inline bool PointInCircle(Vector2D Pos,
-						  double    radius,
-                          Vector2D p)
+bool PointInCircle(Vector2D Pos,
+                   double    radius,
+                   Vector2D p)
 {
   double DistFromCenterSquared = (p-Pos).LengthSq();
 
@@ -541,10 +527,10 @@ inline bool PointInCircle(Vector2D Pos,
 //  returns true if the line segemnt AB intersects with a circle at
 //  position P with radius radius
 //------------------------------------------------------------------------
-inline bool   LineSegmentCircleIntersection(Vector2D A,
-                                            Vector2D B,
-                                            Vector2D P,
-                                            double    radius)
+bool LineSegmentCircleIntersection(Vector2D A,
+                                   Vector2D B,
+                                   Vector2D P,
+                                   double    radius)
 {
   //first determine the distance from the center of the circle to
   //the line segment (working in distance squared space)
@@ -570,11 +556,11 @@ inline bool   LineSegmentCircleIntersection(Vector2D A,
 //
 //  returns false if no intersection point is found
 //-----------------------------------------------------------------------------
-inline bool GetLineSegmentCircleClosestIntersectionPoint(Vector2D A,
-                                                         Vector2D B,
-                                                         Vector2D pos,
-                                                         double    radius,
-                                                         Vector2D& IntersectionPoint)
+bool GetLineSegmentCircleClosestIntersectionPoint(Vector2D A,
+                                                  Vector2D B,
+                                                  Vector2D pos,
+                                                  double    radius,
+                                                  Vector2D& IntersectionPoint)
 {
   Vector2D toBNorm = Vec2DNormalize(B-A);
 
@@ -617,27 +603,3 @@ inline bool GetLineSegmentCircleClosestIntersectionPoint(Vector2D A,
 
   return ipFound;
 }
-
-#endif
-
-              
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
