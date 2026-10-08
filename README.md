@@ -35,61 +35,70 @@
 
 ## 目录与文件结构
 
+项目代码已按照职责驱动的架构规范划分为清晰的子模块目录，实现接口（`.h`）与实现（`.cpp`）的解耦：
+
 ```text
 d:\Code\fsm\
-├── AStarHeuristicPolicies.h       # A* 启发式策略（辅助/扩展图算法）
-├── autolist.h                     # 自动链表模板基类（用于球员自动注册）
-├── C2DMatrix.h                    # 2D 仿射变换矩阵
-├── Cgdi.h / Cgdi.cpp              # Windows GDI 绘图封装与画笔/画刷工具
-├── constants.h                    # 全局常量定义
-├── DebugConsole.h / DebugConsole.cpp # 调试控制台输出窗口
-├── DESIGN.md                      # 系统架构与详细设计文档
-├── EntityBase.h / EntityBase.cpp  # 游戏实体抽象基类
-├── EntityManager.h / EntityManager.cpp # 实体注册与全局单例管理器
-├── EntityMovable.h                # 移动实体基类（物理属性：质量、速度、推力等）
-├── EntityPlayer.h / EntityPlayer.cpp # 球员通用基类
-├── EntityPlayerGoalkeeper.h / .cpp   # 守门员智能体实现
-├── EntityPlayerOnField.h / .cpp      # 场上球员智能体实现
-├── FrameCounter.h / .cpp          # 帧率统计器
-├── geometry.h                     # 2D 几何相交与工具函数库
-├── Goal.h / Goal.cpp              # 球门实体与进球判定
-├── GraphAlgorithms.h              # 图搜索算法库（A*、Dijkstra、BFS、DFS）
-├── GraphEdgeTypes.h / GraphNodeTypes.h # 图节点与图边结构
-├── HandyGraphFunctions.h          # 图辅助函数
-├── icon1.ico                      # 程序图标
-├── iniFileLoaderBase.h / .cpp     # INI 配置文件解析基类
-├── main.cpp                       # Windows 程序入口、消息循环与窗口过程
-├── Makefile                       # MinGW/GCC 项目构建规则
-├── MessageDispatcher.h / .cpp     # 消息分发单例与延迟优先队列
-├── NodeTypeEnumerations.h         # 节点类型枚举
-├── ParamLoader.h / ParamLoader.cpp# 参数配置加载器（单例 Prm）
-├── Params.ini                     # 游戏模拟与 AI 参数配置文件
-├── Pathfinder.h / Pathfinder.cpp  # 路径搜索寻路器（扩展）
-├── PrecisionTimer.h / .cpp        # 高精度时间计数器
-├── PriorityQueue.h                # 优先队列模板
-├── README.md                      # 项目说明文档
-├── Region.h                       # 赛场矩形区域与分区划分
-├── Regulator.h                    # 行为更新频率调节器
-├── resource.h / Script1.rc        # Windows 资源定义与菜单脚本
-├── SimpleSoccer.exe               # 编译生成的可执行文件
-├── SoccerBall.h / SoccerBall.cpp  # 足球实体及物理运动、碰撞检测
-├── SoccerMessages.h / .cpp        # 智能体间传递的消息枚举与转换函数
-├── SoccerPitch.h / SoccerPitch.cpp# 足球场地主控类（驱动各系统运转）
-├── SoccerTeam.h / SoccerTeam.cpp  # 球队类（管理球员、协同决策与传球射门判定）
-├── SparseGraph.h                  # 稀疏图数据结构
-├── State.h                        # 状态抽象接口模板类
-├── StateMachine.h                 # 有限状态机模板类
-├── StatesPlayerGoalKeeper.h / .cpp# 守门员所有具体状态单例实现
-├── StatesPlayerOnField.h / .cpp   # 场上球员所有具体状态单例实现
-├── StatesTeam.h / StatesTeam.cpp  # 球队所有具体状态单例实现
-├── SteeringBehaviors.h / .cpp     # 自主操纵行为力学计算类
-├── Stream_Utility_Functions.h     # 输入输出流辅助函数
-├── SupportSpotCalculator.h / .cpp # 进攻跑位支援点评估计算器
-├── Transformations.h              # 局部空间与世界空间 2D 坐标转换
-├── utils.h                        # 常用数学函数与随机数生成
-├── Vector2D.h / Vector2d.cpp      # 2D 向量计算类
-├── Wall2D.h                       # 2D 边界线段墙壁
-└── WindowUtils.h / WindowUtils.cpp# Win32 窗口辅助工具
+├── common/                             # 基础工具与运行时支持
+│   ├── Cgdi.h / Cgdi.cpp               # Windows GDI 绘图封装与画笔/画刷渲染工具
+│   ├── DebugConsole.h / .cpp           # 调试控制台输出窗口
+│   ├── FrameCounter.h / .cpp           # 帧率统计器
+│   ├── PrecisionTimer.h / .cpp         # 高精度时间计数器
+│   ├── WindowUtils.h / .cpp            # Win32 窗口辅助工具
+│   ├── iniFileLoaderBase.h / .cpp      # INI 配置文件解析基类
+│   ├── utils.h                         # 常用数学函数与随机数生成
+│   ├── constants.h                     # 全局常量定义
+│   ├── autolist.h                      # 自动链表模板基类
+│   ├── Regulator.h                     # 行为更新频率调节器
+│   └── Stream_Utility_Functions.h      # 输入输出流辅助函数
+├── entity/                             # 游戏实体抽象与足球角色实现
+│   ├── EntityBase.h / EntityBase.cpp   # 游戏实体抽象基类
+│   ├── EntityMovable.h                 # 移动实体基类（物理属性：质量、速度、推力等）
+│   ├── EntityManager.h / .cpp          # 实体注册与全局单例管理器
+│   ├── EntityPlayer.h / .cpp           # 球员通用基类
+│   ├── EntityPlayerGoalkeeper.h / .cpp # 守门员智能体实现
+│   ├── EntityPlayerOnField.h / .cpp    # 场上球员智能体实现
+│   └── EntityFunctionTemplates.h       # 实体泛型辅助模板（按距离排序、区域判定等）
+├── fsm/                                # 有限状态机引擎与具体行为状态
+│   ├── State.h                         # 状态抽象接口模板类
+│   ├── StateMachine.h                  # 通用有限状态机调度核心模板类
+│   ├── StatesPlayerGoalKeeper.h / .cpp # 守门员具体状态实现（守门、拦截出击、门前归位等）
+│   ├── StatesPlayerOnField.h / .cpp    # 场上球员具体状态实现（追球、盘带、接球、支援等）
+│   └── StatesTeam.h / StatesTeam.cpp   # 球队宏观战术状态（准备开球、进攻、防守）
+├── game/                               # 足球比赛业务领域与战术决策
+│   ├── SoccerPitch.h / SoccerPitch.cpp # 足球场地主控类（驱动各系统运转、渲染赛场）
+│   ├── SoccerBall.h / SoccerBall.cpp   # 足球实体、物理运动与反弹碰撞检测
+│   ├── SoccerTeam.h / SoccerTeam.cpp   # 球队协同管理、传球路由判定与射门策略
+│   ├── Goal.h / Goal.cpp               # 球门实体与进球判定
+│   ├── SteeringBehaviors.h / .cpp      # Reynolds 操纵行为力学计算类（寻路、拦截、避让等）
+│   ├── SupportSpotCalculator.h / .cpp  # 进攻跑位支援点评估计算器（评分网格）
+│   └── ParamLoader.h / ParamLoader.cpp # 参数配置加载器（单例 Prm，解析 Params.ini）
+├── graph/                              # 导航图与路径搜索算法
+│   ├── SparseGraph.h                   # 2D/3D 稀疏图数据结构
+│   ├── Pathfinder.h / Pathfinder.cpp   # 路径搜索寻路器（A* 等算法封装）
+│   ├── PriorityQueue.h                 # 优先队列模板（支持索引优先队列）
+│   ├── GraphAlgorithms.h               # 图搜索算法库（A*、Dijkstra、BFS、DFS）
+│   ├── GraphEdgeTypes.h / GraphNodeTypes.h # 图节点与图边数据结构
+│   ├── HandyGraphFunctions.h           # 图构建与辅助函数
+│   ├── NodeTypeEnumerations.h          # 节点类型枚举
+│   └── AStarHeuristicPolicies.h        # A* 启发式估价策略
+├── math/                               # 2D 几何与数学基础库
+│   ├── Vector2D.h / Vector2d.cpp       # 2D 向量计算类（点积、求模、归一化、操作符重载）
+│   ├── geometry.h / geometry.cpp       # 2D 几何相交算法、距离与切线计算
+│   ├── C2DMatrix.h / C2DMatrix.cpp     # 2D 仿射变换矩阵（平移、旋转、缩放）
+│   ├── Transformations.h / .cpp        # 局部坐标与世界坐标相互转换、触角生成
+│   ├── Region.h                        # 赛场矩形区域与分区划分
+│   └── Wall2D.h                        # 2D 边界线段墙壁与法线计算
+├── messaging/                          # 消息通信与事件调度体系
+│   ├── MessageDispatcher.h / .cpp      # 消息分发单例与延迟优先队列调度器
+│   ├── Telegram.h                      # 轻量级消息数据包结构体
+│   └── SoccerMessages.h / .cpp         # 智能体间传递的消息枚举与转换函数
+├── main.cpp                            # Windows 程序入口、消息循环与窗口过程
+├── Makefile                            # MinGW/GCC 项目自动化构建规则
+├── Params.ini                          # 游戏模拟与 AI 参数动态配置文件
+├── resource.h / Script1.rc / icon1.ico # Windows 窗口菜单资源与程序图标
+├── DESIGN.md                           # 系统架构与详细设计文档
+└── README.md                           # 项目说明文档
 ```
 
 ---
