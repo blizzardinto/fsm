@@ -5,15 +5,15 @@
 
 enum MessageType
 {
-  Msg_ReceiveBall,
-  Msg_PassToMe,
-  Msg_SupportAttacker,
-  Msg_GoHome,
-  Msg_Wait
+  msgReceiveBall,
+  msgPassToMe,
+  msgSupportAttacker,
+  msgGoHome,
+  msgWait
 };
 
 //converts an enumerated value to a string
-inline std::string MessageToString(int msg);
+inline std::string messageToString(int msg);
 
 
 #endif

@@ -15,7 +15,7 @@
    - [3.1 泛型 FSM 框架设计](#31-泛型-fsm-框架设计)
    - [3.2 守门员状态机 (GoalKeeper FSM)](#32-守门员状态机-goalkeeper-fsm)
    - [3.3 场上球员状态机 (FieldPlayer FSM)](#33-场上球员状态机-fieldplayer-fsm)
-   - [3.4 球队战术状态机 (Team FSM)](#34-球队战术状态机-team-fsm)
+   - [3.4 球队战术状态机 (team FSM)](#34-球队战术状态机-team-fsm)
 4. [自主智能体操纵行为 (Steering Behaviors)](#4-自主智能体操纵行为-steering-behaviors)
    - [4.1 操纵力计算与截断叠加机制](#41-操纵力计算与截断叠加机制)
    - [4.2 核心操纵行为算法](#42-核心操纵行为算法)
@@ -48,7 +48,7 @@ SimpleSoccer 采用了经典面向对象游戏架构，可按职责理解为以�
 +-------------------------------------------------------------+
          |                                          |
 +-----------------------------+   +---------------------------+
-|    球队协同层 (Team Layer)    |   | 消息与管理层 (Core Infra)  |
+|    球队协同层 (team Layer)    |   | 消息与管理层 (Core Infra)  |
 | SoccerTeam, SupportSpotCalc |   | MessageDispatcher,        |
 +-----------------------------+   | EntityManager, Telegram   |
          |                        +---------------------------+
@@ -82,144 +82,144 @@ classDiagram
 
     class EntityBase {
         <<abstract>>
-        -int m_ID
-        -int m_iType
-        #Vector2D m_vPosition
-        #Vector2D m_vScale
-        #double m_dBoundingRadius
-        +Update()* void
-        +Render()* void
-        +HandleMessage(Telegram&)* bool
-        +Pos() Vector2D
-        +ID() int
+        -int mId
+        -int mType
+        #Vector2D mPosition
+        #Vector2D mScale
+        #double mBoundingRadius
+        +update()* void
+        +render()* void
+        +handleMessage(Telegram&)* bool
+        +pos() Vector2D
+        +id() int
     }
 
     class EntityMovable {
-        #Vector2D m_vVelocity
-        #Vector2D m_vHeading
-        #Vector2D m_vSide
-        #double m_dMass
-        #double m_dMaxSpeed
-        #double m_dMaxForce
-        #double m_dMaxTurnRate
-        +Velocity() Vector2D
-        +Heading() Vector2D
-        +Speed() double
-        +RotateHeadingToFacePosition(Vector2D) bool
+        #Vector2D mVelocity
+        #Vector2D mHeading
+        #Vector2D mSide
+        #double mMass
+        #double mMaxSpeed
+        #double mMaxForce
+        #double mMaxTurnRate
+        +velocity() Vector2D
+        +heading() Vector2D
+        +speed() double
+        +rotateHeadingToFacePosition(Vector2D) bool
     }
 
     class SoccerBall {
-        -Vector2D m_vOldPos
-        -vector~Wall2D~ m_PitchBoundary
-        +Kick(Vector2D, double) void
-        +Trap() void
-        +TimeToCoverDistance(Vector2D, Vector2D, double) double
-        +FuturePosition(double) Vector2D
-        +TestCollisionWithWalls(vector~Wall2D~) void
+        -Vector2D mOldPos
+        -vector~Wall2D~ mPitchBoundary
+        +kick(Vector2D, double) void
+        +trap() void
+        +timeToCoverDistance(Vector2D, Vector2D, double) double
+        +futurePosition(double) Vector2D
+        +testCollisionWithWalls(vector~Wall2D~) void
     }
 
     class EntityPlayer {
         <<abstract>>
-        #player_role m_PlayerRole
-        #SoccerTeam* m_pTeam
-        #SteeringBehaviors* m_pSteering
-        #int m_iHomeRegion
-        #int m_iDefaultRegion
-        #double m_dDistSqToBall
-        +TrackBall() void
-        +FindSupport() void
+        #PlayerRole mPlayerRole
+        #SoccerTeam* mTeam
+        #SteeringBehaviors* mSteering
+        #int mHomeRegion
+        #int mDefaultRegion
+        #double mDistSqToBall
+        +trackBall() void
+        +findSupport() void
         +isThreatened() bool
-        +BallWithinKickingRange() bool
+        +ballWithinKickingRange() bool
         +isClosestTeamMemberToBall() bool
     }
 
     class EntityPlayerGoalKeeper {
-        -StateMachine~EntityPlayerGoalKeeper~* m_pStateMachine
-        -Vector2D m_vLookAt
-        +BallWithinRangeForIntercept() bool
-        +TooFarFromGoalMouth() bool
-        +GetRearInterposeTarget() Vector2D
-        +GetFSM() StateMachine*
+        -StateMachine~EntityPlayerGoalKeeper~* mStateMachine
+        -Vector2D mLookAt
+        +ballWithinRangeForIntercept() bool
+        +tooFarFromGoalMouth() bool
+        +getRearInterposeTarget() Vector2D
+        +getFsm() StateMachine*
     }
 
     class EntityPlayerOnField {
-        -StateMachine~EntityPlayerOnField~* m_pStateMachine
-        -Regulator* m_pKickLimiter
+        -StateMachine~EntityPlayerOnField~* mStateMachine
+        -Regulator* mKickLimiter
         +isReadyForNextKick() bool
-        +GetFSM() StateMachine*
+        +getFsm() StateMachine*
     }
 
     class SteeringBehaviors {
-        -EntityPlayer* m_pPlayer
-        -SoccerBall* m_pBall
-        -Vector2D m_vSteeringForce
-        -int m_iFlags
-        +Seek(Vector2D) Vector2D
-        +Arrive(Vector2D, Deceleration) Vector2D
-        +Pursuit(SoccerBall*) Vector2D
-        +Separation() Vector2D
-        +Interpose(SoccerBall*, Vector2D, double) Vector2D
-        +Calculate() Vector2D
+        -EntityPlayer* mPlayer
+        -SoccerBall* mBall
+        -Vector2D mSteeringForce
+        -int mFlags
+        +seek(Vector2D) Vector2D
+        +arrive(Vector2D, Deceleration) Vector2D
+        +pursuit(SoccerBall*) Vector2D
+        +separation() Vector2D
+        +interpose(SoccerBall*, Vector2D, double) Vector2D
+        +calculate() Vector2D
     }
 
     class SoccerTeam {
-        -team_color m_Color
-        -StateMachine~SoccerTeam~* m_pStateMachine
-        -vector~EntityPlayer*~ m_Players
-        -SoccerPitch* m_pPitch
-        -Goal* m_pOpponentsGoal
-        -Goal* m_pHomeGoal
-        -EntityPlayer* m_pControllingPlayer
-        -EntityPlayer* m_pSupportingPlayer
-        -SupportSpotCalculator* m_pSupportSpotCalc
-        +CanShoot(Vector2D, double, Vector2D) bool
-        +FindPass(EntityPlayer*, EntityPlayer*&, Vector2D&, double, double) bool
-        +RequestPass(EntityPlayerOnField*) void
-        +CalculateClosestPlayerToBall() void
+        -TeamColor mColor
+        -StateMachine~SoccerTeam~* mStateMachine
+        -vector~EntityPlayer*~ mPlayers
+        -SoccerPitch* mPitch
+        -Goal* mOpponentsGoal
+        -Goal* mHomeGoal
+        -EntityPlayer* mControllingPlayer
+        -EntityPlayer* mSupportingPlayer
+        -SupportSpotCalculator* mSupportSpotCalc
+        +canShoot(Vector2D, double, Vector2D) bool
+        +findPass(EntityPlayer*, EntityPlayer*&, Vector2D&, double, double) bool
+        +requestPass(EntityPlayerOnField*) void
+        +calculateClosestPlayerToBall() void
     }
 
     class SoccerPitch {
-        +SoccerBall* m_pBall
-        +SoccerTeam* m_pRedTeam
-        +SoccerTeam* m_pBlueTeam
-        +Goal* m_pRedGoal
-        +Goal* m_pBlueGoal
-        +vector~Wall2D~ m_vecWalls
-        +Region* m_pPlayingArea
-        +vector~Region*~ m_Regions
-        +Update() void
-        +Render() bool
-        +TogglePause() void
+        +SoccerBall* mBall
+        +SoccerTeam* mRedTeam
+        +SoccerTeam* mBlueTeam
+        +Goal* mRedGoal
+        +Goal* mBlueGoal
+        +vector~Wall2D~ mWalls
+        +Region* mPlayingArea
+        +vector~Region*~ mRegions
+        +update() void
+        +render() bool
+        +togglePause() void
     }
 
     class SupportSpotCalculator {
-        -SoccerTeam* m_pTeam
-        -vector~SupportSpot~ m_Spots
-        -SupportSpot* m_pBestSupportingSpot
-        -Regulator* m_pRegulator
-        +DetermineBestSupportingPosition() Vector2D
-        +GetBestSupportingSpot() Vector2D
+        -SoccerTeam* mTeam
+        -vector~SupportSpot~ mSpots
+        -SupportSpot* mBestSupportingSpot
+        -Regulator* mRegulator
+        +determineBestSupportingPosition() Vector2D
+        +getBestSupportingSpot() Vector2D
     }
 
     class Goal {
-        -Vector2D m_vLeftPost
-        -Vector2D m_vRightPost
-        -Vector2D m_vFacing
-        -Vector2D m_vCenter
-        -int m_iNumGoalsScored
-        +Scored(SoccerBall*) bool
-        +Center() Vector2D
+        -Vector2D mLeftPost
+        -Vector2D mRightPost
+        -Vector2D mFacing
+        -Vector2D mCenter
+        -int mNumGoalsScored
+        +scored(SoccerBall*) bool
+        +center() Vector2D
     }
 
     class Region {
-        #double m_dTop
-        #double m_dLeft
-        #double m_dRight
-        #double m_dBottom
-        #Vector2D m_vCenter
-        #int m_iID
-        +Inside(Vector2D) bool
-        +Center() Vector2D
+        #double mTop
+        #double mLeft
+        #double mRight
+        #double mBottom
+        #Vector2D mCenter
+        #int mId
+        +inside(Vector2D) bool
+        +center() Vector2D
     }
 
     EntityBase <|-- EntityMovable
@@ -246,77 +246,77 @@ classDiagram
 
 ### 2.2 有限状态机 (FSM) 类图
 
-系统利用泛型 `State<entity_type>` 抽象接口与 `StateMachine<entity_type>` 容器驱动状态生命周期，具体状态类全部为 **单例模式**：
+系统利用泛型 `State<entityType>` 抽象接口与 `StateMachine<entityType>` 容器驱动状态生命周期，具体状态类全部为 **单例模式**：
 
 ```mermaid
 classDiagram
     direction TB
 
-    class State~entity_type~ {
+    class State~entityType~ {
         <<interface>>
-        +Enter(entity_type*)* void
-        +Execute(entity_type*)* void
-        +Exit(entity_type*)* void
-        +OnMessage(entity_type*, Telegram&)* bool
+        +enter(entityType*)* void
+        +execute(entityType*)* void
+        +exit(entityType*)* void
+        +onMessage(entityType*, Telegram&)* bool
     }
 
-    class StateMachine~entity_type~ {
-        -entity_type* m_pOwner
-        -State~entity_type~* m_pCurrentState
-        -State~entity_type~* m_pPreviousState
-        -State~entity_type~* m_pGlobalState
-        +Update() void
-        +ChangeState(State~entity_type~*) void
-        +RevertToPreviousState() void
-        +HandleMessage(Telegram&) bool
-        +isInState(State~entity_type~&) bool
+    class StateMachine~entityType~ {
+        -entityType* mOwner
+        -State~entityType~* mCurrentState
+        -State~entityType~* mPreviousState
+        -State~entityType~* mGlobalState
+        +update() void
+        +changeState(State~entityType~*) void
+        +revertToPreviousState() void
+        +handleMessage(Telegram&) bool
+        +isInState(State~entityType~&) bool
     }
 
-    StateMachine~entity_type~ o-- State~entity_type~
+    StateMachine~entityType~ o-- State~entityType~
 
     namespace GoalKeeperStates {
-        class GlobalKeeperState { +Instance()$ }
-        class TendGoal { +Instance()$ }
-        class InterceptBall { +Instance()$ }
-        class ReturnHome { +Instance()$ }
-        class PutBallBackInPlay { +Instance()$ }
+        class GlobalKeeperState { +instance()$ }
+        class TendGoal { +instance()$ }
+        class InterceptBall { +instance()$ }
+        class ReturnHome { +instance()$ }
+        class PutBallBackInPlay { +instance()$ }
     }
 
     namespace FieldPlayerStates {
-        class GlobalPlayerState { +Instance()$ }
-        class ChaseBall { +Instance()$ }
-        class Dribble { +Instance()$ }
-        class KickBall { +Instance()$ }
-        class Wait { +Instance()$ }
-        class ReceiveBall { +Instance()$ }
-        class SupportAttacker { +Instance()$ }
-        class ReturnToHomeRegion { +Instance()$ }
+        class GlobalPlayerState { +instance()$ }
+        class ChaseBall { +instance()$ }
+        class Dribble { +instance()$ }
+        class KickBall { +instance()$ }
+        class Wait { +instance()$ }
+        class ReceiveBall { +instance()$ }
+        class SupportAttacker { +instance()$ }
+        class ReturnToHomeRegion { +instance()$ }
     }
 
     namespace TeamStates {
-        class PrepareForKickOff { +Instance()$ }
-        class Defending { +Instance()$ }
-        class Attacking { +Instance()$ }
+        class PrepareForKickOff { +instance()$ }
+        class Defending { +instance()$ }
+        class Attacking { +instance()$ }
     }
 
-    State~entity_type~ <|-- GlobalKeeperState
-    State~entity_type~ <|-- TendGoal
-    State~entity_type~ <|-- InterceptBall
-    State~entity_type~ <|-- ReturnHome
-    State~entity_type~ <|-- PutBallBackInPlay
+    State~entityType~ <|-- GlobalKeeperState
+    State~entityType~ <|-- TendGoal
+    State~entityType~ <|-- InterceptBall
+    State~entityType~ <|-- ReturnHome
+    State~entityType~ <|-- PutBallBackInPlay
 
-    State~entity_type~ <|-- GlobalPlayerState
-    State~entity_type~ <|-- ChaseBall
-    State~entity_type~ <|-- Dribble
-    State~entity_type~ <|-- KickBall
-    State~entity_type~ <|-- Wait
-    State~entity_type~ <|-- ReceiveBall
-    State~entity_type~ <|-- SupportAttacker
-    State~entity_type~ <|-- ReturnToHomeRegion
+    State~entityType~ <|-- GlobalPlayerState
+    State~entityType~ <|-- ChaseBall
+    State~entityType~ <|-- Dribble
+    State~entityType~ <|-- KickBall
+    State~entityType~ <|-- Wait
+    State~entityType~ <|-- ReceiveBall
+    State~entityType~ <|-- SupportAttacker
+    State~entityType~ <|-- ReturnToHomeRegion
 
-    State~entity_type~ <|-- PrepareForKickOff
-    State~entity_type~ <|-- Defending
-    State~entity_type~ <|-- Attacking
+    State~entityType~ <|-- PrepareForKickOff
+    State~entityType~ <|-- Defending
+    State~entityType~ <|-- Attacking
 ```
 
 ---
@@ -328,36 +328,36 @@ classDiagram
     direction LR
 
     class Telegram {
-        +int Sender
-        +int Receiver
-        +int Msg
-        +double DispatchTime
-        +void* ExtraInfo
+        +int sender
+        +int receiver
+        +int msg
+        +double dispatchTime
+        +void* extraInfo
     }
 
     class MessageDispatcher {
         -set~Telegram~ PriorityQ
-        +Instance()$ MessageDispatcher*
-        +DispatchMsg(double, int, int, int, void*) void
-        +DispatchDelayedMessages() void
-        -Discharge(EntityBase*, Telegram&) void
+        +instance()$ MessageDispatcher*
+        +dispatchMsg(double, int, int, int, void*) void
+        +dispatchDelayedMessages() void
+        -discharge(EntityBase*, Telegram&) void
     }
 
     class EntityManager {
-        -map~int, EntityBase*~ m_EntityMap
-        +Instance()$ EntityManager*
-        +RegisterEntity(EntityBase*) void
-        +GetEntityFromID(int) EntityBase*
-        +RemoveEntity(EntityBase*) void
+        -map~int, EntityBase*~ mEntityMap
+        +instance()$ EntityManager*
+        +registerEntity(EntityBase*) void
+        +getEntityFromId(int) EntityBase*
+        +removeEntity(EntityBase*) void
     }
 
     class EntityBase {
-        +HandleMessage(Telegram&)* bool
+        +handleMessage(Telegram&)* bool
     }
 
     MessageDispatcher o-- Telegram : 优先级队列按时间排序
     MessageDispatcher ..> EntityManager : 查询接收者指针
-    MessageDispatcher ..> EntityBase : 调用 HandleMessage()
+    MessageDispatcher ..> EntityBase : 调用 handleMessage()
     EntityManager o-- EntityBase : 注册并持有全部实例映射
 ```
 
@@ -368,14 +368,14 @@ classDiagram
 ### 3.1 泛型 FSM 框架设计
 
 在 [`StateMachine.h`](./fsm/StateMachine.h) 中，状态机保存以下三种状态指针。它们不是三层嵌套状态；球队和球员分别运行自己的 FSM，没有父子状态机制：
-- **`m_pCurrentState`**：当前主要执行的状态。
-- **`m_pPreviousState`**：前一个状态（支持 `RevertToPreviousState()` 回溯）。
-- **`m_pGlobalState`**：全局状态。在每一帧的 `Update()` 中，先执行全局状态的 `Execute`，再执行当时的当前状态；在收到消息时，若当前状态未处理该消息，自动冒泡转交至全局状态处理。
+- **`mCurrentState`**：当前主要执行的状态。
+- **`mPreviousState`**：前一个状态（支持 `revertToPreviousState()` 回溯）。
+- **`mGlobalState`**：全局状态。在每一帧的 `update()` 中，先执行全局状态的 `execute`，再执行当时的当前状态；在收到消息时，若当前状态未处理该消息，自动冒泡转交至全局状态处理。
 
 ```cpp
-void Update() const {
-    if (m_pGlobalState)  m_pGlobalState->Execute(m_pOwner);
-    if (m_pCurrentState) m_pCurrentState->Execute(m_pOwner);
+void update() const {
+    if (mGlobalState)  mGlobalState->execute(mOwner);
+    if (mCurrentState) mCurrentState->execute(mOwner);
 }
 ```
 
@@ -390,7 +390,7 @@ stateDiagram-v2
     [*] --> TendGoal: 比赛开始 / 默认状态
 
     state TendGoal {
-        description: 站在球门线上插足(Interpose)跟随足球移动
+        description: 站在球门线上插足(interpose)跟随足球移动
     }
     state InterceptBall {
         description: 出击冲向皮球进行拦截
@@ -402,20 +402,20 @@ stateDiagram-v2
         description: 失去控球或威胁解除后返回门线原位
     }
 
-    TendGoal --> InterceptBall: 球进入禁区/拦截半径 (BallWithinRangeForIntercept)
-    TendGoal --> ReturnHome: 偏离球门口过远 (TooFarFromGoalMouth)
-    
-    InterceptBall --> PutBallBackInPlay: 成功截获皮球 (BallWithinKeeperRange)
+    TendGoal --> InterceptBall: 球进入禁区/拦截半径 (ballWithinRangeForIntercept)
+    TendGoal --> ReturnHome: 偏离球门口过远 (tooFarFromGoalMouth)
+
+    InterceptBall --> PutBallBackInPlay: 成功截获皮球 (ballWithinKeeperRange)
     InterceptBall --> ReturnHome: 距离门线过远或对手已失去威胁
-    
-    PutBallBackInPlay --> TendGoal: 成功将球传出 (FindPass)
-    
-    ReturnHome --> TendGoal: 到达大门中央原位 (AtTarget)
+
+    PutBallBackInPlay --> TendGoal: 成功将球传出 (findPass)
+
+    ReturnHome --> TendGoal: 到达大门中央原位 (atTarget)
 ```
 
 - **`GlobalKeeperState`**：守门员全局状态，拦截并响应外部传球指令。
-- **`TendGoal`**：守门员在球门底线和球之间维持一定插足距离（`Interpose` 操纵行为），时刻注视足球。
-- **`InterceptBall`**：当球进入拦截范围（`EntityPlayerGoalKeeperInterceptRange`）且本方未完全控球时触发，施加 `Pursuit` 冲力。
+- **`TendGoal`**：守门员在球门底线和球之间维持一定插足距离（`interpose` 操纵行为），时刻注视足球。
+- **`InterceptBall`**：当球进入拦截范围（`entityPlayerGoalKeeperInterceptRange`）且本方未完全控球时触发，施加 `pursuit` 冲力。
 - **`PutBallBackInPlay`**：门将抱住球后呼叫全队回位，扫描视野并向最佳安全位置的队友传出地面球。
 
 ---
@@ -451,10 +451,10 @@ stateDiagram-v2
     }
 
     Wait --> ChaseBall: 成为全队离球最近的队员
-    Wait --> SupportAttacker: 收到 Msg_SupportAttacker
-    Wait --> ReceiveBall: 收到 Msg_ReceiveBall
+    Wait --> SupportAttacker: 收到 msgSupportAttacker
+    Wait --> ReceiveBall: 收到 msgReceiveBall
 
-    ChaseBall --> KickBall: 进入起脚范围 (BallWithinKickingRange)
+    ChaseBall --> KickBall: 进入起脚范围 (ballWithinKickingRange)
     ChaseBall --> ReturnToHomeRegion: 不再是最近球员，且本队失去控球
 
     KickBall --> Dribble: 无法射门且无安全传球路线
@@ -469,19 +469,19 @@ stateDiagram-v2
     SupportAttacker --> Wait: 队友已传出球或射门
     SupportAttacker --> ChaseBall: 自身变为离球最近队员
 
-    ReturnToHomeRegion --> Wait: 回到 HomeRegion 指定范围内
+    ReturnToHomeRegion --> Wait: 回到 homeRegion 指定范围内
     ReturnToHomeRegion --> ChaseBall: 途中变成离球最近队员
 ```
 
-- **`GlobalPlayerState`**：每一帧更新球员到皮球的距离平方缓存，并在收到外部消息（如 `Msg_ReceiveBall`、`Msg_SupportAttacker`、`Msg_GoHome`）时代为分发处理。
+- **`GlobalPlayerState`**：每一帧更新球员到皮球的距离平方缓存，并在收到外部消息（如 `msgReceiveBall`、`msgSupportAttacker`、`msgGoHome`）时代为分发处理。
 - **`KickBall`**：决策中枢，执行三级决策树：
-  1. 能射门则射门（[`SoccerTeam::CanShoot`](./game/SoccerTeam.h)）；
-  2. 寻找最安全且向前推进的队友传球（[`SoccerTeam::FindPass`](./game/SoccerTeam.h)）；
+  1. 能射门则射门（[`SoccerTeam::canShoot`](./game/SoccerTeam.h)）；
+  2. 寻找最安全且向前推进的队友传球（[`SoccerTeam::findPass`](./game/SoccerTeam.h)）；
   3. 若均不可行，切换至 [`Dribble`](./fsm/StatesPlayerOnField.h) 缓慢带球推进。
 
 ---
 
-### 3.4 球队战术状态机 (Team FSM)
+### 3.4 球队战术状态机 (team FSM)
 
 球队持有 [`StateMachine<SoccerTeam>`](./game/SoccerTeam.h)，各状态定义于 [`StatesTeam.h`](./fsm/StatesTeam.h)：
 
@@ -502,13 +502,13 @@ stateDiagram-v2
     PrepareForKickOff --> Defending: 开球完成 (所有球员到位且比赛开始)
     Defending --> Attacking: 本队任意球员控制皮球 (isControllingPlayer)
     Attacking --> Defending: 对手抢断或失去控球权
-    Attacking --> PrepareForKickOff: 进球 (Goal::Scored)
+    Attacking --> PrepareForKickOff: 进球 (Goal::scored)
     Defending --> PrepareForKickOff: 被进球
 ```
 
-- **`PrepareForKickOff`**：命令所有球员回到 `m_iDefaultRegion`，重置关键指针（持球人、支援人均清空）。
+- **`PrepareForKickOff`**：命令所有球员回到 `mDefaultRegion`，重置关键指针（持球人、支援人均清空）。
 - **`Defending`**：指定最近球员前去逼抢（`ChaseBall`），其余球员进入 `ReturnToHomeRegion` 或就近盯防。
-- **`Attacking`**：确定持球人（`ControllingPlayer`），命令距最佳支援点最近的无球球员切换到 `SupportAttacker`，其余球员依据网格分布接应。
+- **`Attacking`**：确定持球人（`controllingPlayer`），命令距最佳支援点最近的无球球员切换到 `SupportAttacker`，其余球员依据网格分布接应。
 
 ---
 
@@ -518,7 +518,7 @@ stateDiagram-v2
 
 ### 4.1 操纵力计算与截断叠加机制
 
-每个球员同时可能激活多个行为标志位（如 `separation` + `arrive`）。系统通过优先累加机制 [`AccumulateForce`](./game/SteeringBehaviors.h) 防止合力超过球员的最大推力（`m_dMaxForce`）：
+每个球员同时可能激活多个行为标志位（如 `separationBehavior` + `arriveBehavior`）。系统通过优先累加机制 [`accumulateForce`](./game/SteeringBehaviors.h) 防止合力超过球员的最大推力（`mMaxForce`）：
 
 $$\mathbf{F}_{remain} = F_{max} - |\mathbf{F}_{total}|$$
 
@@ -530,25 +530,25 @@ $$\mathbf{F}_{total} \leftarrow \mathbf{F}_{total} + \frac{\mathbf{F}_{add}}{|\m
 
 ### 4.2 核心操纵行为算法
 
-1. **寻找 (Seek)**
+1. **寻找 (seek)**
    $$\mathbf{v}_{desired} = \text{normalize}(\mathbf{x}_{target} - \mathbf{x}) \cdot v_{max}$$
-   $$\mathbf{F}_{seek} = \mathbf{v}_{desired} - \mathbf{v}$$
+   $$\mathbf{F}_{seekBehavior} = \mathbf{v}_{desired} - \mathbf{v}$$
 
-2. **到达 (Arrive)**
+2. **到达 (arrive)**
    带有减速因子的平滑进站。当距目标距离 $d$ 较小时线性衰减期望速度：
    $$v_{speed} = \min\left(v_{max},\, \frac{d}{\text{Deceleration} \cdot \tau}\right)$$
    $$\mathbf{v}_{desired} = \frac{\mathbf{x}_{target} - \mathbf{x}}{d} \cdot v_{speed}$$
 
-3. **追击 / 拦截 (Pursuit)**
-   用于球员追赶运动中的足球。根据球的当前速度预估相遇时间 $t_{lookahead}$，并 Seek 该未来预测点：
+3. **追击 / 拦截 (pursuit)**
+   用于球员追赶运动中的足球。根据球的当前速度预估相遇时间 $t_{lookahead}$，并 seek 该未来预测点：
    $$t_{lookahead} = \frac{|\mathbf{x}_{ball} - \mathbf{x}|}{v_{max} + v_{ball}}$$
    $$\mathbf{x}_{future} = \mathbf{x}_{ball} + \mathbf{v}_{ball} \cdot t_{lookahead}$$
 
-4. **队员分离 (Separation)**
+4. **队员分离 (separation)**
    遍历视野范围内的所有队友，产生反向排斥力，防止多名球员抢球时堆叠：
    $$\mathbf{F}_{sep} = \sum_{j \in \text{neighbors}} \frac{\mathbf{x} - \mathbf{x}_j}{|\mathbf{x} - \mathbf{x}_j|^2}$$
 
-5. **插足卡位 (Interpose)**
+5. **插足卡位 (interpose)**
    用于守门员防守或防守球员盯人。操纵球员停在目标 A（球）与目标 B（球门中心或接球人）连线上的指定中途点。
 
 ---
@@ -561,16 +561,16 @@ $$\mathbf{F}_{total} \leftarrow \mathbf{F}_{total} + \frac{\mathbf{F}_{add}}{|\m
 
 ```cpp
 struct Telegram {
-    int    Sender;        // 发送方实体 ID
-    int    Receiver;      // 接收方实体 ID
-    int    Msg;           // 消息枚举 (如 Msg_PassToMe)
-    double DispatchTime;  // 期望派发帧计数（不是秒）
-    void*  ExtraInfo;     // 附加数据指针 (如目标落点 Vector2D*)
+    int    sender;        // 发送方实体 id
+    int    receiver;      // 接收方实体 id
+    int    msg;           // 消息枚举 (如 msgPassToMe)
+    double dispatchTime;  // 期望派发帧计数（不是秒）
+    void*  extraInfo;     // 附加数据指针 (如目标落点 Vector2D*)
 };
 ```
 
-- **即时消息 (`delay <= 0`)**：由 [`MessageDispatcher::DispatchMsg`](./messaging/MessageDispatcher.h) 查表并直接调用目标实体的 `HandleMessage()`。
-- **延时消息 (`delay > 0`)**：压入 `std::set<Telegram>`（以时间为权值的优先队列）。`DispatchDelayedMessages()` 按帧计数检查到期消息，但当前主循环没有调用此方法，也没有推进 `FrameCounter`，因此延迟投递尚未接入比赛。
+- **即时消息 (`delay <= 0`)**：由 [`MessageDispatcher::dispatchMsg`](./messaging/MessageDispatcher.h) 查表并直接调用目标实体的 `handleMessage()`。
+- **延时消息 (`delay > 0`)**：压入 `std::set<Telegram>`（以时间为权值的优先队列）。`dispatchDelayedMessages()` 按帧计数检查到期消息，但当前主循环没有调用此方法，也没有推进 `FrameCounter`，因此延迟投递尚未接入比赛。
 
 ---
 
@@ -581,25 +581,25 @@ struct Telegram {
 ```mermaid
 sequenceDiagram
     participant Passer as 持球球员
-    participant Team as SoccerTeam
-    participant Dispatcher as MessageDispatcher
-    participant Receiver as 接球球员
+    participant team as SoccerTeam
+    participant dispatcher as MessageDispatcher
+    participant receiver as 接球球员
     participant Supporter as 支援球员
-    Passer->>Team: FindPass(...)
-    Team-->>Passer: 接球人和目标落点
-    Passer->>Passer: Ball()->Kick(...)
-    Passer->>Dispatcher: DispatchMsg(0, ..., Msg_ReceiveBall, &target)
-    Dispatcher->>Receiver: HandleMessage(telegram)
-    Receiver->>Receiver: 设置目标并切换 ReceiveBall
-    Passer->>Passer: FindSupport()
-    Passer->>Team: DetermineBestSupportingAttacker()
-    Team-->>Passer: 支援球员
-    Passer->>Dispatcher: DispatchMsg(0, ..., Msg_SupportAttacker, NULL)
-    Dispatcher->>Supporter: HandleMessage(telegram)
+    Passer->>team: findPass(...)
+    team-->>Passer: 接球人和目标落点
+    Passer->>Passer: ball()->kick(...)
+    Passer->>dispatcher: dispatchMsg(0, ..., msgReceiveBall, &target)
+    dispatcher->>receiver: handleMessage(telegram)
+    receiver->>receiver: 设置目标并切换 ReceiveBall
+    Passer->>Passer: findSupport()
+    Passer->>team: determineBestSupportingAttacker()
+    team-->>Passer: 支援球员
+    Passer->>dispatcher: dispatchMsg(0, ..., msgSupportAttacker, NULL)
+    dispatcher->>Supporter: handleMessage(telegram)
     Supporter->>Supporter: 切换 SupportAttacker
 ```
 
-消息中的 `ExtraInfo` 是无所有权的 `void*`。当前传球目标可通过即时投递在调用期间读取；如果改成延迟投递，需要让载荷拥有足够长的生命周期，不能直接缓存局部变量地址。
+消息中的 `extraInfo` 是无所有权的 `void*`。当前传球目标可通过即时投递在调用期间读取；如果改成延迟投递，需要让载荷拥有足够长的生命周期，不能直接缓存局部变量地址。
 
 ---
 
@@ -615,7 +615,7 @@ $$\text{Score}(S_i) = 1 + w_1 \cdot C_{pass}(S_i) + w_2 \cdot C_{score}(S_i) + w
 2. **射门得分威胁度 $C_{score}$**：测试如果球员站在 $S_i$，是否能够直接起脚打入对方球门且不受门将/后卫阻挡。
 3. **距离奖励项 $D_{optimal}$**：仅在已有支援球员时计算，以距持球者 200 像素为最佳距离，在 0 到 400 像素之间给予三角形分布的额外奖励；不直接扣分。配置中另两个支援权重虽被读取，但没有参与当前评分。
 
-最高分的点被选为 `m_pBestSupportingSpot`，通过消息通知无球跑位球员前往接应。
+最高分的点被选为 `mBestSupportingSpot`，通过消息通知无球跑位球员前往接应。
 
 ---
 
@@ -625,8 +625,8 @@ $$\text{Score}(S_i) = 1 + w_1 \cdot C_{pass}(S_i) + w_2 \cdot C_{score}(S_i) + w
 
 1. 对手位于传球起点后方时直接认为安全，这是基于球速高于对手最大速度的简化假设。
 2. 对手距起点比目标更远时，依据是否有接球者及双方距目标的距离判断。
-3. 对其他情况，估算球到对手在传球轴上投影位置的时间 `TimeForBall`。
-4. 计算对手可达范围 `reach = MaxSpeed * TimeForBall + 球半径 + 对手半径`。
+3. 对其他情况，估算球到对手在传球轴上投影位置的时间 `timeForBall`。
+4. 计算对手可达范围 `reach = maxSpeed * timeForBall + 球半径 + 对手半径`。
 5. 若对手到传球轴的垂直距离小于 `reach`，则判定不安全。
 
 该实现使用局部坐标与可达范围估算，没有额外的时间安全裕量参数，也不模拟完整拦截轨迹。
@@ -635,9 +635,9 @@ $$\text{Score}(S_i) = 1 + w_1 \cdot C_{pass}(S_i) + w_2 \cdot C_{score}(S_i) + w
 
 ### 6.3 射门路线与进球判定
 
-- **进球判定**：[`Goal::Scored`](./game/Goal.h) 使用二维线段相交算法：
-  $$\text{LineIntersection2D}(\mathbf{x}_{ball}^{now},\, \mathbf{x}_{ball}^{old},\, \mathbf{P}_{left}^{post},\, \mathbf{P}_{right}^{post})$$
-  若球在上一帧与当前帧的位移线段与两门柱之间的线段相交，计入进球。当前 `Goal::Scored()` 没有额外检查运动方向。
+- **进球判定**：[`Goal::scored`](./game/Goal.h) 使用二维线段相交算法：
+  $$\text{lineIntersection2D}(\mathbf{x}_{ball}^{now},\, \mathbf{x}_{ball}^{old},\, \mathbf{P}_{left}^{post},\, \mathbf{P}_{right}^{post})$$
+  若球在上一帧与当前帧的位移线段与两门柱之间的线段相交，计入进球。当前 `Goal::scored()` 没有额外检查运动方向。
 
 ---
 
@@ -645,16 +645,16 @@ $$\text{Score}(S_i) = 1 + w_1 \cdot C_{pass}(S_i) + w_2 \cdot C_{score}(S_i) + w
 
 在 [`SoccerBall.h`](./game/SoccerBall.h) 中，足球受草坪恒定摩擦阻力做减速运动：
 
-每次固定步长更新，代码沿速度方向叠加 `Prm.Friction`，再以更新后的速度推进位置；`Friction = -0.015` 是模拟步长中的速度变化量，没有使用物理摩擦系数乘重力的计算。
+每次固定步长更新，代码沿速度方向叠加 `prm.friction`，再以更新后的速度推进位置；`friction = -0.015` 是模拟步长中的速度变化量，没有使用物理摩擦系数乘重力的计算。
 
-### 1. 距离飞行时间反算 (`TimeToCoverDistance`)
+### 1. 距离飞行时间反算 (`timeToCoverDistance`)
 根据初速度 $v_0$、位移 $s$ 与减速度 $a$：
 $$s = v_0 \cdot t + \frac{1}{2} a \cdot t^2$$
 使用恒定减速度模型估算传球到达时间；不可到达时返回 `-1.0`。该预测用于战术判断，不是逐帧运动与碰撞的精确重放。
 
-### 2. 未来位置推演 (`FuturePosition`)
+### 2. 未来位置推演 (`futurePosition`)
 $$\mathbf{x}(t) = \mathbf{x}_0 + \mathbf{v}_0 \cdot t + \frac{1}{2} \mathbf{a} \cdot t^2$$
-`FuturePosition()` 直接计算上述公式，没有将预测时间截断到停止时刻，也不预测墙壁反弹。预测时间超过停止时刻时，可能得到不符合实际运动的结果。
+`futurePosition()` 直接计算上述公式，没有将预测时间截断到停止时刻，也不预测墙壁反弹。预测时间超过停止时刻时，可能得到不符合实际运动的结果。
 
 ---
 
@@ -666,7 +666,7 @@ $$\mathbf{x}(t) = \mathbf{x}_0 + \mathbf{v}_0 \cdot t + \frac{1}{2} \mathbf{a} \
 | **单例模式 (Singleton Pattern)** | 所有具体状态子类、[`MessageDispatcher`](./messaging/MessageDispatcher.h)、[`EntityManager`](./entity/EntityManager.h) | 状态类均无成员变量（无自身状态），全局仅需一个单例共享实例，节约堆栈开销；消息与实体管理器全局唯一。 |
 | **中介者模式 (Mediator Pattern)** | [`MessageDispatcher`](./messaging/MessageDispatcher.h) | 传球请求、接球、支援与回位通知经调度器中转；球队仍直接保存球员指针，消息机制不消除所有对象耦合。 |
 | **策略模式 (Strategy Pattern)** | [`SteeringBehaviors`](./game/SteeringBehaviors.h) | 将寻找、到达、追击、拦截等运动算法抽离为可自由启用的插拔策略组合。 |
-| **模板方法 / 接口模式** | [`EntityBase`](./entity/EntityBase.h) | 统一规定实体的 `Update()`, `Render()`, `HandleMessage()` 虚函数契约，球队通过球员基类指针调用具体角色；主循环直接调用 SoccerPitch，未统一遍历所有实体。 |
+| **模板方法 / 接口模式** | [`EntityBase`](./entity/EntityBase.h) | 统一规定实体的 `update()`, `render()`, `handleMessage()` 虚函数契约，球队通过球员基类指针调用具体角色；主循环直接调用 SoccerPitch，未统一遍历所有实体。 |
 
 ## 9. 实际依赖、对象生命周期与维护建议
 
@@ -675,24 +675,24 @@ $$\mathbf{x}(t) = \mathbf{x}_0 + \mathbf{v}_0 \cdot t + \frac{1}{2} \mathbf{a} \
 | 模块 | 当前依赖与职责边界 |
 | :--- | :--- |
 | `fsm/` | `State.h`、`StateMachine.h` 是通用模板；同目录的足球状态直接调用球队、球员、场地和消息设施。 |
-| `entity/` | 通用实体与足球球员共存；球员依赖 `game/` 的球队、足球和 Steering，业务依赖与 `fsm/`、`game/` 双向交织。 |
+| `entity/` | 通用实体与足球球员共存；球员依赖 `game/` 的球队、足球和 steering，业务依赖与 `fsm/`、`game/` 双向交织。 |
 | `game/` | 世界、球队、战术、物理与渲染共存；`SoccerTeam` 还负责球员创建及注册。 |
 | `messaging/` | 调度器依赖全局实体注册表与帧计数器；接收者通过虚函数处理消息。 |
 | `math/`、`common/` | `Vector2D` 使用 Win32 类型，`Region`、`Wall2D` 内置 GDI 绘图；基础层尚不能独立于窗口环境使用。 |
 | `graph/` | 包含通用搜索模板及依赖窗口、工具栏的 Pathfinder 演示类。足球逻辑没有引用 Pathfinder，但 Makefile 编译它，main.cpp 为它保留工具栏全局变量。 |
 
-每次定时更新依次调用 `SoccerPitch::Update()` → 足球更新 → 红队更新 → 蓝队更新 → 进球检测。球队先计算最近球员，再更新球队 FSM，最后依次更新各球员；球员先执行 FSM，再计算移动。暂停时场地更新直接返回。绘图由 Win32 的 `WM_PAINT` 驱动，与更新入口分开，但各业务对象内部仍实现 `Render()`。
+每次定时更新依次调用 `SoccerPitch::update()` → 足球更新 → 红队更新 → 蓝队更新 → 进球检测。球队先计算最近球员，再更新球队 FSM，最后依次更新各球员；球员先执行 FSM，再计算移动。暂停时场地更新直接返回。绘图由 Win32 的 `WM_PAINT` 驱动，与更新入口分开，但各业务对象内部仍实现 `render()`。
 
-模拟使用固定步长，没有向 `Update()` 传入 elapsed time；改变更新频率会影响实际时间中的运动速度。支援点评估和踢球频率另外使用 `Regulator` 限频。
+模拟使用固定步长，没有向 `update()` 传入 elapsed time；改变更新频率会影响实际时间中的运动速度。支援点评估和踢球频率另外使用 `Regulator` 限频。
 
 ### 9.2 对象所有权与生命周期
 
 - `main.cpp` 创建并删除 `SoccerPitch`；按 `R` 删除旧场地并创建新场地。
 - 场地拥有足球、两支球队、两个球门、场地区域和分区对象；球队拥有球员、球队 FSM 和支援点计算器。
-- 球员拥有 Steering，具体角色拥有各自 FSM；场上球员另外拥有踢球频率调节器。状态对象采用共享单例，不由 FSM 删除。
+- 球员拥有 steering，具体角色拥有各自 FSM；场上球员另外拥有踢球频率调节器。状态对象采用共享单例，不由 FSM 删除。
 - 球队与球员之间、球队与场地之间，以及对手引用等使用非拥有的裸指针。拥有关系同样用裸指针表达，缺少异常情况下的自动清理。
-- `EntityManager` 保存球员指针但不拥有球员。当前球队销毁球员时没有调用 `RemoveEntity()`，重置也没有清空注册表，旧条目会成为悬空指针。
-- `GetEntityFromID()` 对不存在的 ID 使用断言，未提供安全的失败返回；因此调度器里的空指针检查不能覆盖无效 ID 情况。
+- `EntityManager` 保存球员指针但不拥有球员。当前球队销毁球员时没有调用 `removeEntity()`，重置也没有清空注册表，旧条目会成为悬空指针。
+- `getEntityFromId()` 对不存在的 id 使用断言，未提供安全的失败返回；因此调度器里的空指针检查不能覆盖无效 id 情况。
 
 ### 9.3 尚未完成的消息与构建支持
 
@@ -702,7 +702,7 @@ Makefile 没有生成和包含头文件依赖文件，修改头文件后可能�
 
 ### 9.4 配置与文档使用约定
 
-[Params.ini](./Params.ini) 从进程工作目录读取，由 `ParamLoader` 单例首次初始化时加载。解析器按条目顺序提取数值，不按键名查找；新增或重排配置项必须同步修改读取顺序。文件标签 `NumSweetSpotsX/Y` 对应成员 `NumSupportSpotsX/Y`，`Spot_CanPassScore` 对应 `Spot_PassSafeScore`。修改文件后需要重启程序，比赛重置不会重新读取。
+[Params.ini](./Params.ini) 从进程工作目录读取，由 `ParamLoader` 单例首次初始化时加载。解析器按条目顺序提取数值，不按键名查找；新增或重排配置项必须同步修改读取顺序。文件标签 `numSweetSpotsX/Y` 对应成员 `numSupportSpotsX/Y`，`spotCanPassScore` 对应 `spotPassSafeScore`。修改文件后需要重启程序，比赛重置不会重新读取。
 
 本文的类图和状态图用于说明设计，运行行为以源码为准。所有源码链接采用仓库相对路径，避免依赖机器上的绝对目录。
 

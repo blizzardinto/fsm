@@ -14,25 +14,25 @@ class Region
 {
 public:
 
-  enum region_modifier{halfsize, normal};
-  
+  enum RegionModifier{halfsize, normal};
+
 protected:
 
-  double        m_dTop;
-  double        m_dLeft;
-  double        m_dRight;
-  double        m_dBottom;
+  double        mTop;
+  double        mLeft;
+  double        mRight;
+  double        mBottom;
 
-  double        m_dWidth;
-  double        m_dHeight;
+  double        mWidth;
+  double        mHeight;
 
-  Vector2D     m_vCenter;
-  
-  int          m_iID;
+  Vector2D     mCenter;
+
+  int          mId;
 
 public:
 
-  Region():m_dTop(0),m_dBottom(0),m_dLeft(0),m_dRight(0)
+  Region():mTop(0),mBottom(0),mLeft(0),mRight(0)
   {}
 
 
@@ -40,82 +40,82 @@ public:
          double top,
          double right,
          double bottom,
-         int id = -1):m_dTop(top),
-                        m_dRight(right),
-                        m_dLeft(left),
-                        m_dBottom(bottom),
-                        m_iID(id)
+         int id = -1):mTop(top),
+                        mRight(right),
+                        mLeft(left),
+                        mBottom(bottom),
+                        mId(id)
   {
     //calculate center of region
-    m_vCenter = Vector2D( (left+right)*0.5, (top+bottom)*0.5 );
+    mCenter = Vector2D( (left+right)*0.5, (top+bottom)*0.5 );
 
-    m_dWidth  = fabs(right-left);
-    m_dHeight = fabs(bottom-top);
+    mWidth  = fabs(right-left);
+    mHeight = fabs(bottom-top);
   }
 
   virtual ~Region(){}
 
-  virtual inline void     Render(bool ShowID)const;
+  virtual inline void     render(bool showId)const;
 
   //returns true if the given position lays inside the region. The
   //region modifier can be used to contract the region bounderies
-  inline bool     Inside(Vector2D pos, region_modifier r)const;
+  inline bool     inside(Vector2D pos, RegionModifier r)const;
 
   //returns a vector representing a random location
   //within the region
-  inline Vector2D GetRandomPosition()const;
+  inline Vector2D getRandomPosition()const;
 
   //-------------------------------
-  double     Top()const{return m_dTop;}
-  double     Bottom()const{return m_dBottom;}
-  double     Left()const{return m_dLeft;}
-  double     Right()const{return m_dRight;}
-  double     Width()const{return fabs(m_dRight - m_dLeft);}
-  double     Height()const{return fabs(m_dTop - m_dBottom);}
-  double     Length()const{return std::max(Width(), Height());}
-  double     Breadth()const{return std::min(Width(), Height());}
+  double     top()const{return mTop;}
+  double     bottom()const{return mBottom;}
+  double     left()const{return mLeft;}
+  double     right()const{return mRight;}
+  double     width()const{return fabs(mRight - mLeft);}
+  double     height()const{return fabs(mTop - mBottom);}
+  double     length()const{return std::max(width(), height());}
+  double     breadth()const{return std::min(width(), height());}
 
-  Vector2D  Center()const{return m_vCenter;}
-  int       ID()const{return m_iID;}
+  Vector2D  center()const{return mCenter;}
+  int       id()const{return mId;}
 
 };
 
 
 
-inline Vector2D Region::GetRandomPosition()const
+inline Vector2D Region::getRandomPosition()const
 {
-  return Vector2D(RandInRange(m_dLeft, m_dRight),
-                   RandInRange(m_dTop, m_dBottom));
+  return Vector2D(randInRange(mLeft, mRight),
+                   randInRange(mTop, mBottom));
 }
 
-inline bool Region::Inside(Vector2D pos, region_modifier r=normal)const
+inline bool Region::inside(Vector2D pos, RegionModifier r=normal)const
 {
   if (r == normal)
   {
-    return ((pos.x > m_dLeft) && (pos.x < m_dRight) &&
-         (pos.y > m_dTop) && (pos.y < m_dBottom));
+    return ((pos.x > mLeft) && (pos.x < mRight) &&
+         (pos.y > mTop) && (pos.y < mBottom));
   }
   else
   {
-    const double marginX = m_dWidth * 0.25;
-    const double marginY = m_dHeight * 0.25;
+    const double marginX = mWidth * 0.25;
+    const double marginY = mHeight * 0.25;
 
-    return ((pos.x > (m_dLeft+marginX)) && (pos.x < (m_dRight-marginX)) &&
-         (pos.y > (m_dTop+marginY)) && (pos.y < (m_dBottom-marginY)));
+    return ((pos.x > (mLeft+marginX)) && (pos.x < (mRight-marginX)) &&
+         (pos.y > (mTop+marginY)) && (pos.y < (mBottom-marginY)));
   }
 
 }
 
-inline void Region::Render(bool ShowID = 0)const
+inline void Region::render(bool showId = 0)const
 {
-  gdi->HollowBrush();
-  gdi->GreenPen();
-  gdi->Rect(m_dLeft, m_dTop, m_dRight, m_dBottom);
+  gdi->hollowBrush();
+  gdi->greenPen();
+  gdi->rect(mLeft, mTop, mRight, mBottom);
 
-  if (ShowID)
-  { 
-    gdi->TextColor(Cgdi::green);
-    gdi->TextAtPos(Center(), ttos(ID()));
+  if (showId)
+  {
+    gdi->textColor(Cgdi::green);
+    gdi->textAtPos(center(), ttos(id()));
   }
 }
 

@@ -21,7 +21,7 @@
 //--------------------------- GlobalKeeperState -------------------------------
 //-----------------------------------------------------------------------------
 
-GlobalKeeperState* GlobalKeeperState::Instance()
+GlobalKeeperState* GlobalKeeperState::instance()
 {
   static GlobalKeeperState instance;
 
@@ -29,22 +29,22 @@ GlobalKeeperState* GlobalKeeperState::Instance()
 }
 
 
-bool GlobalKeeperState::OnMessage(EntityPlayerGoalKeeper* keeper, const Telegram& telegram)
+bool GlobalKeeperState::onMessage(EntityPlayerGoalKeeper* keeper, const Telegram& telegram)
 {
-  switch(telegram.Msg)
+  switch(telegram.msg)
   {
-    case Msg_GoHome:
+    case msgGoHome:
     {
-      keeper->SetDefaultHomeRegion();
-      
-      keeper->GetFSM()->ChangeState(ReturnHome::Instance());
+      keeper->setDefaultHomeRegion();
+
+      keeper->getFsm()->changeState(ReturnHome::instance());
     }
 
     break;
 
-    case Msg_ReceiveBall:
+    case msgReceiveBall:
       {
-        keeper->GetFSM()->ChangeState(InterceptBall::Instance());
+        keeper->getFsm()->changeState(InterceptBall::instance());
       }
 
       break;
@@ -58,14 +58,14 @@ bool GlobalKeeperState::OnMessage(EntityPlayerGoalKeeper* keeper, const Telegram
 //--------------------------- TendGoal -----------------------------------
 //
 //  This is the main state for the goalkeeper. When in this state he will
-//  move left to right across the goalmouth using the 'interpose' steering
+//  move left to right across the goalmouth using the 'interposeBehavior' steering
 //  behavior to put himself between the ball and the back of the net.
 //
 //  If the ball comes within the 'goalkeeper range' he moves out of the
 //  goalmouth to attempt to intercept it. (see next state)
 //------------------------------------------------------------------------
 
-TendGoal* TendGoal::Instance()
+TendGoal* TendGoal::instance()
 {
   static TendGoal instance;
 
@@ -73,56 +73,56 @@ TendGoal* TendGoal::Instance()
 }
 
 
-void TendGoal::Enter(EntityPlayerGoalKeeper* keeper)
+void TendGoal::enter(EntityPlayerGoalKeeper* keeper)
 {
-  //turn interpose on
-  keeper->Steering()->InterposeOn(Prm.EntityPlayerGoalKeeperTendingDistance);
+  //turn interposeBehavior on
+  keeper->steering()->interposeOn(prm.entityPlayerGoalKeeperTendingDistance);
 
-  //interpose will position the agent between the ball position and a target
+  //interposeBehavior will position the agent between the ball position and a target
   //position situated along the goal mouth. This call sets the target
-  keeper->Steering()->SetTarget(keeper->GetRearInterposeTarget());
+  keeper->steering()->setTarget(keeper->getRearInterposeTarget());
 }
 
-void TendGoal::Execute(EntityPlayerGoalKeeper* keeper)
+void TendGoal::execute(EntityPlayerGoalKeeper* keeper)
 {
-  //the rear interpose target will change as the ball's position changes
-  //so it must be updated each update-step 
-  keeper->Steering()->SetTarget(keeper->GetRearInterposeTarget());
+  //the rear interposeBehavior target will change as the ball's position changes
+  //so it must be updated each update-step
+  keeper->steering()->setTarget(keeper->getRearInterposeTarget());
 
   //if the ball comes in range the keeper traps it and then changes state
   //to put the ball back in play
-  if (keeper->BallWithinKeeperRange())
+  if (keeper->ballWithinKeeperRange())
   {
-    keeper->Ball()->Trap();
+    keeper->ball()->trap();
 
-    keeper->Pitch()->SetEntityPlayerGoalKeeperHasBall(true);
+    keeper->pitch()->setEntityPlayerGoalKeeperHasBall(true);
 
-    keeper->GetFSM()->ChangeState(PutBallBackInPlay::Instance());
+    keeper->getFsm()->changeState(PutBallBackInPlay::instance());
 
     return;
   }
 
   //if ball is within a predefined distance, the keeper moves out from
   //position to try and intercept it.
-  if (keeper->BallWithinRangeForIntercept() && !keeper->Team()->InControl())
+  if (keeper->ballWithinRangeForIntercept() && !keeper->team()->inControl())
   {
-    keeper->GetFSM()->ChangeState(InterceptBall::Instance());
+    keeper->getFsm()->changeState(InterceptBall::instance());
   }
 
   //if the keeper has ventured too far away from the goal-line and there
   //is no threat from the opponents he should move back towards it
-  if (keeper->TooFarFromGoalMouth() && keeper->Team()->InControl())
+  if (keeper->tooFarFromGoalMouth() && keeper->team()->inControl())
   {
-    keeper->GetFSM()->ChangeState(ReturnHome::Instance());
+    keeper->getFsm()->changeState(ReturnHome::instance());
 
     return;
   }
 }
 
 
-void TendGoal::Exit(EntityPlayerGoalKeeper* keeper)
+void TendGoal::exit(EntityPlayerGoalKeeper* keeper)
 {
-  keeper->Steering()->InterposeOff();
+  keeper->steering()->interposeOff();
 }
 
 
@@ -132,7 +132,7 @@ void TendGoal::Exit(EntityPlayerGoalKeeper* keeper)
 //  the goal region before changing state back to TendGoal
 //------------------------------------------------------------------------
 
-ReturnHome* ReturnHome::Instance()
+ReturnHome* ReturnHome::instance()
 {
   static ReturnHome instance;
 
@@ -140,26 +140,26 @@ ReturnHome* ReturnHome::Instance()
 }
 
 
-void ReturnHome::Enter(EntityPlayerGoalKeeper* keeper)
+void ReturnHome::enter(EntityPlayerGoalKeeper* keeper)
 {
-  keeper->Steering()->ArriveOn();
+  keeper->steering()->arriveOn();
 }
 
-void ReturnHome::Execute(EntityPlayerGoalKeeper* keeper)
+void ReturnHome::execute(EntityPlayerGoalKeeper* keeper)
 {
-  keeper->Steering()->SetTarget(keeper->HomeRegion()->Center());
+  keeper->steering()->setTarget(keeper->homeRegion()->center());
 
   //if close enough to home or the opponents get control over the ball,
   //change state to tend goal
-  if (keeper->InHomeRegion() || !keeper->Team()->InControl())
+  if (keeper->inHomeRegion() || !keeper->team()->inControl())
   {
-    keeper->GetFSM()->ChangeState(TendGoal::Instance());
+    keeper->getFsm()->changeState(TendGoal::instance());
   }
 }
 
-void ReturnHome::Exit(EntityPlayerGoalKeeper* keeper)
+void ReturnHome::exit(EntityPlayerGoalKeeper* keeper)
 {
-  keeper->Steering()->ArriveOff();
+  keeper->steering()->arriveOff();
 }
 
 
@@ -167,11 +167,11 @@ void ReturnHome::Exit(EntityPlayerGoalKeeper* keeper)
 //----------------- InterceptBall ----------------------------------------
 //
 //  In this state the GP will attempt to intercept the ball using the
-//  pursuit steering behavior, but he only does so so long as he remains
+//  pursuitBehavior steering behavior, but he only does so so long as he remains
 //  within his home region.
 //------------------------------------------------------------------------
 
-InterceptBall* InterceptBall::Instance()
+InterceptBall* InterceptBall::instance()
 {
   static InterceptBall instance;
 
@@ -179,44 +179,44 @@ InterceptBall* InterceptBall::Instance()
 }
 
 
-void InterceptBall::Enter(EntityPlayerGoalKeeper* keeper)
+void InterceptBall::enter(EntityPlayerGoalKeeper* keeper)
 {
-  keeper->Steering()->PursuitOn();  
+  keeper->steering()->pursuitOn();
 
     #ifdef GOALY_STATE_INFO_ON
-    debug_con << "Goaly " << keeper->ID() << " enters InterceptBall" <<  "";
+    debugCon << "Goaly " << keeper->id() << " enters InterceptBall" <<  "";
     #endif
 }
 
-void InterceptBall::Execute(EntityPlayerGoalKeeper* keeper)
-{ 
+void InterceptBall::execute(EntityPlayerGoalKeeper* keeper)
+{
   //if the goalkeeper moves to far away from the goal he should return to his
   //home region UNLESS he is the closest player to the ball, in which case,
   //he should keep trying to intercept it.
-  if (keeper->TooFarFromGoalMouth() && !keeper->isClosestPlayerOnPitchToBall())
+  if (keeper->tooFarFromGoalMouth() && !keeper->isClosestPlayerOnPitchToBall())
   {
-    keeper->GetFSM()->ChangeState(ReturnHome::Instance());
+    keeper->getFsm()->changeState(ReturnHome::instance());
 
     return;
   }
-  
-  //if the ball becomes in range of the goalkeeper's hands he traps the 
-  //ball and puts it back in play
-  if (keeper->BallWithinKeeperRange())
-  {
-    keeper->Ball()->Trap();
-    
-    keeper->Pitch()->SetEntityPlayerGoalKeeperHasBall(true);
 
-    keeper->GetFSM()->ChangeState(PutBallBackInPlay::Instance());
+  //if the ball becomes in range of the goalkeeper's hands he traps the
+  //ball and puts it back in play
+  if (keeper->ballWithinKeeperRange())
+  {
+    keeper->ball()->trap();
+
+    keeper->pitch()->setEntityPlayerGoalKeeperHasBall(true);
+
+    keeper->getFsm()->changeState(PutBallBackInPlay::instance());
 
     return;
   }
 }
 
-void InterceptBall::Exit(EntityPlayerGoalKeeper* keeper)
+void InterceptBall::exit(EntityPlayerGoalKeeper* keeper)
 {
-  keeper->Steering()->PursuitOff();
+  keeper->steering()->pursuitOff();
 }
 
 
@@ -225,57 +225,57 @@ void InterceptBall::Exit(EntityPlayerGoalKeeper* keeper)
 //
 //------------------------------------------------------------------------
 
-PutBallBackInPlay* PutBallBackInPlay::Instance()
+PutBallBackInPlay* PutBallBackInPlay::instance()
 {
   static PutBallBackInPlay instance;
 
   return &instance;
 }
 
-void PutBallBackInPlay::Enter(EntityPlayerGoalKeeper* keeper)
+void PutBallBackInPlay::enter(EntityPlayerGoalKeeper* keeper)
 {
   //let the team know that the keeper is in control
-  keeper->Team()->SetControllingPlayer(keeper);
+  keeper->team()->setControllingPlayer(keeper);
 
   //send all the players home
-  keeper->Team()->Opponents()->ReturnAllEntityPlayerOnFieldsToHome();
-  keeper->Team()->ReturnAllEntityPlayerOnFieldsToHome();
+  keeper->team()->opponents()->returnAllEntityPlayerOnFieldsToHome();
+  keeper->team()->returnAllEntityPlayerOnFieldsToHome();
 }
 
 
-void PutBallBackInPlay::Execute(EntityPlayerGoalKeeper* keeper)
+void PutBallBackInPlay::execute(EntityPlayerGoalKeeper* keeper)
 {
   EntityPlayer*  receiver = NULL;
-  Vector2D     BallTarget;
-    
+  Vector2D     ballTarget;
+
   //test if there are players further forward on the field we might
   //be able to pass to. If so, make a pass.
-  if (keeper->Team()->FindPass(keeper,
+  if (keeper->team()->findPass(keeper,
                               receiver,
-                              BallTarget,
-                              Prm.MaxPassingForce,
-                              Prm.GoalkeeperMinPassDist))
-  {     
-    //make the pass   
-    keeper->Ball()->Kick(Vec2DNormalize(BallTarget - keeper->Ball()->Pos()),
-                         Prm.MaxPassingForce);
+                              ballTarget,
+                              prm.maxPassingForce,
+                              prm.goalkeeperMinPassDist))
+  {
+    //make the pass
+    keeper->ball()->kick(vec2DNormalize(ballTarget - keeper->ball()->pos()),
+                         prm.maxPassingForce);
 
-    //goalkeeper no longer has ball 
-    keeper->Pitch()->SetEntityPlayerGoalKeeperHasBall(false);
+    //goalkeeper no longer has ball
+    keeper->pitch()->setEntityPlayerGoalKeeperHasBall(false);
 
     //let the receiving player know the ball's comin' at him
-    Dispatcher->DispatchMsg(SEND_MSG_IMMEDIATELY,
-                          keeper->ID(),
-                          receiver->ID(),
-                          Msg_ReceiveBall,
-                          &BallTarget);
-    
-    //go back to tending the goal   
-    keeper->GetFSM()->ChangeState(TendGoal::Instance());
+    dispatcher->dispatchMsg(sendMsgImmediately,
+                          keeper->id(),
+                          receiver->id(),
+                          msgReceiveBall,
+                          &ballTarget);
+
+    //go back to tending the goal
+    keeper->getFsm()->changeState(TendGoal::instance());
 
     return;
-  }  
+  }
 
-  keeper->SetVelocity(Vector2D());
+  keeper->setVelocity(Vector2D());
 }
 

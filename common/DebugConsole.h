@@ -11,27 +11,27 @@
 
 
 //need to define a custom message
-const int UM_SETSCROLL = WM_USER + 32;
+const int umSetscroll = WM_USER + 32;
 
-//maximum number of lines shown in console before the buffer is flushed to 
+//maximum number of lines shown in console before the buffer is flushed to
 //a file
-const int MaxBufferSize = 500;
+const int maxBufferSize = 500;
 
 //initial dimensions of the console window
-const int DEBUG_WINDOW_WIDTH  = 400;
-const int DEBUG_WINDOW_HEIGHT = 400;
+const int debugWindowWidth  = 400;
+const int debugWindowHeight = 400;
 
 //undefine DEBUG to send all debug messages to hyperspace (a sink - see below)
 //#define DEBUG
 #ifdef DEBUG
-#define debug_con *(DebugConsole::Instance())
+#define debugCon *(DebugConsole::instance())
 #else
-#define debug_con *(CSink::Instance())
+#define debugCon *(CSink::instance())
 #endif
 
 //use these in your code to toggle output to the console on/off
-#define debug_on  DebugConsole::On();
-#define debug_off DebugConsole::Off();
+#define debugOn  DebugConsole::on();
+#define debugOff DebugConsole::off();
 
 
 //this little class just acts as a sink for any input. Used in place
@@ -45,15 +45,15 @@ private:
   //copy ctor and assignment should be private
   CSink(const CSink&);
   CSink& operator=(const CSink&);
-  
+
 public:
 
-  static CSink* Instance(){static CSink instance; return &instance;}
-  
+  static CSink* instance(){static CSink instance; return &instance;}
+
   template<class T>
   CSink& operator<<(const T&)
   {
-	  return *this;
+    return *this;
   }
 };
 
@@ -63,101 +63,101 @@ class DebugConsole
 {
 private:
 
-  static HWND	         m_hwnd;
-  
+  static HWND	         mHwnd;
+
   //the string buffer. All input to debug stream is stored here
-  static std::vector<std::string> m_Buffer;
-  
+  static std::vector<std::string> mBuffer;
+
   //if true the next input will be pushed into the buffer. If false,
   //it will be appended.
-  static bool          m_bFlushed;  
-  
+  static bool          mFlushed;
+
   //position of debug window
-  static int           m_iPosTop;
-  static int           m_iPosLeft;
+  static int           mPosTop;
+  static int           mPosLeft;
 
   //set to true if the window is destroyed
-  static bool          m_bDestroyed;
+  static bool          mDestroyed;
 
   //if false the console will just disregard any input
-  static bool          m_bActive;
+  static bool          mActive;
 
   //default logging file
-  static std::ofstream m_LogOut;
+  static std::ofstream mLogOut;
 
 
 
   //the debug window message handler
-  static LRESULT CALLBACK DebugWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
+  static LRESULT CALLBACK debugWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
   //this registers the window class and creates the window(called by the ctor)
-  static bool             Create();
+  static bool             create();
 
-  static void             DrawWindow(){InvalidateRect(m_hwnd, NULL, TRUE); UpdateWindow(m_hwnd);}
+  static void             drawWindow(){InvalidateRect(mHwnd, NULL, TRUE); UpdateWindow(mHwnd);}
 
 private:
 
   DebugConsole(){}
- 
+
   //copy ctor and assignment should be private
   DebugConsole(const DebugConsole&);
   DebugConsole& operator=(const DebugConsole&);
 
 public:
 
-  ~DebugConsole(){WriteAndResetBuffer(); }
+  ~DebugConsole(){writeAndResetBuffer(); }
 
-  static DebugConsole* Instance();
+  static DebugConsole* instance();
 
-             
-  void ClearBuffer(){m_Buffer.clear(); flush();}
+
+  void clearBuffer(){mBuffer.clear(); flush();}
 
 
   static void flush()
   {
-    if (!m_bDestroyed)
+    if (!mDestroyed)
     {
-      m_bFlushed = true; SendMessage(m_hwnd, UM_SETSCROLL, NULL, NULL);
+      mFlushed = true; SendMessage(mHwnd, umSetscroll, NULL, NULL);
     }
   }
 
   //writes the contents of the buffer to the file "debug_log.txt", clears
   //the buffer and resets the appropriate scroll info
-  void WriteAndResetBuffer();
+  void writeAndResetBuffer();
 
   //use to activate deactivate
-  static void  Off(){m_bActive = false;}
-  static void  On()  {m_bActive = true;}
+  static void  off(){mActive = false;}
+  static void  on()  {mActive = true;}
 
-  bool Destroyed()const{return m_bDestroyed;}
- 
+  bool destroyed()const{return mDestroyed;}
+
 
   //overload the << to accept any type
   template <class T>
   DebugConsole& operator<<(const T& t)
   {
-    if (!m_bActive || m_bDestroyed) return *this;
-   
-    //reset buffer and scroll info if it overflows. Write the excess
+    if (!mActive || mDestroyed) return *this;
+
+    //reset buffer and scroll info if it overflows. write the excess
     //to file
-    if (m_Buffer.size() > MaxBufferSize)
+    if (mBuffer.size() > maxBufferSize)
     {
-       WriteAndResetBuffer();
+       writeAndResetBuffer();
     }
-    
+
     std::ostringstream ss; ss << t;
 
     if (ss.str() == ""){flush(); return *this;}
-    
-    if (!m_bFlushed)
-      {m_Buffer.back() += ss.str();}
+
+    if (!mFlushed)
+      {mBuffer.back() += ss.str();}
     else
-      {m_Buffer.push_back(ss.str());m_bFlushed = false;}
+      {mBuffer.push_back(ss.str());mFlushed = false;}
 
     return *this;
   }
 };
 
- 
+
 
 #endif

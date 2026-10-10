@@ -6,36 +6,36 @@
 #include <vector>
 #include <cassert>
 
-//----------------------- Swap -------------------------------------------
+//----------------------- swap -------------------------------------------
 //
 //  used to swap two values
 //------------------------------------------------------------------------
 template<class T>
-void Swap(T &a, T &b)
+void swap(T &a, T &b)
 {
   T temp = a;
   a = b;
   b = temp;
 }
 
-//-------------------- ReorderUpwards ------------------------------------
+//-------------------- reorderUpwards ------------------------------------
 //
 //  given a heap and a node in the heap, this function moves upwards
 //  through the heap swapping elements until the heap is ordered
 //------------------------------------------------------------------------
 template<class T>
-void ReorderUpwards(std::vector<T>& heap, int nd)
+void reorderUpwards(std::vector<T>& heap, int nd)
 {
   //move up the heap swapping the elements until the heap is ordered
   while ( (nd>1) && (heap[nd/2] < heap[nd]))
   {
-    Swap(heap[nd/2], heap[nd]);
+    swap(heap[nd/2], heap[nd]);
 
     nd /= 2;
   }
 }
 
-//--------------------- ReorderDownwards ---------------------------------
+//--------------------- reorderDownwards ---------------------------------
 //
 //  given a heap, the heapsize and a node in the heap, this function
 //  reorders the elements in a top down fashion by moving down the heap
@@ -43,16 +43,16 @@ void ReorderUpwards(std::vector<T>& heap, int nd)
 //  (provided a child is larger than the current node)
 //------------------------------------------------------------------------
 template<class T>
-void ReorderDownwards(std::vector<T>& heap, int nd, int HeapSize)
+void reorderDownwards(std::vector<T>& heap, int nd, int heapSize)
 {
   //move down the heap from node nd swapping the elements until
   //the heap is reordered
-  while (2*nd <= HeapSize)
+  while (2*nd <= heapSize)
   {
     int child = 2 * nd;
 
     //set child to largest of nd's two children
-    if ( (child < HeapSize) && (heap[child] < heap[child+1]) )
+    if ( (child < heapSize) && (heap[child] < heap[child+1]) )
     {
       ++child;
     }
@@ -60,7 +60,7 @@ void ReorderDownwards(std::vector<T>& heap, int nd, int HeapSize)
     //if this nd is smaller than its child, swap
     if (heap[nd] < heap[child])
     {
-      Swap(heap[child], heap[nd]);
+      swap(heap[child], heap[nd]);
 
       //move the current node down the tree
       nd = child;
@@ -84,20 +84,20 @@ class PriorityQ
 {
 private:
 
-  std::vector<T>  m_Heap;
+  std::vector<T>  mHeap;
 
-  int             m_iSize;
+  int             mSize;
 
-  int             m_iMaxSize;
+  int             mMaxSize;
 
   //given a heap and a node in the heap, this function moves upwards
   //through the heap swapping elements until the heap is ordered
-  void ReorderUpwards(std::vector<T>& heap, int nd)
+  void reorderUpwards(std::vector<T>& heap, int nd)
   {
     //move up the heap swapping the elements until the heap is ordered
     while ( (nd>1) && (heap[nd/2] < heap[nd]))
     {
-      Swap(heap[nd/2], heap[nd]);
+      swap(heap[nd/2], heap[nd]);
 
       nd /= 2;
     }
@@ -107,16 +107,16 @@ private:
   //reorders the elements in a top down fashion by moving down the heap
   //and swapping the current node with the greater of its two children
   //(provided a child is larger than the current node)
-  void ReorderDownwards(std::vector<T>& heap, int nd, int HeapSize)
+  void reorderDownwards(std::vector<T>& heap, int nd, int heapSize)
   {
     //move down the heap from node nd swapping the elements until
     //the heap is reordered
-    while (2*nd <= HeapSize)
+    while (2*nd <= heapSize)
     {
      int child = 2 * nd;
 
       //set child to largest of nd's two children
-      if ( (child < HeapSize) && (heap[child] < heap[child+1]) )
+      if ( (child < heapSize) && (heap[child] < heap[child+1]) )
      {
         ++child;
       }
@@ -124,12 +124,12 @@ private:
       //if this nd is smaller than its child, swap
       if (heap[nd] < heap[child])
       {
-        Swap(heap[child], heap[nd]);
+        swap(heap[child], heap[nd]);
 
         //move the current node down the tree
         nd = child;
       }
-  
+
       else
       {
         break;
@@ -139,40 +139,40 @@ private:
 
 public:
 
-  PriorityQ(int MaxSize):m_iMaxSize(MaxSize), m_iSize(0)
+  PriorityQ(int maxSize):mMaxSize(maxSize), mSize(0)
   {
-    m_Heap.assign(MaxSize+1, T());
+    mHeap.assign(maxSize+1, T());
   }
 
-  bool empty()const{return (m_iSize==0);}
+  bool empty()const{return (mSize==0);}
 
   //to insert an item into the queue it gets added to the end of the heap
   //and then the heap is reordered
   void insert(const T item)
   {
 
-    assert (m_iSize+1 <= m_iMaxSize);
+    assert (mSize+1 <= mMaxSize);
 
-    ++m_iSize;
+    ++mSize;
 
-    m_Heap[m_iSize] = item;
+    mHeap[mSize] = item;
 
-    ReorderUpwards(m_Heap, m_iSize);
+    reorderUpwards(mHeap, mSize);
   }
 
   //to get the max item the first element is exchanged with the lowest
-  //in the heap and then the heap is reordered from the top down. 
+  //in the heap and then the heap is reordered from the top down.
   T pop()
   {
-    Swap(m_Heap[1], m_Heap[m_iSize]);
+    swap(mHeap[1], mHeap[mSize]);
 
-    ReorderDownwards(m_Heap, 1, m_iSize-1);
+    reorderDownwards(mHeap, 1, mSize-1);
 
-    return m_Heap[m_iSize--];
+    return mHeap[mSize--];
   }
 
   //so we can take a peek at the first in line
-  const T& Peek()const{return m_Heap[1];}
+  const T& peek()const{return mHeap[1];}
 };
 
 //--------------------- PriorityQLow -------------------------------------
@@ -185,20 +185,20 @@ class PriorityQLow
 {
 private:
 
-  std::vector<T>  m_Heap;
+  std::vector<T>  mHeap;
 
-  int             m_iSize;
+  int             mSize;
 
-  int             m_iMaxSize;
+  int             mMaxSize;
 
   //given a heap and a node in the heap, this function moves upwards
   //through the heap swapping elements until the heap is ordered
-  void ReorderUpwards(std::vector<T>& heap, int nd)
+  void reorderUpwards(std::vector<T>& heap, int nd)
   {
     //move up the heap swapping the elements until the heap is ordered
     while ( (nd>1) && (heap[nd/2] > heap[nd]))
     {
-      Swap(heap[nd/2], heap[nd]);
+      swap(heap[nd/2], heap[nd]);
 
       nd /= 2;
     }
@@ -208,16 +208,16 @@ private:
   //reorders the elements in a top down fashion by moving down the heap
   //and swapping the current node with the smaller of its two children
   //(provided a child is larger than the current node)
-  void ReorderDownwards(std::vector<T>& heap, int nd, int HeapSize)
+  void reorderDownwards(std::vector<T>& heap, int nd, int heapSize)
   {
     //move down the heap from node nd swapping the elements until
     //the heap is reordered
-    while (2*nd <= HeapSize)
+    while (2*nd <= heapSize)
     {
      int child = 2 * nd;
 
       //set child to largest of nd's two children
-      if ( (child < HeapSize) && (heap[child] > heap[child+1]) )
+      if ( (child < heapSize) && (heap[child] > heap[child+1]) )
      {
         ++child;
       }
@@ -225,12 +225,12 @@ private:
       //if this nd is smaller than its child, swap
       if (heap[nd] > heap[child])
       {
-        Swap(heap[child], heap[nd]);
+        swap(heap[child], heap[nd]);
 
         //move the current node down the tree
         nd = child;
       }
-  
+
       else
       {
         break;
@@ -240,44 +240,44 @@ private:
 
 public:
 
-  PriorityQLow(int MaxSize):m_iMaxSize(MaxSize), m_iSize(0)
+  PriorityQLow(int maxSize):mMaxSize(maxSize), mSize(0)
   {
-    m_Heap.assign(MaxSize+1, T());
+    mHeap.assign(maxSize+1, T());
   }
 
-  bool empty()const{return (m_iSize==0);}
+  bool empty()const{return (mSize==0);}
 
   //to insert an item into the queue it gets added to the end of the heap
   //and then the heap is reordered
   void insert(const T item)
   {
-    assert (m_iSize+1 <= m_iMaxSize);
+    assert (mSize+1 <= mMaxSize);
 
-    ++m_iSize;
+    ++mSize;
 
-    m_Heap[m_iSize] = item;
+    mHeap[mSize] = item;
 
-    ReorderUpwards(m_Heap, m_iSize);
+    reorderUpwards(mHeap, mSize);
   }
 
   //to get the max item the first element is exchanged with the lowest
-  //in the heap and then the heap is reordered from the top down. 
+  //in the heap and then the heap is reordered from the top down.
   T pop()
   {
-    Swap(m_Heap[1], m_Heap[m_iSize]);
+    swap(mHeap[1], mHeap[mSize]);
 
-    ReorderDownwards(m_Heap, 1, m_iSize-1);
+    reorderDownwards(mHeap, 1, mSize-1);
 
-    return m_Heap[m_iSize--];
+    return mHeap[mSize--];
   }
 
   //so we can take a peek at the first in line
-  const T& peek()const{return m_Heap[1];}
+  const T& peek()const{return mHeap[1];}
 };
 
 //----------------------- IndexedPriorityQLow ---------------------------
 //
-//  Priority queue based on an index into a set of keys. The queue is
+//  priority queue based on an index into a set of keys. The queue is
 //  maintained as a 2-way heap.
 //
 //  The priority in this implementation is the lowest valued key
@@ -287,52 +287,52 @@ class IndexedPriorityQLow
 {
 private:
 
-  std::vector<KeyType>&  m_vecKeys;
+  std::vector<KeyType>&  mKeys;
 
-  std::vector<int>       m_Heap;
- 
-  std::vector<int>       m_invHeap;
+  std::vector<int>       mHeap;
 
-  int                    m_iSize,
-                         m_iMaxSize;
+  std::vector<int>       mInverseHeap;
 
-  void Swap(int a, int b)
+  int                    mSize,
+                         mMaxSize;
+
+  void swap(int a, int b)
   {
-    int temp = m_Heap[a]; m_Heap[a] = m_Heap[b]; m_Heap[b] = temp;
+    int temp = mHeap[a]; mHeap[a] = mHeap[b]; mHeap[b] = temp;
 
     //change the handles too
-    m_invHeap[m_Heap[a]] = a; m_invHeap[m_Heap[b]] = b;
+    mInverseHeap[mHeap[a]] = a; mInverseHeap[mHeap[b]] = b;
   }
 
-  void ReorderUpwards(int nd)
+  void reorderUpwards(int nd)
   {
     //move up the heap swapping the elements until the heap is ordered
-    while ( (nd>1) && (m_vecKeys[m_Heap[nd/2]] > m_vecKeys[m_Heap[nd]]) )
-    {      
-      Swap(nd/2, nd);
+    while ( (nd>1) && (mKeys[mHeap[nd/2]] > mKeys[mHeap[nd]]) )
+    {
+      swap(nd/2, nd);
 
       nd /= 2;
     }
   }
 
-  void ReorderDownwards(int nd, int HeapSize)
+  void reorderDownwards(int nd, int heapSize)
   {
     //move down the heap from node nd swapping the elements until
     //the heap is reordered
-    while (2*nd <= HeapSize)
+    while (2*nd <= heapSize)
     {
       int child = 2 * nd;
 
       //set child to smaller of nd's two children
-      if ((child < HeapSize) && (m_vecKeys[m_Heap[child]] > m_vecKeys[m_Heap[child+1]]))
+      if ((child < heapSize) && (mKeys[mHeap[child]] > mKeys[mHeap[child+1]]))
       {
         ++child;
       }
 
       //if this nd is larger than its child, swap
-      if (m_vecKeys[m_Heap[nd]] > m_vecKeys[m_Heap[child]])
+      if (mKeys[mHeap[nd]] > mKeys[mHeap[child]])
       {
-        Swap(child, nd);
+        swap(child, nd);
 
         //move the current node down the tree
         nd = child;
@@ -347,51 +347,51 @@ private:
 
 
 public:
-  
-  //you must pass the constructor a reference to the std::vector the PQ
+
+  //you must pass the function Object() { [native code] } a reference to the std::vector the PQ
   //will be indexing into and the maximum size of the queue.
   IndexedPriorityQLow(std::vector<KeyType>& keys,
-                      int              MaxSize):m_vecKeys(keys),
-                                                m_iMaxSize(MaxSize),
-                                                m_iSize(0)
+                      int              maxSize):mKeys(keys),
+                                                mMaxSize(maxSize),
+                                                mSize(0)
   {
-    m_Heap.assign(MaxSize+1, 0);
-    m_invHeap.assign(MaxSize+1, 0);
+    mHeap.assign(maxSize+1, 0);
+    mInverseHeap.assign(maxSize+1, 0);
   }
 
-  bool empty()const{return (m_iSize==0);}
+  bool empty()const{return (mSize==0);}
 
   //to insert an item into the queue it gets added to the end of the heap
   //and then the heap is reordered from the bottom up.
   void insert(const int idx)
   {
-    assert (m_iSize+1 <= m_iMaxSize);
+    assert (mSize+1 <= mMaxSize);
 
-    ++m_iSize;
+    ++mSize;
 
-    m_Heap[m_iSize] = idx;
+    mHeap[mSize] = idx;
 
-    m_invHeap[idx] = m_iSize;
+    mInverseHeap[idx] = mSize;
 
-    ReorderUpwards(m_iSize);
+    reorderUpwards(mSize);
   }
 
   //to get the min item the first element is exchanged with the lowest
-  //in the heap and then the heap is reordered from the top down. 
-  int Pop()
+  //in the heap and then the heap is reordered from the top down.
+  int pop()
   {
-    Swap(1, m_iSize);
+    swap(1, mSize);
 
-    ReorderDownwards(1, m_iSize-1);
+    reorderDownwards(1, mSize-1);
 
-    return m_Heap[m_iSize--];
+    return mHeap[mSize--];
   }
 
-  //if the value of one of the client key's changes then call this with 
+  //if the value of one of the client key's changes then call this with
   //the key's index to adjust the queue accordingly
-  void ChangePriority(const int idx)
+  void changePriority(const int idx)
   {
-    ReorderUpwards(m_invHeap[idx]);
+    reorderUpwards(mInverseHeap[idx]);
   }
 };
 

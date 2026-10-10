@@ -1,6 +1,6 @@
 #include "ParamLoader.h"
 
-ParamLoader* ParamLoader::Instance()
+ParamLoader* ParamLoader::instance()
 {
   static ParamLoader instance;
 

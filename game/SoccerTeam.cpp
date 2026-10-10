@@ -23,41 +23,41 @@ using std::vector;
 //----------------------------- ctor -------------------------------------
 //
 //------------------------------------------------------------------------
-SoccerTeam::SoccerTeam(Goal*        home_goal,
-                       Goal*        opponents_goal,
+SoccerTeam::SoccerTeam(Goal*        homeGoal,
+                       Goal*        opponentsGoal,
                        SoccerPitch* pitch,
-                       team_color   color):m_pOpponentsGoal(opponents_goal),
-                                           m_pHomeGoal(home_goal),
-                                           m_pOpponents(NULL),
-                                           m_pPitch(pitch),
-                                           m_Color(color),
-                                           m_dDistSqToBallOfClosestPlayer(0.0),
-                                           m_pSupportingPlayer(NULL),
-                                           m_pReceivingPlayer(NULL),
-                                           m_pControllingPlayer(NULL),
-                                           m_pPlayerClosestToBall(NULL)
+                       TeamColor   color):mOpponentsGoal(opponentsGoal),
+                                           mHomeGoal(homeGoal),
+                                           mOpponents(NULL),
+                                           mPitch(pitch),
+                                           mColor(color),
+                                           mDistSqToBallOfClosestPlayer(0.0),
+                                           mSupportingPlayer(NULL),
+                                           mReceivingPlayer(NULL),
+                                           mControllingPlayer(NULL),
+                                           mPlayerClosestToBall(NULL)
 {
   //setup the state machine
-  m_pStateMachine = new StateMachine<SoccerTeam>(this);
+  mStateMachine = new StateMachine<SoccerTeam>(this);
 
-  m_pStateMachine->SetCurrentState(Defending::Instance());
-  m_pStateMachine->SetPreviousState(Defending::Instance());
-  m_pStateMachine->SetGlobalState(NULL);
+  mStateMachine->setCurrentState(Defending::instance());
+  mStateMachine->setPreviousState(Defending::instance());
+  mStateMachine->setGlobalState(NULL);
 
   //create the players and goalkeeper
-  CreatePlayers();
-  
-  //set default steering behaviors
-  std::vector<EntityPlayer*>::iterator it = m_Players.begin();
+  createPlayers();
 
-  for (it; it != m_Players.end(); ++it)
+  //set default steering behaviors
+  std::vector<EntityPlayer*>::iterator it = mPlayers.begin();
+
+  for (it; it != mPlayers.end(); ++it)
   {
-    (*it)->Steering()->SeparationOn();   
+    (*it)->steering()->separationOn();
   }
 
   //create the sweet spot calculator
-  m_pSupportSpotCalc = new SupportSpotCalculator(Prm.NumSupportSpotsX,
-                                                 Prm.NumSupportSpotsY,
+  mSupportSpotCalc = new SupportSpotCalculator(prm.numSupportSpotsX,
+                                                 prm.numSupportSpotsY,
                                                  this);
 }
 
@@ -66,163 +66,163 @@ SoccerTeam::SoccerTeam(Goal*        home_goal,
 //------------------------------------------------------------------------
 SoccerTeam::~SoccerTeam()
 {
-  delete m_pStateMachine;
+  delete mStateMachine;
 
-  std::vector<EntityPlayer*>::iterator it = m_Players.begin();
-  for (it; it != m_Players.end(); ++it)
+  std::vector<EntityPlayer*>::iterator it = mPlayers.begin();
+  for (it; it != mPlayers.end(); ++it)
   {
     delete *it;
   }
 
-  delete m_pSupportSpotCalc;
+  delete mSupportSpotCalc;
 }
 
 //-------------------------- update --------------------------------------
 //
-//  iterates through each player's update function and calculates 
+//  iterates through each player's update function and calculates
 //  frequently accessed info
 //------------------------------------------------------------------------
-void SoccerTeam::Update()
+void SoccerTeam::update()
 {
-  //this information is used frequently so it's more efficient to 
+  //this information is used frequently so it's more efficient to
   //calculate it just once each frame
-  CalculateClosestPlayerToBall();
+  calculateClosestPlayerToBall();
 
   //the team state machine switches between attack/defense behavior. It
   //also handles the 'kick off' state where a team must return to their
   //kick off positions before the whistle is blown
-  m_pStateMachine->Update();
-  
-  //now update each player
-  std::vector<EntityPlayer*>::iterator it = m_Players.begin();
+  mStateMachine->update();
 
-  for (it; it != m_Players.end(); ++it)
+  //now update each player
+  std::vector<EntityPlayer*>::iterator it = mPlayers.begin();
+
+  for (it; it != mPlayers.end(); ++it)
   {
-    (*it)->Update();
+    (*it)->update();
   }
 
 }
 
 
-//------------------------ CalculateClosestPlayerToBall ------------------
+//------------------------ calculateClosestPlayerToBall ------------------
 //
 //  sets m_iClosestPlayerToBall to the player closest to the ball
 //------------------------------------------------------------------------
-void SoccerTeam::CalculateClosestPlayerToBall()
+void SoccerTeam::calculateClosestPlayerToBall()
 {
-  double ClosestSoFar = MaxFloat;
+  double closestSoFar = maxFloat;
 
-  std::vector<EntityPlayer*>::iterator it = m_Players.begin();
+  std::vector<EntityPlayer*>::iterator it = mPlayers.begin();
 
-  for (it; it != m_Players.end(); ++it)
+  for (it; it != mPlayers.end(); ++it)
   {
     //calculate the dist. Use the squared value to avoid sqrt
-    double dist = Vec2DDistanceSq((*it)->Pos(), Pitch()->Ball()->Pos());
+    double dist = vec2DDistanceSq((*it)->pos(), pitch()->ball()->pos());
 
     //keep a record of this value for each player
-    (*it)->SetDistSqToBall(dist);
-    
-    if (dist < ClosestSoFar)
-    {
-      ClosestSoFar = dist;
+    (*it)->setDistSqToBall(dist);
 
-      m_pPlayerClosestToBall = *it;
+    if (dist < closestSoFar)
+    {
+      closestSoFar = dist;
+
+      mPlayerClosestToBall = *it;
     }
   }
 
-  m_dDistSqToBallOfClosestPlayer = ClosestSoFar;
+  mDistSqToBallOfClosestPlayer = closestSoFar;
 }
 
 
-//------------- DetermineBestSupportingAttacker ------------------------
+//------------- determineBestSupportingAttacker ------------------------
 //
 // calculate the closest player to the SupportSpot
 //------------------------------------------------------------------------
-EntityPlayer* SoccerTeam::DetermineBestSupportingAttacker()
+EntityPlayer* SoccerTeam::determineBestSupportingAttacker()
 {
-  double ClosestSoFar = MaxFloat;
+  double closestSoFar = maxFloat;
 
-  EntityPlayer* BestPlayer = NULL;
+  EntityPlayer* bestPlayer = NULL;
 
-  std::vector<EntityPlayer*>::iterator it = m_Players.begin();
+  std::vector<EntityPlayer*>::iterator it = mPlayers.begin();
 
-  for (it; it != m_Players.end(); ++it)
+  for (it; it != mPlayers.end(); ++it)
   {
     //only attackers utilize the BestSupportingSpot
-    if ( ((*it)->Role() == EntityPlayer::attacker) && ((*it) != m_pControllingPlayer) )
+    if ( ((*it)->role() == EntityPlayer::attacker) && ((*it) != mControllingPlayer) )
     {
       //calculate the dist. Use the squared value to avoid sqrt
-      double dist = Vec2DDistanceSq((*it)->Pos(), m_pSupportSpotCalc->GetBestSupportingSpot());
-    
+      double dist = vec2DDistanceSq((*it)->pos(), mSupportSpotCalc->getBestSupportingSpot());
+
       //if the distance is the closest so far and the player is not a
       //goalkeeper and the player is not the one currently controlling
       //the ball, keep a record of this player
-      if ((dist < ClosestSoFar) )
+      if ((dist < closestSoFar) )
       {
-        ClosestSoFar = dist;
+        closestSoFar = dist;
 
-        BestPlayer = (*it);
+        bestPlayer = (*it);
       }
     }
   }
 
-  return BestPlayer;
+  return bestPlayer;
 }
 
-//-------------------------- FindPass ------------------------------
+//-------------------------- findPass ------------------------------
 //
-//  The best pass is considered to be the pass that cannot be intercepted 
+//  The best pass is considered to be the pass that cannot be intercepted
 //  by an opponent and that is as far forward of the receiver as possible
 //------------------------------------------------------------------------
-bool SoccerTeam::FindPass(const EntityPlayer*const passer,
+bool SoccerTeam::findPass(const EntityPlayer*const passer,
                          EntityPlayer*&           receiver,
-                         Vector2D&              PassTarget,
+                         Vector2D&              passTarget,
                          double                  power,
-                         double                  MinPassingDistance)const
-{  
-  
-  std::vector<EntityPlayer*>::const_iterator curPlyr = Members().begin();
+                         double                  minPassingDistance)const
+{
 
-  double    ClosestToGoalSoFar = MaxFloat;
-  Vector2D Target;
+  std::vector<EntityPlayer*>::const_iterator curPlyr = members().begin();
+
+  double    closestToGoalSoFar = maxFloat;
+  Vector2D target;
 
   //iterate through all this player's team members and calculate which
-  //one is in a position to be passed the ball 
-  for (curPlyr; curPlyr != Members().end(); ++curPlyr)
-  {   
+  //one is in a position to be passed the ball
+  for (curPlyr; curPlyr != members().end(); ++curPlyr)
+  {
     //make sure the potential receiver being examined is not this player
     //and that it is further away than the minimum pass distance
-    if ( (*curPlyr != passer) &&            
-        (Vec2DDistanceSq(passer->Pos(), (*curPlyr)->Pos()) > 
-         MinPassingDistance*MinPassingDistance))                  
-    {           
-      if (GetBestPassToReceiver(passer, *curPlyr, Target, power))
+    if ( (*curPlyr != passer) &&
+        (vec2DDistanceSq(passer->pos(), (*curPlyr)->pos()) >
+         minPassingDistance*minPassingDistance))
+    {
+      if (getBestPassToReceiver(passer, *curPlyr, target, power))
       {
         //if the pass target is the closest to the opponent's goal line found
         // so far, keep a record of it
-        double Dist2Goal = fabs(Target.x - OpponentsGoal()->Center().x);
+        double dist2Goal = fabs(target.x - opponentsGoal()->center().x);
 
-        if (Dist2Goal < ClosestToGoalSoFar)
+        if (dist2Goal < closestToGoalSoFar)
         {
-          ClosestToGoalSoFar = Dist2Goal;
-          
+          closestToGoalSoFar = dist2Goal;
+
           //keep a record of this player
           receiver = *curPlyr;
 
           //and the target
-          PassTarget = Target;
-        }     
+          passTarget = target;
+        }
       }
     }
   }//next team member
 
   if (receiver) return true;
- 
+
   else return false;
 }
 
 
-//---------------------- GetBestPassToReceiver ---------------------------
+//---------------------- getBestPassToReceiver ---------------------------
 //
 //  Three potential passes are calculated. One directly toward the receiver's
 //  current position and two that are the tangents from the ball position
@@ -230,18 +230,18 @@ bool SoccerTeam::FindPass(const EntityPlayer*const passer,
 //  These passes are then tested to see if they can be intercepted by an
 //  opponent and to make sure they terminate within the playing area. If
 //  all the passes are invalidated the function returns false. Otherwise
-//  the function returns the pass that takes the ball closest to the 
+//  the function returns the pass that takes the ball closest to the
 //  opponent's goal area.
 //------------------------------------------------------------------------
-bool SoccerTeam::GetBestPassToReceiver(const EntityPlayer* const passer,
+bool SoccerTeam::getBestPassToReceiver(const EntityPlayer* const passer,
                                        const EntityPlayer* const receiver,
-                                       Vector2D&               PassTarget,
+                                       Vector2D&               passTarget,
                                        double                   power)const
-{  
-  //first, calculate how much time it will take for the ball to reach 
-  //this receiver, if the receiver was to remain motionless 
-  double time = Pitch()->Ball()->TimeToCoverDistance(Pitch()->Ball()->Pos(),
-                                                    receiver->Pos(),
+{
+  //first, calculate how much time it will take for the ball to reach
+  //this receiver, if the receiver was to remain motionless
+  double time = pitch()->ball()->timeToCoverDistance(pitch()->ball()->pos(),
+                                                    receiver->pos(),
                                                     power);
 
   //return false if ball cannot reach the receiver after having been
@@ -249,26 +249,26 @@ bool SoccerTeam::GetBestPassToReceiver(const EntityPlayer* const passer,
   if (time < 0) return false;
 
   //the maximum distance the receiver can cover in this time
-  double InterceptRange = time * receiver->MaxSpeed();
-  
-  //Scale the intercept range
-  const double ScalingFactor = 0.3;
-  InterceptRange *= ScalingFactor;
+  double interceptRange = time * receiver->maxSpeed();
+
+  //scale the intercept range
+  const double scalingFactor = 0.3;
+  interceptRange *= scalingFactor;
 
   //now calculate the pass targets which are positioned at the intercepts
   //of the tangents from the ball to the receiver's range circle.
   Vector2D ip1, ip2;
 
-  GetTangentPoints(receiver->Pos(),
-                   InterceptRange,
-                   Pitch()->Ball()->Pos(),
+  getTangentPoints(receiver->pos(),
+                   interceptRange,
+                   pitch()->ball()->pos(),
                    ip1,
                    ip2);
- 
-  const int NumPassesToTry = 3;
-  Vector2D Passes[NumPassesToTry] = {ip1, receiver->Pos(), ip2};
-  
-  
+
+  const int numPassesToTry = 3;
+  Vector2D passes[numPassesToTry] = {ip1, receiver->pos(), ip2};
+
+
   // this pass is the best found so far if it is:
   //
   //  1. Further upfield than the closest valid pass for this receiver
@@ -276,23 +276,23 @@ bool SoccerTeam::GetBestPassToReceiver(const EntityPlayer* const passer,
   //  2. Within the playing area
   //  3. Cannot be intercepted by any opponents
 
-  double ClosestSoFar = MaxFloat;
+  double closestSoFar = maxFloat;
   bool  bResult      = false;
 
-  for (int pass=0; pass<NumPassesToTry; ++pass)
-  {    
-    double dist = fabs(Passes[pass].x - OpponentsGoal()->Center().x);
+  for (int pass=0; pass<numPassesToTry; ++pass)
+  {
+    double dist = fabs(passes[pass].x - opponentsGoal()->center().x);
 
-    if (( dist < ClosestSoFar) &&
-        Pitch()->PlayingArea()->Inside(Passes[pass]) &&
-        isPassSafeFromAllOpponents(Pitch()->Ball()->Pos(),
-                                   Passes[pass],
+    if (( dist < closestSoFar) &&
+        pitch()->playingArea()->inside(passes[pass]) &&
+        isPassSafeFromAllOpponents(pitch()->ball()->pos(),
+                                   passes[pass],
                                    receiver,
                                    power))
-        
+
     {
-      ClosestSoFar = dist;
-      PassTarget   = Passes[pass];
+      closestSoFar = dist;
+      passTarget   = passes[pass];
       bResult      = true;
     }
   }
@@ -309,33 +309,33 @@ bool SoccerTeam::isPassSafeFromOpponent(Vector2D    from,
                                         Vector2D    target,
                                         const EntityPlayer* const receiver,
                                         const EntityPlayer* const opp,
-                                        double       PassingForce)const
+                                        double       passingForce)const
 {
   //move the opponent into local space.
-  Vector2D ToTarget = target - from;
-  Vector2D ToTargetNormalized = Vec2DNormalize(ToTarget);
+  Vector2D toTarget = target - from;
+  Vector2D toTargetNormalized = vec2DNormalize(toTarget);
 
-  Vector2D LocalPosOpp = PointToLocalSpace(opp->Pos(),
-                                         ToTargetNormalized,
-                                         ToTargetNormalized.Perp(),
+  Vector2D localPosOpp = pointToLocalSpace(opp->pos(),
+                                         toTargetNormalized,
+                                         toTargetNormalized.perp(),
                                          from);
 
-  //if opponent is behind the kicker then pass is considered okay(this is 
-  //based on the assumption that the ball is going to be kicked with a 
+  //if opponent is behind the kicker then pass is considered okay(this is
+  //based on the assumption that the ball is going to be kicked with a
   //velocity greater than the opponent's max velocity)
-  if ( LocalPosOpp.x < 0 )
-  {     
+  if ( localPosOpp.x < 0 )
+  {
     return true;
   }
-  
+
   //if the opponent is further away than the target we need to consider if
   //the opponent can reach the position before the receiver.
-  if (Vec2DDistanceSq(from, target) < Vec2DDistanceSq(opp->Pos(), from))
+  if (vec2DDistanceSq(from, target) < vec2DDistanceSq(opp->pos(), from))
   {
     if (receiver)
     {
-      if ( Vec2DDistanceSq(target, opp->Pos())  > 
-           Vec2DDistanceSq(target, receiver->Pos()) )
+      if ( vec2DDistanceSq(target, opp->pos())  >
+           vec2DDistanceSq(target, receiver->pos()) )
       {
         return true;
       }
@@ -350,25 +350,25 @@ bool SoccerTeam::isPassSafeFromOpponent(Vector2D    from,
     else
     {
       return true;
-    } 
+    }
   }
-  
-  //calculate how long it takes the ball to cover the distance to the 
+
+  //calculate how long it takes the ball to cover the distance to the
   //position orthogonal to the opponents position
-  double TimeForBall = 
-  Pitch()->Ball()->TimeToCoverDistance(Vector2D(0,0),
-                                       Vector2D(LocalPosOpp.x, 0),
-                                       PassingForce);
+  double timeForBall =
+  pitch()->ball()->timeToCoverDistance(Vector2D(0,0),
+                                       Vector2D(localPosOpp.x, 0),
+                                       passingForce);
 
   //now calculate how far the opponent can run in this time
-  double reach = opp->MaxSpeed() * TimeForBall +
-                Pitch()->Ball()->BRadius()+
-                opp->BRadius();
+  double reach = opp->maxSpeed() * timeForBall +
+                pitch()->ball()->boundingRadius()+
+                opp->boundingRadius();
 
   //if the distance to the opponent's y position is less than his running
   //range plus the radius of the ball and the opponents radius then the
   //ball can be intercepted
-  if ( fabs(LocalPosOpp.y) < reach )
+  if ( fabs(localPosOpp.y) < reach )
   {
     return false;
   }
@@ -385,16 +385,16 @@ bool SoccerTeam::isPassSafeFromOpponent(Vector2D    from,
 bool SoccerTeam::isPassSafeFromAllOpponents(Vector2D                from,
                                             Vector2D                target,
                                             const EntityPlayer* const receiver,
-                                            double     PassingForce)const
+                                            double     passingForce)const
 {
-  std::vector<EntityPlayer*>::const_iterator opp = Opponents()->Members().begin();
+  std::vector<EntityPlayer*>::const_iterator opp = opponents()->members().begin();
 
-  for (opp; opp != Opponents()->Members().end(); ++opp)
+  for (opp; opp != opponents()->members().end(); ++opp)
   {
-    if (!isPassSafeFromOpponent(from, target, receiver, *opp, PassingForce))
+    if (!isPassSafeFromOpponent(from, target, receiver, *opp, passingForce))
     {
-      debug_on
-        
+      debugOn
+
       return false;
     }
   }
@@ -402,239 +402,239 @@ bool SoccerTeam::isPassSafeFromAllOpponents(Vector2D                from,
   return true;
 }
 
-//------------------------ CanShoot --------------------------------------
+//------------------------ canShoot --------------------------------------
 //
 //  Given a ball position, a kicking power and a reference to a vector2D
 //  this function will sample random positions along the opponent's goal-
 //  mouth and check to see if a goal can be scored if the ball was to be
-//  kicked in that direction with the given power. If a possible shot is 
-//  found, the function will immediately return true, with the target 
-//  position stored in the vector ShotTarget.
+//  kicked in that direction with the given power. If a possible shot is
+//  found, the function will immediately return true, with the target
+//  position stored in the vector shotTarget.
 //------------------------------------------------------------------------
-bool SoccerTeam::CanShoot(Vector2D  BallPos,
-                          double     power, 
-                          Vector2D  ShotTarget)const
+bool SoccerTeam::canShoot(Vector2D  ballPos,
+                          double     power,
+                          Vector2D  shotTarget)const
 {
-  //the number of randomly created shot targets this method will test 
-  int NumAttempts = Prm.NumAttemptsToFindValidStrike;
+  //the number of randomly created shot targets this method will test
+  int numAttempts = prm.numAttemptsToFindValidStrike;
 
-  while (NumAttempts--)
+  while (numAttempts--)
   {
     //choose a random position along the opponent's goal mouth. (making
     //sure the ball's radius is taken into account)
-    ShotTarget = OpponentsGoal()->Center();
+    shotTarget = opponentsGoal()->center();
 
     //the y value of the shot position should lay somewhere between two
     //goalposts (taking into consideration the ball diameter)
-    int MinYVal = OpponentsGoal()->LeftPost().y + Pitch()->Ball()->BRadius();
-    int MaxYVal = OpponentsGoal()->RightPost().y - Pitch()->Ball()->BRadius();
+    int minYVal = opponentsGoal()->leftPost().y + pitch()->ball()->boundingRadius();
+    int maxYVal = opponentsGoal()->rightPost().y - pitch()->ball()->boundingRadius();
 
-    ShotTarget.y = (double)RandInt(MinYVal, MaxYVal);
+    shotTarget.y = (double)randInt(minYVal, maxYVal);
 
     //make sure striking the ball with the given power is enough to drive
     //the ball over the goal line.
-    double time = Pitch()->Ball()->TimeToCoverDistance(BallPos,
-                                                      ShotTarget,
+    double time = pitch()->ball()->timeToCoverDistance(ballPos,
+                                                      shotTarget,
                                                       power);
-    
+
     //if it is, this shot is then tested to see if any of the opponents
     //can intercept it.
     if (time >= 0)
     {
-      if (isPassSafeFromAllOpponents(BallPos, ShotTarget, NULL, power))
+      if (isPassSafeFromAllOpponents(ballPos, shotTarget, NULL, power))
       {
         return true;
       }
     }
   }
-  
+
   return false;
 }
 
- 
-//--------------------- ReturnAllEntityPlayerOnFieldsToHome ---------------------------
+
+//--------------------- returnAllEntityPlayerOnFieldsToHome ---------------------------
 //
 //  sends a message to all players to return to their home areas forthwith
 //------------------------------------------------------------------------
-void SoccerTeam::ReturnAllEntityPlayerOnFieldsToHome()const
+void SoccerTeam::returnAllEntityPlayerOnFieldsToHome()const
 {
-  std::vector<EntityPlayer*>::const_iterator it = m_Players.begin();
+  std::vector<EntityPlayer*>::const_iterator it = mPlayers.begin();
 
-  for (it; it != m_Players.end(); ++it)
+  for (it; it != mPlayers.end(); ++it)
   {
-    if ((*it)->Role() != EntityPlayer::goal_keeper)
+    if ((*it)->role() != EntityPlayer::goalKeeper)
     {
-      Dispatcher->DispatchMsg(SEND_MSG_IMMEDIATELY,
+      dispatcher->dispatchMsg(sendMsgImmediately,
                             1,
-                            (*it)->ID(),
-                            Msg_GoHome,
+                            (*it)->id(),
+                            msgGoHome,
                             NULL);
     }
   }
 }
 
 
-//--------------------------- Render -------------------------------------
+//--------------------------- render -------------------------------------
 //
 //  renders the players and any team related info
 //------------------------------------------------------------------------
-void SoccerTeam::Render()const
+void SoccerTeam::render()const
 {
-  std::vector<EntityPlayer*>::const_iterator it = m_Players.begin();
+  std::vector<EntityPlayer*>::const_iterator it = mPlayers.begin();
 
-  for (it; it != m_Players.end(); ++it)
+  for (it; it != mPlayers.end(); ++it)
   {
-    (*it)->Render();
+    (*it)->render();
   }
 
   //show the controlling team and player at the top of the display
-  if (Prm.bShowControllingTeam)
+  if (prm.bShowControllingTeam)
   {
-    gdi->TextColor(Cgdi::white);
-    
-    if ( (Color() == blue) && InControl())
+    gdi->textColor(Cgdi::white);
+
+    if ( (color() == blue) && inControl())
     {
-      gdi->TextAtPos(20,3,"Blue in Control");
+      gdi->textAtPos(20,3,"Blue in Control");
     }
-    else if ( (Color() == red) && InControl())
+    else if ( (color() == red) && inControl())
     {
-      gdi->TextAtPos(20,3,"Red in Control");
+      gdi->textAtPos(20,3,"Red in Control");
     }
-    if (m_pControllingPlayer != NULL)
+    if (mControllingPlayer != NULL)
     {
-      gdi->TextAtPos(Pitch()->cxClient()-150, 3, "Controlling Player: " + ttos(m_pControllingPlayer->ID()));
+      gdi->textAtPos(pitch()->cxClient()-150, 3, "Controlling Player: " + ttos(mControllingPlayer->id()));
     }
   }
 
   //render the sweet spots
-  if (Prm.bSupportSpots && InControl())
+  if (prm.bSupportSpots && inControl())
   {
-    m_pSupportSpotCalc->Render();
+    mSupportSpotCalc->render();
   }
 
 //#define SHOW_TEAM_STATE
 #ifdef SHOW_TEAM_STATE
-  if (Color() == red)
+  if (color() == red)
   {
-    gdi->TextColor(Cgdi::white);
+    gdi->textColor(Cgdi::white);
 
-    if (CurrentState() == Attacking::Instance())
+    if (currentState() == Attacking::instance())
     {
-      gdi->TextAtPos(160, 20, "Attacking");
+      gdi->textAtPos(160, 20, "Attacking");
     }
-    if (CurrentState() == Defending::Instance())
+    if (currentState() == Defending::instance())
     {
-      gdi->TextAtPos(160, 20, "Defending");
+      gdi->textAtPos(160, 20, "Defending");
     }
-    if (CurrentState() == PrepareForKickOff::Instance())
+    if (currentState() == PrepareForKickOff::instance())
     {
-      gdi->TextAtPos(160, 20, "Kickoff");
+      gdi->textAtPos(160, 20, "Kickoff");
     }
   }
   else
   {
-    if (CurrentState() == Attacking::Instance())
+    if (currentState() == Attacking::instance())
     {
-      gdi->TextAtPos(160, Pitch()->cyClient()-40, "Attacking");
+      gdi->textAtPos(160, pitch()->cyClient()-40, "Attacking");
     }
-    if (CurrentState() == Defending::Instance())
+    if (currentState() == Defending::instance())
     {
-      gdi->TextAtPos(160, Pitch()->cyClient()-40, "Defending");
+      gdi->textAtPos(160, pitch()->cyClient()-40, "Defending");
     }
-    if (CurrentState() == PrepareForKickOff::Instance())
+    if (currentState() == PrepareForKickOff::instance())
     {
-      gdi->TextAtPos(160, Pitch()->cyClient()-40, "Kickoff");
+      gdi->textAtPos(160, pitch()->cyClient()-40, "Kickoff");
     }
   }
 #endif
 
 //#define SHOW_SUPPORTING_PLAYERS_TARGET
 #ifdef SHOW_SUPPORTING_PLAYERS_TARGET
-  if (m_pSupportingPlayer)
+  if (mSupportingPlayer)
   {
-    gdi->BlueBrush();
-    gdi->RedPen();
-    gdi->Circle(m_pSupportingPlayer->Steering()->Target(), 4);
+    gdi->blueBrush();
+    gdi->redPen();
+    gdi->circle(mSupportingPlayer->steering()->target(), 4);
 
   }
 #endif
 
 }
 
-//------------------------- CreatePlayers --------------------------------
+//------------------------- createPlayers --------------------------------
 //
 //  creates the players
 //------------------------------------------------------------------------
-void SoccerTeam::CreatePlayers()
+void SoccerTeam::createPlayers()
 {
-  if (Color() == blue)
+  if (color() == blue)
   {
     //goalkeeper
-    m_Players.push_back(new EntityPlayerGoalKeeper(this,
+    mPlayers.push_back(new EntityPlayerGoalKeeper(this,
                                1,
-                               TendGoal::Instance(),
+                               TendGoal::instance(),
                                Vector2D(0,1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale));
- 
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale));
+
     //create the players
-    m_Players.push_back(new EntityPlayerOnField(this,
+    mPlayers.push_back(new EntityPlayerOnField(this,
                                6,
-                               Wait::Instance(),
+                               Wait::instance(),
                                Vector2D(0,1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale,
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale,
                                EntityPlayer::attacker));
 
 
 
-        m_Players.push_back(new EntityPlayerOnField(this,
+        mPlayers.push_back(new EntityPlayerOnField(this,
                                8,
-                               Wait::Instance(),
+                               Wait::instance(),
                                Vector2D(0,1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale,
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale,
                                EntityPlayer::attacker));
 
 
- 
 
 
-        m_Players.push_back(new EntityPlayerOnField(this,
+
+        mPlayers.push_back(new EntityPlayerOnField(this,
                                3,
-                               Wait::Instance(),
+                               Wait::instance(),
                                Vector2D(0,1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale,
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale,
                                EntityPlayer::defender));
 
 
-        m_Players.push_back(new EntityPlayerOnField(this,
+        mPlayers.push_back(new EntityPlayerOnField(this,
                                5,
-                               Wait::Instance(),
+                               Wait::instance(),
                                Vector2D(0,1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale,
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale,
                               EntityPlayer::defender));
 
   }
@@ -643,138 +643,138 @@ void SoccerTeam::CreatePlayers()
   {
 
      //goalkeeper
-    m_Players.push_back(new EntityPlayerGoalKeeper(this,
+    mPlayers.push_back(new EntityPlayerGoalKeeper(this,
                                16,
-                               TendGoal::Instance(),
+                               TendGoal::instance(),
                                Vector2D(0,-1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale));
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale));
 
 
     //create the players
-    m_Players.push_back(new EntityPlayerOnField(this,
+    mPlayers.push_back(new EntityPlayerOnField(this,
                                9,
-                               Wait::Instance(),
+                               Wait::instance(),
                                Vector2D(0,-1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale,
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale,
                                EntityPlayer::attacker));
 
-    m_Players.push_back(new EntityPlayerOnField(this,
+    mPlayers.push_back(new EntityPlayerOnField(this,
                                11,
-                               Wait::Instance(),
+                               Wait::instance(),
                                Vector2D(0,-1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale,
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale,
                                EntityPlayer::attacker));
 
 
- 
-    m_Players.push_back(new EntityPlayerOnField(this,
+
+    mPlayers.push_back(new EntityPlayerOnField(this,
                                12,
-                               Wait::Instance(),
+                               Wait::instance(),
                                Vector2D(0,-1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale,
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale,
                                EntityPlayer::defender));
 
 
-    m_Players.push_back(new EntityPlayerOnField(this,
+    mPlayers.push_back(new EntityPlayerOnField(this,
                                14,
-                               Wait::Instance(),
+                               Wait::instance(),
                                Vector2D(0,-1),
                                Vector2D(0.0, 0.0),
-                               Prm.PlayerMass,
-                               Prm.PlayerMaxForce,
-                               Prm.PlayerMaxSpeedWithoutBall,
-                               Prm.PlayerMaxTurnRate,
-                               Prm.PlayerScale,
+                               prm.playerMass,
+                               prm.playerMaxForce,
+                               prm.playerMaxSpeedWithoutBall,
+                               prm.playerMaxTurnRate,
+                               prm.playerScale,
                                EntityPlayer::defender));
-                      
+
   }
 
   //register the players with the entity manager
-  std::vector<EntityPlayer*>::iterator it = m_Players.begin();
+  std::vector<EntityPlayer*>::iterator it = mPlayers.begin();
 
-  for (it; it != m_Players.end(); ++it)
+  for (it; it != mPlayers.end(); ++it)
   {
-    EntityMgr->RegisterEntity(*it);
+    entityMgr->registerEntity(*it);
   }
 }
 
 
-EntityPlayer* SoccerTeam::GetPlayerFromID(int id)const
+EntityPlayer* SoccerTeam::getPlayerFromId(int id)const
 {
-  std::vector<EntityPlayer*>::const_iterator it = m_Players.begin();
+  std::vector<EntityPlayer*>::const_iterator it = mPlayers.begin();
 
-  for (it; it != m_Players.end(); ++it)
+  for (it; it != mPlayers.end(); ++it)
   {
-    if ((*it)->ID() == id) return *it;
+    if ((*it)->id() == id) return *it;
   }
 
   return NULL;
 }
 
 
-void SoccerTeam::SetPlayerHomeRegion(int plyr, int region)const
+void SoccerTeam::setPlayerHomeRegion(int plyr, int region)const
 {
-  assert ( (plyr>=0) && (plyr<m_Players.size()) );
+  assert ( (plyr>=0) && (plyr<mPlayers.size()) );
 
-  m_Players[plyr]->SetHomeRegion(region);
+  mPlayers[plyr]->setHomeRegion(region);
 }
 
 
-//---------------------- UpdateTargetsOfWaitingPlayers ------------------------
+//---------------------- updateTargetsOfWaitingPlayers ------------------------
 //
-//  
-void SoccerTeam::UpdateTargetsOfWaitingPlayers()const
+//
+void SoccerTeam::updateTargetsOfWaitingPlayers()const
 {
-  std::vector<EntityPlayer*>::const_iterator it = m_Players.begin();
+  std::vector<EntityPlayer*>::const_iterator it = mPlayers.begin();
 
-  for (it; it != m_Players.end(); ++it)
-  {  
-    if ( (*it)->Role() != EntityPlayer::goal_keeper )
+  for (it; it != mPlayers.end(); ++it)
+  {
+    if ( (*it)->role() != EntityPlayer::goalKeeper )
     {
       //cast to a field player
       EntityPlayerOnField* plyr = static_cast<EntityPlayerOnField*>(*it);
-      
-      if ( plyr->GetFSM()->isInState(*Wait::Instance()) ||
-           plyr->GetFSM()->isInState(*ReturnToHomeRegion::Instance()) )
+
+      if ( plyr->getFsm()->isInState(*Wait::instance()) ||
+           plyr->getFsm()->isInState(*ReturnToHomeRegion::instance()) )
       {
-        plyr->Steering()->SetTarget(plyr->HomeRegion()->Center());
+        plyr->steering()->setTarget(plyr->homeRegion()->center());
       }
     }
   }
 }
 
 
-//--------------------------- AllPlayersAtHome --------------------------------
+//--------------------------- allPlayersAtHome --------------------------------
 //
 //  returns false if any of the team are not located within their home region
 //-----------------------------------------------------------------------------
-bool SoccerTeam::AllPlayersAtHome()const
+bool SoccerTeam::allPlayersAtHome()const
 {
-  std::vector<EntityPlayer*>::const_iterator it = m_Players.begin();
+  std::vector<EntityPlayer*>::const_iterator it = mPlayers.begin();
 
-  for (it; it != m_Players.end(); ++it)
+  for (it; it != mPlayers.end(); ++it)
   {
-    if ((*it)->InHomeRegion() == false)
+    if ((*it)->inHomeRegion() == false)
     {
       return false;
     }
@@ -783,30 +783,30 @@ bool SoccerTeam::AllPlayersAtHome()const
   return true;
 }
 
-//------------------------- RequestPass ---------------------------------------
+//------------------------- requestPass ---------------------------------------
 //
 //  this tests to see if a pass is possible between the requester and
 //  the controlling player. If it is possible a message is sent to the
 //  controlling player to pass the ball asap.
 //-----------------------------------------------------------------------------
-void SoccerTeam::RequestPass(EntityPlayerOnField* requester)const
+void SoccerTeam::requestPass(EntityPlayerOnField* requester)const
 {
   //maybe put a restriction here
-  if (RandFloat() > 0.1) return;
-  
-  if (isPassSafeFromAllOpponents(ControllingPlayer()->Pos(),
-                                 requester->Pos(),
+  if (randFloat() > 0.1) return;
+
+  if (isPassSafeFromAllOpponents(controllingPlayer()->pos(),
+                                 requester->pos(),
                                  requester,
-                                 Prm.MaxPassingForce))
+                                 prm.maxPassingForce))
   {
 
     //tell the player to make the pass
-    //let the receiver know a pass is coming 
-    Dispatcher->DispatchMsg(SEND_MSG_IMMEDIATELY,
-                          requester->ID(),
-                          ControllingPlayer()->ID(),
-                          Msg_PassToMe,
-                          requester); 
+    //let the receiver know a pass is coming
+    dispatcher->dispatchMsg(sendMsgImmediately,
+                          requester->id(),
+                          controllingPlayer()->id(),
+                          msgPassToMe,
+                          requester);
 
   }
 }
@@ -819,12 +819,12 @@ void SoccerTeam::RequestPass(EntityPlayerOnField* requester)const
 //-----------------------------------------------------------------------------
 bool SoccerTeam::isOpponentWithinRadius(Vector2D pos, double rad)
 {
-  std::vector<EntityPlayer*>::const_iterator end = Opponents()->Members().end();
+  std::vector<EntityPlayer*>::const_iterator end = opponents()->members().end();
   std::vector<EntityPlayer*>::const_iterator it;
 
-  for (it=Opponents()->Members().begin(); it !=end; ++it)
+  for (it=opponents()->members().begin(); it !=end; ++it)
   {
-    if (Vec2DDistanceSq(pos, (*it)->Pos()) < rad*rad)
+    if (vec2DDistanceSq(pos, (*it)->pos()) < rad*rad)
     {
       return true;
     }

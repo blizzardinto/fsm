@@ -2,40 +2,40 @@
 #include "EntityBase.h"
 
 
-//--------------------------- Instance ----------------------------------------
+//--------------------------- instance ----------------------------------------
 //
 //   this class is a singleton
 //-----------------------------------------------------------------------------
-EntityManager* EntityManager::Instance()
+EntityManager* EntityManager::instance()
 {
   static EntityManager instance;
 
   return &instance;
 }
 
-//------------------------- GetEntityFromID -----------------------------------
+//------------------------- getEntityFromId -----------------------------------
 //-----------------------------------------------------------------------------
-EntityBase* EntityManager::GetEntityFromID(int id)const
+EntityBase* EntityManager::getEntityFromId(int id)const
 {
   //find the entity
-  EntityMap::const_iterator ent = m_EntityMap.find(id);
+  EntityMap::const_iterator ent = mEntityMap.find(id);
 
   //assert that the entity is a member of the map
-  assert ( (ent !=  m_EntityMap.end()) && "<EntityManager::GetEntityFromID>: invalid ID");
+  assert ( (ent !=  mEntityMap.end()) && "<EntityManager::GetEntityFromID>: invalid ID");
 
   return ent->second;
 }
 
-//--------------------------- RemoveEntity ------------------------------------
+//--------------------------- removeEntity ------------------------------------
 //-----------------------------------------------------------------------------
-void EntityManager::RemoveEntity(EntityBase* pEntity)
-{    
-  m_EntityMap.erase(m_EntityMap.find(pEntity->ID()));
-} 
-
-//---------------------------- RegisterEntity ---------------------------------
-//-----------------------------------------------------------------------------
-void EntityManager::RegisterEntity(EntityBase* NewEntity)
+void EntityManager::removeEntity(EntityBase* pEntity)
 {
-  m_EntityMap.insert(std::make_pair(NewEntity->ID(), NewEntity));
+  mEntityMap.erase(mEntityMap.find(pEntity->id()));
+}
+
+//---------------------------- registerEntity ---------------------------------
+//-----------------------------------------------------------------------------
+void EntityManager::registerEntity(EntityBase* newEntity)
+{
+  mEntityMap.insert(std::make_pair(newEntity->id(), newEntity));
 }

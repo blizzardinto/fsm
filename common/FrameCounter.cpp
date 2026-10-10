@@ -1,7 +1,7 @@
 #include "framecounter.h"
 
 
-FrameCounter* FrameCounter::Instance()
+FrameCounter* FrameCounter::instance()
 {
   static FrameCounter instance;
 

@@ -3,7 +3,7 @@
 #define FIELDPLAYER_H
 //------------------------------------------------------------------------
 //
-//  Name:   EntityPlayerOnField.h
+//  name:   EntityPlayerOnField.h
 //
 //  Desc:   Derived from a EntityPlayer, this class encapsulates a player
 //          capable of moving around a soccer pitch, kicking, dribbling,
@@ -36,40 +36,40 @@ class EntityPlayerOnField : public EntityPlayer
 private:
 
    //an instance of the state machine class
-  StateMachine<EntityPlayerOnField>*  m_pStateMachine;
-  
-  //limits the number of kicks a player may take per second
-  Regulator*                  m_pKickLimiter;
+  StateMachine<EntityPlayerOnField>*  mStateMachine;
 
-  
+  //limits the number of kicks a player may take per second
+  Regulator*                  mKickLimiter;
+
+
 public:
 
-  EntityPlayerOnField(SoccerTeam*    home_team,
-             int        home_region,
-             State<EntityPlayerOnField>* start_state,
+  EntityPlayerOnField(SoccerTeam*    homeTeam,
+             int        homeRegion,
+             State<EntityPlayerOnField>* startState,
              Vector2D  heading,
              Vector2D      velocity,
              double         mass,
-             double         max_force,
-             double         max_speed,
-             double         max_turn_rate,
+             double         maxForce,
+             double         maxSpeed,
+             double         maxTurnRate,
              double         scale,
-             player_role    role);   
-  
+             PlayerRole    role);
+
   ~EntityPlayerOnField();
 
   //call this to update the player's position and orientation
-  void        Update();   
+  void        update();
 
-  void        Render();
+  void        render();
 
-  bool        HandleMessage(const Telegram& msg);
+  bool        handleMessage(const Telegram& msg);
 
-  StateMachine<EntityPlayerOnField>* GetFSM()const{return m_pStateMachine;}
+  StateMachine<EntityPlayerOnField>* getFsm()const{return mStateMachine;}
 
-  bool        isReadyForNextKick()const{return m_pKickLimiter->isReady();}
+  bool        isReadyForNextKick()const{return mKickLimiter->isReady();}
 
-         
+
 };
 
 

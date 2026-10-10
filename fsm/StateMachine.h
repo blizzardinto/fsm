@@ -3,9 +3,9 @@
 
 //------------------------------------------------------------------------
 //
-//  Name:   StateMachine.h
+//  name:   StateMachine.h
 //
-//  Desc:   State machine class. Inherit from this class and create some 
+//  Desc:   State machine class. Inherit from this class and create some
 //          states to give your agents FSM functionality
 //
 //  Author: Mat Buckland (fup@ai-junkie.com)
@@ -18,60 +18,60 @@
 #include "Telegram.h"
 
 
-template <class entity_type>
+template <class entityType>
 class StateMachine
 {
 private:
 
   //a pointer to the agent that owns this instance
-  entity_type*          m_pOwner;
+  entityType*          mOwner;
 
-  State<entity_type>*   m_pCurrentState;
-  
+  State<entityType>*   mCurrentState;
+
   //a record of the last state the agent was in
-  State<entity_type>*   m_pPreviousState;
+  State<entityType>*   mPreviousState;
 
   //this is called every time the FSM is updated
-  State<entity_type>*   m_pGlobalState;
-  
+  State<entityType>*   mGlobalState;
+
 
 public:
 
-  StateMachine(entity_type* owner):m_pOwner(owner),
-                                   m_pCurrentState(NULL),
-                                   m_pPreviousState(NULL),
-                                   m_pGlobalState(NULL)
+  StateMachine(entityType* owner):mOwner(owner),
+                                   mCurrentState(NULL),
+                                   mPreviousState(NULL),
+                                   mGlobalState(NULL)
   {}
 
   virtual ~StateMachine(){}
 
   //use these methods to initialize the FSM
-  void SetCurrentState(State<entity_type>* s){m_pCurrentState = s;}
-  void SetGlobalState(State<entity_type>* s) {m_pGlobalState = s;}
-  void SetPreviousState(State<entity_type>* s){m_pPreviousState = s;}
-  
+  void setCurrentState(State<entityType>* s){mCurrentState = s;}
+  void setGlobalState(State<entityType>* s) {mGlobalState = s;}
+  void setPreviousState(State<entityType>* s){mPreviousState = s;}
+
   //call this to update the FSM
-  void  Update()const
+  void  update()const
   {
     //if a global state exists, call its execute method, else do nothing
-    if(m_pGlobalState)   m_pGlobalState->Execute(m_pOwner);
+    if(mGlobalState)   mGlobalState->execute(mOwner);
 
     //same for the current state
-    if (m_pCurrentState) m_pCurrentState->Execute(m_pOwner);
+    if (mCurrentState) mCurrentState->execute(mOwner);
   }
 
-  bool  HandleMessage(const Telegram& msg)const
+  bool  handleMessage(const Telegram& msg)const
   {
     //first see if the current state is valid and that it can handle
     //the message
-    if (m_pCurrentState && m_pCurrentState->OnMessage(m_pOwner, msg))
+    if (mCurrentState && mCurrentState->onMessage(mOwner, msg))
     {
       return true;
     }
-  
-    //if not, and if a global state has been implemented, send 
+
+    //if not, and if a global state has been implemented, send
     //the message to the global state
-    if (m_pGlobalState && m_pGlobalState->OnMessage(m_pOwner, msg))
+    if (mGlobalState && mGlobalState->onMessage(mOwner, msg))
     {
       return true;
     }
@@ -80,45 +80,45 @@ public:
   }
 
   //change to a new state
-  void  ChangeState(State<entity_type>* pNewState)
+  void  changeState(State<entityType>* pNewState)
   {
     assert(pNewState && "<StateMachine::ChangeState>:trying to assign null state to current");
 
     //keep a record of the previous state
-    m_pPreviousState = m_pCurrentState;
+    mPreviousState = mCurrentState;
 
     //call the exit method of the existing state
-    m_pCurrentState->Exit(m_pOwner);
+    mCurrentState->exit(mOwner);
 
     //change state to the new state
-    m_pCurrentState = pNewState;
+    mCurrentState = pNewState;
 
     //call the entry method of the new state
-    m_pCurrentState->Enter(m_pOwner);
+    mCurrentState->enter(mOwner);
   }
 
   //change state back to the previous state
-  void  RevertToPreviousState()
+  void  revertToPreviousState()
   {
-    ChangeState(m_pPreviousState);
+    changeState(mPreviousState);
   }
 
   //returns true if the current state's type is equal to the type of the
-  //class passed as a parameter. 
-  bool  isInState(const State<entity_type>& st)const
+  //class passed as a parameter.
+  bool  isInState(const State<entityType>& st)const
   {
-    if (typeid(*m_pCurrentState) == typeid(st)) return true;
+    if (typeid(*mCurrentState) == typeid(st)) return true;
     return false;
   }
 
-  State<entity_type>*  CurrentState()  const{return m_pCurrentState;}
-  State<entity_type>*  GlobalState()   const{return m_pGlobalState;}
-  State<entity_type>*  PreviousState() const{return m_pPreviousState;}
+  State<entityType>*  currentState()  const{return mCurrentState;}
+  State<entityType>*  globalState()   const{return mGlobalState;}
+  State<entityType>*  previousState() const{return mPreviousState;}
 
   //only ever used during debugging to grab the name of the current state
-  std::string         GetNameOfCurrentState()const
+  std::string         getNameOfCurrentState()const
   {
-    std::string s(typeid(*m_pCurrentState).name());
+    std::string s(typeid(*mCurrentState).name());
 
     //remove the 'class ' part from the front of the string
     if (s.size() > 5)

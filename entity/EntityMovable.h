@@ -2,9 +2,9 @@
 #define MOVING_ENTITY
 //------------------------------------------------------------------------
 //
-//  Name:   EntityMovable.h
+//  name:   EntityMovable.h
 //
-//  Desc:   A base class defining an entity that moves. The entity has 
+//  Desc:   A base class defining an entity that moves. The entity has
 //          a local coordinate system and members for defining its
 //          mass and velocity.
 //
@@ -22,26 +22,26 @@
 class EntityMovable : public EntityBase
 {
 protected:
-  
-  Vector2D    m_vVelocity;
-  
-  //a normalized vector pointing in the direction the entity is heading. 
-  Vector2D    m_vHeading;
+
+  Vector2D    mVelocity;
+
+  //a normalized vector pointing in the direction the entity is heading.
+  Vector2D    mHeading;
 
   //a vector perpendicular to the heading vector
-  Vector2D    m_vSide; 
+  Vector2D    mSide;
 
-  double      m_dMass;
-  
+  double      mMass;
+
   //the maximum speed this entity may travel at.
-  double      m_dMaxSpeed;
+  double      mMaxSpeed;
 
-  //the maximum force this entity can produce to power itself 
+  //the maximum force this entity can produce to power itself
   //(think rockets and thrust)
-  double      m_dMaxForce;
-  
-  //the maximum rate (radians per second)this vehicle can rotate         
-  double      m_dMaxTurnRate;
+  double      mMaxForce;
+
+  //the maximum rate (radians per second)this vehicle can rotate
+  double      mMaxTurnRate;
 
 public:
 
@@ -49,73 +49,73 @@ public:
   EntityMovable(Vector2D position,
                double   radius,
                Vector2D velocity,
-               double   max_speed,
+               double   maxSpeed,
                Vector2D heading,
                double   mass,
                Vector2D scale,
-               double   turn_rate,
-               double   max_force):EntityBase(EntityBase::GetNextValidID()),
-                                  m_vHeading(heading),
-                                  m_vVelocity(velocity),
-                                  m_dMass(mass),
-                                  m_vSide(m_vHeading.Perp()),
-                                  m_dMaxSpeed(max_speed),
-                                  m_dMaxTurnRate(turn_rate),
-                                  m_dMaxForce(max_force)
+               double   turnRate,
+               double   maxForce):EntityBase(EntityBase::getNextValidId()),
+                                  mHeading(heading),
+                                  mVelocity(velocity),
+                                  mMass(mass),
+                                  mSide(mHeading.perp()),
+                                  mMaxSpeed(maxSpeed),
+                                  mMaxTurnRate(turnRate),
+                                  mMaxForce(maxForce)
   {
-    m_vPosition = position;
-    m_dBoundingRadius = radius; 
-    m_vScale = scale;
+    mPosition = position;
+    mBoundingRadius = radius;
+    mScale = scale;
   }
 
 
   virtual ~EntityMovable(){}
 
   //accessors
-  Vector2D  Velocity()const{return m_vVelocity;}
-  void      SetVelocity(const Vector2D& NewVel){m_vVelocity = NewVel;}
-  
-  double    Mass()const{return m_dMass;}
-  
-  Vector2D  Side()const{return m_vSide;}
+  Vector2D  velocity()const{return mVelocity;}
+  void      setVelocity(const Vector2D& newVel){mVelocity = newVel;}
 
-  double    MaxSpeed()const{return m_dMaxSpeed;}                       
-  void      SetMaxSpeed(double new_speed){m_dMaxSpeed = new_speed;}
-  
-  double    MaxForce()const{return m_dMaxForce;}
-  void      SetMaxForce(double mf){m_dMaxForce = mf;}
+  double    mass()const{return mMass;}
 
-  bool      IsSpeedMaxedOut()const{return m_dMaxSpeed*m_dMaxSpeed >= m_vVelocity.LengthSq();}
-  double    Speed()const{return m_vVelocity.Length();}
-  double    SpeedSq()const{return m_vVelocity.LengthSq();}
-  
-  Vector2D  Heading()const{return m_vHeading;}
-  void      SetHeading(Vector2D new_heading);
-  bool      RotateHeadingToFacePosition(Vector2D target);
+  Vector2D  side()const{return mSide;}
 
-  double    MaxTurnRate()const{return m_dMaxTurnRate;}
-  void      SetMaxTurnRate(double val){m_dMaxTurnRate = val;}
+  double    maxSpeed()const{return mMaxSpeed;}
+  void      setMaxSpeed(double newSpeed){mMaxSpeed = newSpeed;}
+
+  double    maxForce()const{return mMaxForce;}
+  void      setMaxForce(double mf){mMaxForce = mf;}
+
+  bool      isSpeedMaxedOut()const{return mMaxSpeed*mMaxSpeed >= mVelocity.lengthSq();}
+  double    speed()const{return mVelocity.length();}
+  double    speedSq()const{return mVelocity.lengthSq();}
+
+  Vector2D  heading()const{return mHeading;}
+  void      setHeading(Vector2D newHeading);
+  bool      rotateHeadingToFacePosition(Vector2D target);
+
+  double    maxTurnRate()const{return mMaxTurnRate;}
+  void      setMaxTurnRate(double val){mMaxTurnRate = val;}
 
 };
 
 
-//--------------------------- RotateHeadingToFacePosition ---------------------
+//--------------------------- rotateHeadingToFacePosition ---------------------
 //
 //  given a target position, this method rotates the entity's heading and
-//  side vectors by an amount not greater than m_dMaxTurnRate until it
+//  side vectors by an amount not greater than mMaxTurnRate until it
 //  directly faces the target.
 //
 //  returns true when the heading is facing in the desired direction
 //-----------------------------------------------------------------------------
-inline bool EntityMovable::RotateHeadingToFacePosition(Vector2D target)
+inline bool EntityMovable::rotateHeadingToFacePosition(Vector2D target)
 {
-  Vector2D toTarget = Vec2DNormalize(target - m_vPosition);
+  Vector2D toTarget = vec2DNormalize(target - mPosition);
 
-  double dot = m_vHeading.Dot(toTarget);
+  double dot = mHeading.dot(toTarget);
 
   //some compilers lose acurracy so the value is clamped to ensure it
   //remains valid for the acos
-  Clamp(dot, -1, 1);
+  clamp(dot, -1, 1);
 
   //first determine the angle between the heading vector and the target
   double angle = acos(dot);
@@ -124,39 +124,39 @@ inline bool EntityMovable::RotateHeadingToFacePosition(Vector2D target)
   if (angle < 0.00001) return true;
 
   //clamp the amount to turn to the max turn rate
-  if (angle > m_dMaxTurnRate) angle = m_dMaxTurnRate;
-  
+  if (angle > mMaxTurnRate) angle = mMaxTurnRate;
+
   //The next few lines use a rotation matrix to rotate the player's heading
   //vector accordingly
-	C2DMatrix RotationMatrix;
-  
+  C2DMatrix rotationMatrix;
+
   //notice how the direction of rotation has to be determined when creating
   //the rotation matrix
-	RotationMatrix.Rotate(angle * m_vHeading.Sign(toTarget));	
-  RotationMatrix.TransformVector2Ds(m_vHeading);
-  RotationMatrix.TransformVector2Ds(m_vVelocity);
+  rotationMatrix.rotate(angle * mHeading.sign(toTarget));
+  rotationMatrix.transformVector2Ds(mHeading);
+  rotationMatrix.transformVector2Ds(mVelocity);
 
-  //finally recreate m_vSide
-  m_vSide = m_vHeading.Perp();
+  //finally recreate mSide
+  mSide = mHeading.perp();
 
   return false;
 }
 
 
-//------------------------- SetHeading ----------------------------------------
+//------------------------- setHeading ----------------------------------------
 //
 //  first checks that the given heading is not a vector of zero length. If the
-//  new heading is valid this fumction sets the entity's heading and side 
+//  new heading is valid this fumction sets the entity's heading and side
 //  vectors accordingly
 //-----------------------------------------------------------------------------
-inline void EntityMovable::SetHeading(Vector2D new_heading)
+inline void EntityMovable::setHeading(Vector2D newHeading)
 {
-  assert( (new_heading.LengthSq() - 1.0) < 0.00001);
-  
-  m_vHeading = new_heading;
+  assert( (newHeading.lengthSq() - 1.0) < 0.00001);
+
+  mHeading = newHeading;
 
   //the side vector must always be perpendicular to the heading
-  m_vSide = m_vHeading.Perp();
+  mSide = mHeading.perp();
 }
 
 

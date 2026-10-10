@@ -3,7 +3,7 @@
 #pragma warning (disable:4786)
 //------------------------------------------------------------------------
 //
-//  Name:   Pathfinder.h
+//  name:   Pathfinder.h
 //
 //  Desc:   class enabling users to create simple environments consisting
 //          of different terrain types and then to use various search algorithms
@@ -32,7 +32,7 @@ class Pathfinder
 {
 public:
 
-  enum brush_type
+  enum BrushType
   {
     normal   = 0,
     obstacle = 1,
@@ -41,142 +41,142 @@ public:
     source   = 4,
     target   = 5
   };
-      
-  enum algorithm_type
+
+  enum AlgorithmType
   {
     non,
-    search_astar,
-    search_bfs,
-    search_dfs,
-    search_dijkstra
+    searchAstar,
+    searchBfs,
+    searchDfs,
+    searchDijkstra
   };
 
 private:
-  
+
   //the terrain type of each cell
-  std::vector<int>              m_TerrainType;
+  std::vector<int>              mTerrainType;
 
   //this vector will store any path returned from a graph search
-  std::list<int>                m_Path;
+  std::list<int>                mPath;
 
   //create a typedef for the graph type
   typedef SparseGraph<NavGraphNode<void*>, GraphEdge> NavGraph;
 
-  NavGraph*                     m_pGraph;
-  
-  //this vector of edges is used to store any subtree returned from 
+  NavGraph*                     mGraph;
+
+  //this vector of edges is used to store any subtree returned from
   //any of the graph algorithms (such as an SPT)
-  std::vector<const GraphEdge*> m_SubTree;
+  std::vector<const GraphEdge*> mSubTree;
 
   //the total cost of the path from target to source
-  double                         m_dCostToTarget;
+  double                         mCostToTarget;
 
   //the currently selected algorithm
-  algorithm_type                m_CurrentAlgorithm;
+  AlgorithmType                mCurrentAlgorithm;
 
   //the current terrain brush
-  brush_type                    m_CurrentTerrainBrush;
+  BrushType                    mCurrentTerrainBrush;
 
   //the dimensions of the cells
-  double                        m_dCellWidth;
-  double                        m_dCellHeight;
+  double                        mCellWidth;
+  double                        mCellHeight;
 
   //number of cells vertically and horizontally
-  int                           m_iCellsX,
-                                m_iCellsY;
+  int                           mCellsX,
+                                mCellsY;
 
   //local record of the client area
-  int                           m_icxClient,
-                                m_icyClient;
+  int                           mClientWidth,
+                                mClientHeight;
 
   //the indices of the source and target cells
-  int                           m_iSourceCell,
-                                m_iTargetCell;
+  int                           mSourceCell,
+                                mTargetCell;
 
   //flags to indicate if the start and finish points have been added
-  bool                          m_bStart,
-                                m_bFinish;
+  bool                          mStart,
+                                mFinish;
 
   //should the graph (nodes and GraphEdges) be rendered?
-  bool                          m_bShowGraph;
+  bool                          mShowGraph;
 
   //should the tile outlines be rendered
-  bool                          m_bShowTiles;
+  bool                          mShowTiles;
 
   //holds the time taken for the most currently used algorithm to
   //complete
-  double                        m_dTimeTaken;
-  
-  //this calls the appropriate algorithm
-  void  UpdateAlgorithm();
+  double                        mTimeTaken;
 
-  //helper function for PaintTerrain (see below)
-  void  UpdateGraphFromBrush(int brush, int CellIndex);
- 
- std::string GetNameOfCurrentSearchAlgorithm()const;
+  //this calls the appropriate algorithm
+  void  updateAlgorithm();
+
+  //helper function for paintTerrain (see below)
+  void  updateGraphFromBrush(int brush, int cellIndex);
+
+ std::string getNameOfCurrentSearchAlgorithm()const;
 
 public:
 
-  Pathfinder():m_bStart(false),
-                m_bFinish(false),
-                m_bShowGraph(false),
-                m_bShowTiles(true),
-                m_dCellWidth(0),
-                m_dCellHeight(0),
-                m_iCellsX(0),
-                m_iCellsY(0),
-                m_dTimeTaken(0.0),
-                m_CurrentTerrainBrush(normal),
-                m_iSourceCell(0),
-                m_iTargetCell(0),
-                m_icxClient(0),
-                m_icyClient(0),
-                m_dCostToTarget(0.0),
-                m_pGraph(NULL)
+  Pathfinder():mStart(false),
+                mFinish(false),
+                mShowGraph(false),
+                mShowTiles(true),
+                mCellWidth(0),
+                mCellHeight(0),
+                mCellsX(0),
+                mCellsY(0),
+                mTimeTaken(0.0),
+                mCurrentTerrainBrush(normal),
+                mSourceCell(0),
+                mTargetCell(0),
+                mClientWidth(0),
+                mClientHeight(0),
+                mCostToTarget(0.0),
+                mGraph(NULL)
   {}
 
-  ~Pathfinder(){delete m_pGraph;}
+  ~Pathfinder(){delete mGraph;}
 
-  void CreateGraph(int CellsUp, int CellsAcross);
+  void createGraph(int cellsUp, int cellsAcross);
 
-  void Render();
+  void render();
 
-  //this will paint whatever cell the cursor is currently over in the 
+  //this will paint whatever cell the cursor is currently over in the
   //currently selected terrain brush
-  void PaintTerrain(POINTS p);
+  void paintTerrain(POINTS p);
 
   //the algorithms
-  void CreatePathDFS();
-  void CreatePathBFS();
-  void CreatePathDijkstra();
-  void CreatePathAStar();
-  void MinSpanningTree();
+  void createPathDfs();
+  void createPathBfs();
+  void createPathDijkstra();
+  void createPathAStar();
+  void minSpanningTree();
 
-  //if m_bShowGraph is true the graph will be rendered
-  void ToggleShowGraph(){m_bShowGraph = !m_bShowGraph;}
-  void SwitchGraphOn(){m_bShowGraph = true;}
-  void SwitchGraphOff(){m_bShowGraph = false;}
-  bool isShowGraphOn()const{return m_bShowGraph;}
+  //if mShowGraph is true the graph will be rendered
+  void toggleShowGraph(){mShowGraph = !mShowGraph;}
+  void switchGraphOn(){mShowGraph = true;}
+  void switchGraphOff(){mShowGraph = false;}
+  bool isShowGraphOn()const{return mShowGraph;}
 
-  void ToggleShowTiles(){m_bShowTiles = !m_bShowTiles;}
-  void SwitchTilesOn(){m_bShowTiles = true;}
-  void SwitchTilesOff(){m_bShowTiles = false;}
-  bool isShowTilesOn()const{return m_bShowTiles;}
+  void toggleShowTiles(){mShowTiles = !mShowTiles;}
+  void switchTilesOn(){mShowTiles = true;}
+  void switchTilesOff(){mShowTiles = false;}
+  bool isShowTilesOn()const{return mShowTiles;}
 
-  void ChangeBrush(const brush_type NewBrush){m_CurrentTerrainBrush = NewBrush;}
+  void changeBrush(const BrushType newBrush){mCurrentTerrainBrush = newBrush;}
 
-  void ChangeSource(const int cell){m_iSourceCell = cell;}
-  void ChangeTarget(const int cell){m_iTargetCell = cell;}
+  void changeSource(const int cell){mSourceCell = cell;}
+  void changeTarget(const int cell){mTargetCell = cell;}
 
   //converts a POINTS to an index into the graph. Returns false if p
   //is invalid
-  bool PointToIndex(POINTS p, int& NodeIndex);
+  bool pointToIndex(POINTS p, int& nodeIndex);
 
   //returns the terrain cost of the brush type
-  double GetTerrainCost(brush_type brush);
+  double getTerrainCost(BrushType brush);
 
-  void Save( char* FileName);
-  void Load( char* FileName);
+  void save( char* fileName);
+  void load( char* fileName);
 
 };
 

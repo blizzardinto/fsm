@@ -31,12 +31,12 @@ inline std::string btos(bool b)
   return "false";
 }
 
-//--------------------------- GetValueFromStream ------------------------------
+//--------------------------- getValueFromStream ------------------------------
 //
 //  grabs a value of the specified type from an input stream
 //-----------------------------------------------------------------------------
 template <typename T>
-inline T GetValueFromStream(std::ifstream& stream)
+inline T getValueFromStream(std::ifstream& stream)
 {
   T val;
 

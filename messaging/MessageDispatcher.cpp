@@ -9,125 +9,125 @@ using std::set;
 //uncomment below to send message info to the debug window
 //#define SHOW_MESSAGING_INFO
 
-//--------------------------- Instance ----------------------------------------
+//--------------------------- instance ----------------------------------------
 //
 //   this class is a singleton
 //-----------------------------------------------------------------------------
-MessageDispatcher* MessageDispatcher::Instance()
+MessageDispatcher* MessageDispatcher::instance()
 {
-  static MessageDispatcher instance; 
-  
+  static MessageDispatcher instance;
+
   return &instance;
 }
 
 //----------------------------- Dispatch ---------------------------------
-//  
+//
 //  see description in header
 //------------------------------------------------------------------------
-void MessageDispatcher::Discharge(EntityBase* pReceiver, const Telegram& telegram)
+void MessageDispatcher::discharge(EntityBase* pReceiver, const Telegram& telegram)
 {
-  if (!pReceiver->HandleMessage(telegram))
+  if (!pReceiver->handleMessage(telegram))
   {
     //telegram could not be handled
     #ifdef SHOW_MESSAGING_INFO
-    debug_con << "Message not handled" << "";
+    debugCon << "Message not handled" << "";
     #endif
   }
 }
 
-//---------------------------- DispatchMsg ---------------------------
+//---------------------------- dispatchMsg ---------------------------
 //
 //  given a message, a receiver, a sender and any time delay, this function
 //  routes the message to the correct agent (if no delay) or stores
 //  in the message queue to be dispatched at the correct time
 //------------------------------------------------------------------------
-void MessageDispatcher::DispatchMsg(double       delay,
+void MessageDispatcher::dispatchMsg(double       delay,
                                     int          sender,
                                     int          receiver,
                                     int          msg,
-                                    void*        AdditionalInfo = NULL)
+                                    void*        additionalInfo = NULL)
 {
 
   //get a pointer to the receiver
-  EntityBase* pReceiver = EntityMgr->GetEntityFromID(receiver);
+  EntityBase* pReceiver = entityMgr->getEntityFromId(receiver);
 
   //make sure the receiver is valid
   if (pReceiver == NULL)
   {
     #ifdef SHOW_MESSAGING_INFO
-    debug_con << "\nWarning! No Receiver with ID of " << receiver << " found" << "";
+    debugCon << "\nWarning! No Receiver with ID of " << receiver << " found" << "";
     #endif
 
     return;
   }
-  
+
   //create the telegram
-  Telegram telegram(0, sender, receiver, msg, AdditionalInfo);
-  
-  //if there is no delay, route telegram immediately                       
-  if (delay <= 0.0)                                                        
+  Telegram telegram(0, sender, receiver, msg, additionalInfo);
+
+  //if there is no delay, route telegram immediately
+  if (delay <= 0.0)
   {
     #ifdef SHOW_MESSAGING_INFO
-    debug_con << "\nTelegram dispatched at time: " << TickCounter->GetCurrentFrame()
-         << " by " << sender << " for " << receiver 
+    debugCon << "\nTelegram dispatched at time: " << tickCounter->getCurrentFrame()
+         << " by " << sender << " for " << receiver
          << ". Msg is " << msg << "";
     #endif
 
     //send the telegram to the recipient
-    Discharge(pReceiver, telegram);
+    discharge(pReceiver, telegram);
   }
 
   //else calculate the time when the telegram should be dispatched
   else
   {
-    double CurrentTime = TickCounter->GetCurrentFrame(); 
+    double currentTime = tickCounter->getCurrentFrame();
 
-    telegram.DispatchTime = CurrentTime + delay;
+    telegram.dispatchTime = currentTime + delay;
 
     //and put it in the queue
-    PriorityQ.insert(telegram);   
+    mDelayedMessages.insert(telegram);
 
     #ifdef SHOW_MESSAGING_INFO
-    debug_con << "\nDelayed telegram from " << sender << " recorded at time " 
-            << TickCounter->GetCurrentFrame() << " for " << receiver
+    debugCon << "\nDelayed telegram from " << sender << " recorded at time "
+            << tickCounter->getCurrentFrame() << " for " << receiver
             << ". Msg is " << msg << "";
     #endif
   }
 }
 
-//---------------------- DispatchDelayedMessages -------------------------
+//---------------------- dispatchDelayedMessages -------------------------
 //
 //  This function dispatches any telegrams with a timestamp that has
 //  expired. Any dispatched telegrams are removed from the queue
 //------------------------------------------------------------------------
-void MessageDispatcher::DispatchDelayedMessages()
-{ 
+void MessageDispatcher::dispatchDelayedMessages()
+{
   //first get current time
-  double CurrentTime = TickCounter->GetCurrentFrame(); 
+  double currentTime = tickCounter->getCurrentFrame();
 
   //now peek at the queue to see if any telegrams need dispatching.
   //remove all telegrams from the front of the queue that have gone
   //past their sell by date
-  while( !PriorityQ.empty() &&
-	     (PriorityQ.begin()->DispatchTime < CurrentTime) && 
-         (PriorityQ.begin()->DispatchTime > 0) )
+  while( !mDelayedMessages.empty() &&
+       (mDelayedMessages.begin()->dispatchTime < currentTime) &&
+         (mDelayedMessages.begin()->dispatchTime > 0) )
   {
     //read the telegram from the front of the queue
-    const Telegram& telegram = *PriorityQ.begin();
+    const Telegram& telegram = *mDelayedMessages.begin();
 
     //find the recipient
-    EntityBase* pReceiver = EntityMgr->GetEntityFromID(telegram.Receiver);
+    EntityBase* pReceiver = entityMgr->getEntityFromId(telegram.receiver);
 
     #ifdef SHOW_MESSAGING_INFO
-    debug_con << "\nQueued telegram ready for dispatch: Sent to " 
-         << pReceiver->ID() << ". Msg is "<< telegram.Msg << "";
+    debugCon << "\nQueued telegram ready for dispatch: Sent to "
+         << pReceiver->id() << ". Msg is "<< telegram.msg << "";
     #endif
 
     //send the telegram to the recipient
-    Discharge(pReceiver, telegram);
+    discharge(pReceiver, telegram);
 
-	//remove it from the queue
-    PriorityQ.erase(PriorityQ.begin());
+  //remove it from the queue
+    mDelayedMessages.erase(mDelayedMessages.begin());
   }
 }
 

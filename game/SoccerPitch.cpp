@@ -12,198 +12,198 @@
 #include "StatesTeam.h"
 #include "FrameCounter.h"
 
-const int NumRegionsHorizontal = 6; 
-const int NumRegionsVertical   = 3;
+const int numRegionsHorizontal = 6;
+const int numRegionsVertical   = 3;
 
 //------------------------------- ctor -----------------------------------
 //------------------------------------------------------------------------
-SoccerPitch::SoccerPitch(int cx, int cy):m_cxClient(cx),
-                                         m_cyClient(cy),
-                                         m_bPaused(false),
-                                         m_bEntityPlayerGoalKeeperHasBall(false),
-                                         m_Regions(NumRegionsHorizontal*NumRegionsVertical),
-                                         m_bGameOn(true)
+SoccerPitch::SoccerPitch(int cx, int cy):mClientWidth(cx),
+                                         mClientHeight(cy),
+                                         mPaused(false),
+                                         mEntityPlayerGoalKeeperHasBall(false),
+                                         mRegions(numRegionsHorizontal*numRegionsVertical),
+                                         mGameOn(true)
 {
   //define the playing area
-  m_pPlayingArea = new Region(20, 20, cx-20, cy-20);
+  mPlayingArea = new Region(20, 20, cx-20, cy-20);
 
-  //create the regions  
-  CreateRegions(PlayingArea()->Width() / (double)NumRegionsHorizontal,
-                PlayingArea()->Height() / (double)NumRegionsVertical);
+  //create the regions
+  createRegions(playingArea()->width() / (double)numRegionsHorizontal,
+                playingArea()->height() / (double)numRegionsVertical);
 
   //create the goals
-   m_pRedGoal  = new Goal(Vector2D( m_pPlayingArea->Left(), (cy-Prm.GoalWidth)/2),
-                          Vector2D(m_pPlayingArea->Left(), cy - (cy-Prm.GoalWidth)/2),
+   mRedGoal  = new Goal(Vector2D( mPlayingArea->left(), (cy-prm.goalWidth)/2),
+                          Vector2D(mPlayingArea->left(), cy - (cy-prm.goalWidth)/2),
                           Vector2D(1,0));
-   
 
 
-  m_pBlueGoal = new Goal( Vector2D( m_pPlayingArea->Right(), (cy-Prm.GoalWidth)/2),
-                          Vector2D(m_pPlayingArea->Right(), cy - (cy-Prm.GoalWidth)/2),
+
+  mBlueGoal = new Goal( Vector2D( mPlayingArea->right(), (cy-prm.goalWidth)/2),
+                          Vector2D(mPlayingArea->right(), cy - (cy-prm.goalWidth)/2),
                           Vector2D(-1,0));
 
 
   //create the soccer ball
-  m_pBall = new SoccerBall(Vector2D((double)m_cxClient/2.0, (double)m_cyClient/2.0),
-                           Prm.BallSize,
-                           Prm.BallMass,
-                           m_vecWalls);
+  mBall = new SoccerBall(Vector2D((double)mClientWidth/2.0, (double)mClientHeight/2.0),
+                           prm.ballSize,
+                           prm.ballMass,
+                           mWalls);
 
-  
-  //create the teams 
-  m_pRedTeam  = new SoccerTeam(m_pRedGoal, m_pBlueGoal, this, SoccerTeam::red);
-  m_pBlueTeam = new SoccerTeam(m_pBlueGoal, m_pRedGoal, this, SoccerTeam::blue);
+
+  //create the teams
+  mRedTeam  = new SoccerTeam(mRedGoal, mBlueGoal, this, SoccerTeam::red);
+  mBlueTeam = new SoccerTeam(mBlueGoal, mRedGoal, this, SoccerTeam::blue);
 
   //make sure each team knows who their opponents are
-  m_pRedTeam->SetOpponents(m_pBlueTeam);
-  m_pBlueTeam->SetOpponents(m_pRedTeam); 
+  mRedTeam->setOpponents(mBlueTeam);
+  mBlueTeam->setOpponents(mRedTeam);
 
   //create the walls
-  Vector2D TopLeft(m_pPlayingArea->Left(), m_pPlayingArea->Top());                                        
-  Vector2D TopRight(m_pPlayingArea->Right(), m_pPlayingArea->Top());
-  Vector2D BottomRight(m_pPlayingArea->Right(), m_pPlayingArea->Bottom());
-  Vector2D BottomLeft(m_pPlayingArea->Left(), m_pPlayingArea->Bottom());
-                                      
-  m_vecWalls.push_back(Wall2D(BottomLeft, m_pRedGoal->RightPost()));
-  m_vecWalls.push_back(Wall2D(m_pRedGoal->LeftPost(), TopLeft));
-  m_vecWalls.push_back(Wall2D(TopLeft, TopRight));
-  m_vecWalls.push_back(Wall2D(TopRight, m_pBlueGoal->LeftPost()));
-  m_vecWalls.push_back(Wall2D(m_pBlueGoal->RightPost(), BottomRight));
-  m_vecWalls.push_back(Wall2D(BottomRight, BottomLeft));
+  Vector2D topLeft(mPlayingArea->left(), mPlayingArea->top());
+  Vector2D topRight(mPlayingArea->right(), mPlayingArea->top());
+  Vector2D bottomRight(mPlayingArea->right(), mPlayingArea->bottom());
+  Vector2D bottomLeft(mPlayingArea->left(), mPlayingArea->bottom());
 
-  ParamLoader* p = ParamLoader::Instance();
+  mWalls.push_back(Wall2D(bottomLeft, mRedGoal->rightPost()));
+  mWalls.push_back(Wall2D(mRedGoal->leftPost(), topLeft));
+  mWalls.push_back(Wall2D(topLeft, topRight));
+  mWalls.push_back(Wall2D(topRight, mBlueGoal->leftPost()));
+  mWalls.push_back(Wall2D(mBlueGoal->rightPost(), bottomRight));
+  mWalls.push_back(Wall2D(bottomRight, bottomLeft));
+
+  ParamLoader* p = ParamLoader::instance();
 }
 
 //-------------------------------- dtor ----------------------------------
 //------------------------------------------------------------------------
 SoccerPitch::~SoccerPitch()
 {
-  delete m_pBall;
+  delete mBall;
 
-  delete m_pRedTeam;
-  delete m_pBlueTeam;
+  delete mRedTeam;
+  delete mBlueTeam;
 
-  delete m_pRedGoal;
-  delete m_pBlueGoal;
+  delete mRedGoal;
+  delete mBlueGoal;
 
-  delete m_pPlayingArea;
+  delete mPlayingArea;
 
-  for (unsigned int i=0; i<m_Regions.size(); ++i)
+  for (unsigned int i=0; i<mRegions.size(); ++i)
   {
-    delete m_Regions[i];
+    delete mRegions[i];
   }
 }
 
-//----------------------------- Update -----------------------------------
+//----------------------------- update -----------------------------------
 //
 //  this demo works on a fixed frame rate (60 by default) so we don't need
 //  to pass a time_elapsed as a parameter to the game entities
 //------------------------------------------------------------------------
-void SoccerPitch::Update()
+void SoccerPitch::update()
 {
-  if (m_bPaused) return;
+  if (mPaused) return;
 
   static int tick = 0;
 
   //update the balls
-  m_pBall->Update();
+  mBall->update();
 
   //update the teams
-  m_pRedTeam->Update();
-  m_pBlueTeam->Update();
+  mRedTeam->update();
+  mBlueTeam->update();
 
   //if a goal has been detected reset the pitch ready for kickoff
-  if (m_pBlueGoal->Scored(m_pBall) || m_pRedGoal->Scored(m_pBall))
+  if (mBlueGoal->scored(mBall) || mRedGoal->scored(mBall))
   {
-    m_bGameOn = false;
-    
-    //reset the ball                                                      
-    m_pBall->PlaceAtPosition(Vector2D((double)m_cxClient/2.0, (double)m_cyClient/2.0));
+    mGameOn = false;
+
+    //reset the ball
+    mBall->placeAtPosition(Vector2D((double)mClientWidth/2.0, (double)mClientHeight/2.0));
 
     //get the teams ready for kickoff
-    m_pRedTeam->GetFSM()->ChangeState(PrepareForKickOff::Instance());
-    m_pBlueTeam->GetFSM()->ChangeState(PrepareForKickOff::Instance());
+    mRedTeam->getFsm()->changeState(PrepareForKickOff::instance());
+    mBlueTeam->getFsm()->changeState(PrepareForKickOff::instance());
   }
 }
 
-//------------------------- CreateRegions --------------------------------
-void SoccerPitch::CreateRegions(double width, double height)
-{  
+//------------------------- createRegions --------------------------------
+void SoccerPitch::createRegions(double width, double height)
+{
   //index into the vector
-  int idx = m_Regions.size()-1;
-    
-  for (int col=0; col<NumRegionsHorizontal; ++col)
+  int idx = mRegions.size()-1;
+
+  for (int col=0; col<numRegionsHorizontal; ++col)
   {
-    for (int row=0; row<NumRegionsVertical; ++row)
+    for (int row=0; row<numRegionsVertical; ++row)
     {
-      m_Regions[idx--] = new Region(PlayingArea()->Left()+col*width,
-                                   PlayingArea()->Top()+row*height,
-                                   PlayingArea()->Left()+(col+1)*width,
-                                   PlayingArea()->Top()+(row+1)*height,
+      mRegions[idx--] = new Region(playingArea()->left()+col*width,
+                                   playingArea()->top()+row*height,
+                                   playingArea()->left()+(col+1)*width,
+                                   playingArea()->top()+(row+1)*height,
                                    idx);
     }
   }
 }
 
 
-//------------------------------ Render ----------------------------------
+//------------------------------ render ----------------------------------
 //------------------------------------------------------------------------
-bool SoccerPitch::Render()
+bool SoccerPitch::render()
 {
   //draw the grass
-  gdi->DarkGreenPen();
-  gdi->DarkGreenBrush();
-  gdi->Rect(0,0,m_cxClient, m_cyClient);
+  gdi->darkGreenPen();
+  gdi->darkGreenBrush();
+  gdi->rect(0,0,mClientWidth, mClientHeight);
 
   //render regions
-  if (Prm.bRegions)
-  {   
-    for (unsigned int r=0; r<m_Regions.size(); ++r)
+  if (prm.bRegions)
+  {
+    for (unsigned int r=0; r<mRegions.size(); ++r)
     {
-      m_Regions[r]->Render(true);
+      mRegions[r]->render(true);
     }
   }
-  
-  //render the goals
-  gdi->HollowBrush();
-  gdi->RedPen();
-  gdi->Rect(m_pPlayingArea->Left(), (m_cyClient-Prm.GoalWidth)/2, m_pPlayingArea->Left()+40, m_cyClient - (m_cyClient-Prm.GoalWidth)/2);
 
-  gdi->BluePen();
-  gdi->Rect(m_pPlayingArea->Right(), (m_cyClient-Prm.GoalWidth)/2, m_pPlayingArea->Right()-40, m_cyClient - (m_cyClient-Prm.GoalWidth)/2);
-  
+  //render the goals
+  gdi->hollowBrush();
+  gdi->redPen();
+  gdi->rect(mPlayingArea->left(), (mClientHeight-prm.goalWidth)/2, mPlayingArea->left()+40, mClientHeight - (mClientHeight-prm.goalWidth)/2);
+
+  gdi->bluePen();
+  gdi->rect(mPlayingArea->right(), (mClientHeight-prm.goalWidth)/2, mPlayingArea->right()-40, mClientHeight - (mClientHeight-prm.goalWidth)/2);
+
   //render the pitch markings
-  gdi->WhitePen();
-  gdi->Circle(m_pPlayingArea->Center(), m_pPlayingArea->Width() * 0.125);
-  gdi->Line(m_pPlayingArea->Center().x, m_pPlayingArea->Top(), m_pPlayingArea->Center().x, m_pPlayingArea->Bottom());
-  gdi->WhiteBrush();
-  gdi->Circle(m_pPlayingArea->Center(), 2.0);
+  gdi->whitePen();
+  gdi->circle(mPlayingArea->center(), mPlayingArea->width() * 0.125);
+  gdi->line(mPlayingArea->center().x, mPlayingArea->top(), mPlayingArea->center().x, mPlayingArea->bottom());
+  gdi->whiteBrush();
+  gdi->circle(mPlayingArea->center(), 2.0);
 
 
   //the ball
-  gdi->WhitePen();
-  gdi->WhiteBrush();
-  m_pBall->Render();
-  
-  //Render the teams
-  m_pRedTeam->Render();
-  m_pBlueTeam->Render(); 
+  gdi->whitePen();
+  gdi->whiteBrush();
+  mBall->render();
+
+  //render the teams
+  mRedTeam->render();
+  mBlueTeam->render();
 
   //render the walls
-  gdi->WhitePen();
-  for (unsigned int w=0; w<m_vecWalls.size(); ++w)
+  gdi->whitePen();
+  for (unsigned int w=0; w<mWalls.size(); ++w)
   {
-    m_vecWalls[w].Render();
+    mWalls[w].render();
   }
 
   //show the score
-  gdi->TextColor(Cgdi::red);
-  gdi->TextAtPos((m_cxClient/2)-50, m_cyClient-18, "Red: " + ttos(m_pBlueGoal->NumGoalsScored()));
+  gdi->textColor(Cgdi::red);
+  gdi->textAtPos((mClientWidth/2)-50, mClientHeight-18, "Red: " + ttos(mBlueGoal->numGoalsScored()));
 
-  gdi->TextColor(Cgdi::blue);
-  gdi->TextAtPos((m_cxClient/2)+10, m_cyClient-18, "Blue: " + ttos(m_pRedGoal->NumGoalsScored()));
+  gdi->textColor(Cgdi::blue);
+  gdi->textAtPos((mClientWidth/2)+10, mClientHeight-18, "Blue: " + ttos(mRedGoal->numGoalsScored()));
 
-  return true;  
+  return true;
 }
 
 

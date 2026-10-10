@@ -2,7 +2,7 @@
 #define GRAPH_NODE_TYPES_H
 //-----------------------------------------------------------------------------
 //
-//  Name:   GraphNodeTypes.h
+//  name:   GraphNodeTypes.h
 //
 //  Author: Mat Buckland (www.ai-junkie.com)
 //
@@ -18,32 +18,32 @@
 
 
 class GraphNode
-{  
+{
 protected:
 
   //every node has an index. A valid index is >= 0
-  int        m_iIndex;
+  int        mIndex;
 
 public:
-  
-  GraphNode():m_iIndex(invalid_node_index){}
-  GraphNode(int idx):m_iIndex(idx){}
-  GraphNode(std::ifstream& stream){char buffer[50]; stream >> buffer >> m_iIndex;}
+
+  GraphNode():mIndex(invalidNodeIndex){}
+  GraphNode(int idx):mIndex(idx){}
+  GraphNode(std::ifstream& stream){char buffer[50]; stream >> buffer >> mIndex;}
 
   virtual ~GraphNode(){}
 
-  int  Index()const{return m_iIndex;}
-  void SetIndex(int NewIndex){m_iIndex = NewIndex;}
-  
+  int  index()const{return mIndex;}
+  void setIndex(int newIndex){mIndex = newIndex;}
+
 
 
   //for reading and writing to streams.
   friend std::ostream& operator<<(std::ostream& os, const GraphNode& n)
   {
-    os << "Index: " << n.m_iIndex << std::endl; return os;
+    os << "Index: " << n.mIndex << std::endl; return os;
   }
 
-};   
+};
 
 
 
@@ -53,58 +53,58 @@ public:
 //  the position of the node and a pointer to a EntityBase... useful
 //  if you want your nodes to represent health packs, gold mines and the like
 //-----------------------------------------------------------------------------
-template <class extra_info = void*>
+template <class ExtraInfoType = void*>
 class NavGraphNode : public GraphNode
 {
 protected:
 
   //the node's position
-  Vector2D     m_vPosition;
+  Vector2D     mPosition;
 
   //often you will require a navgraph node to contain additional information.
   //For example a node might represent a pickup such as armor in which
-  //case m_ExtraInfo could be an enumerated value denoting the pickup type,
+  //case mExtraInfo could be an enumerated value denoting the pickup type,
   //thereby enabling a search algorithm to search a graph for specific items.
-  //Going one step further, m_ExtraInfo could be a pointer to the instance of
+  //Going one step further, mExtraInfo could be a pointer to the instance of
   //the item type the node is twinned with. This would allow a search algorithm
-  //to test the status of the pickup during the search. 
-  extra_info  m_ExtraInfo;
+  //to test the status of the pickup during the search.
+  ExtraInfoType  mExtraInfo;
 
 public:
-  
+
   //ctors
-  NavGraphNode():m_ExtraInfo(extra_info()){}
+  NavGraphNode():mExtraInfo(ExtraInfoType()){}
 
   NavGraphNode(int      idx,
                Vector2D pos):GraphNode(idx),
-                             m_vPosition(pos),
-                             m_ExtraInfo(extra_info())
+                             mPosition(pos),
+                             mExtraInfo(ExtraInfoType())
   {}
 
-  //stream constructor
-  NavGraphNode(std::ifstream& stream):m_ExtraInfo(extra_info())
+  //stream function Object() { [native code] }
+  NavGraphNode(std::ifstream& stream):mExtraInfo(ExtraInfoType())
   {
     char buffer[50];
-    stream >> buffer >> m_iIndex >> buffer >> m_vPosition.x >> buffer >> m_vPosition.y;
+    stream >> buffer >> mIndex >> buffer >> mPosition.x >> buffer >> mPosition.y;
   }
- 
+
 
   virtual ~NavGraphNode(){}
 
-  Vector2D   Pos()const{return m_vPosition;}
-  void       SetPos(Vector2D NewPosition){m_vPosition = NewPosition;}
+  Vector2D   pos()const{return mPosition;}
+  void       setPos(Vector2D newPosition){mPosition = newPosition;}
 
-  extra_info ExtraInfo()const{return m_ExtraInfo;}
-  void       SetExtraInfo(extra_info info){m_ExtraInfo = info;}
+  ExtraInfoType extraInfo()const{return mExtraInfo;}
+  void       setExtraInfo(ExtraInfoType info){mExtraInfo = info;}
 
   //for reading and writing to streams.
   friend std::ostream& operator<<(std::ostream& os, const NavGraphNode& n)
   {
-    os << "Index: " << n.m_iIndex << " PosX: " << n.m_vPosition.x << " PosY: " << n.m_vPosition.y << std::endl;
+    os << "Index: " << n.mIndex << " PosX: " << n.mPosition.x << " PosY: " << n.mPosition.y << std::endl;
 
     return os;
   }
-  
+
 };
 
 

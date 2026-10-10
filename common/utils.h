@@ -11,16 +11,16 @@
 
 
 //a few useful constants
-const int     MaxInt    = (std::numeric_limits<int>::max)();
-const double  MaxDouble = (std::numeric_limits<double>::max)();
-const double  MinDouble = (std::numeric_limits<double>::min)();
-const float   MaxFloat  = (std::numeric_limits<float>::max)();
-const float   MinFloat  = (std::numeric_limits<float>::min)();
+const int     maxInt    = (std::numeric_limits<int>::max)();
+const double  maxDouble = (std::numeric_limits<double>::max)();
+const double  minDouble = (std::numeric_limits<double>::min)();
+const float   maxFloat  = (std::numeric_limits<float>::max)();
+const float   minFloat  = (std::numeric_limits<float>::min)();
 
-const double   Pi        = 3.14159;
-const double   TwoPi     = Pi * 2;
-const double   HalfPi    = Pi / 2;
-const double   QuarterPi = Pi / 4;
+const double   pi        = 3.14159;
+const double   twoPi     = pi * 2;
+const double   halfPi    = pi / 2;
+const double   quarterPi = pi / 4;
 
 //returns true if the value is a NaN
 template <typename T>
@@ -29,22 +29,22 @@ inline bool isNaN(T val)
   return val != val;
 }
 
-inline double DegsToRads(double degs)
+inline double degsToRads(double degs)
 {
-  return TwoPi * (degs/360.0);
+  return twoPi * (degs/360.0);
 }
 
 
 
 //returns true if the parameter is equal to zero
-inline bool IsZero(double val)
+inline bool isZero(double val)
 {
-  return ( (-MinDouble < val) && (val < MinDouble) );
+  return ( (-minDouble < val) && (val < minDouble) );
 }
 
 //returns true is the third parameter is in the range described by the
 //first two
-inline bool InRange(double start, double end, double val)
+inline bool inRange(double start, double end, double val)
 {
   if (start < end)
   {
@@ -60,7 +60,7 @@ inline bool InRange(double start, double end, double val)
 }
 
 template <class T>
-T Maximum(const T& v1, const T& v2)
+T maximum(const T& v1, const T& v2)
 {
   return v1 > v2 ? v1 : v2;
 }
@@ -72,84 +72,84 @@ T Maximum(const T& v1, const T& v2)
 //----------------------------------------------------------------------------
 
 //returns a random integer between x and y
-inline int   RandInt(int x,int y) {return rand()%(y-x+1)+x;}
+inline int   randInt(int x,int y) {return rand()%(y-x+1)+x;}
 
 //returns a random double between zero and 1
-inline double RandFloat()      {return ((rand())/(RAND_MAX+1.0));}
+inline double randFloat()      {return ((rand())/(RAND_MAX+1.0));}
 
-inline double RandInRange(double x, double y)
+inline double randInRange(double x, double y)
 {
-  return x + RandFloat()*(y-x);
+  return x + randFloat()*(y-x);
 }
 
 //returns a random bool
-inline bool   RandBool()
+inline bool   randBool()
 {
-  if (RandInt(0,1)) return true;
+  if (randInt(0,1)) return true;
 
   else return false;
 }
 
 //returns a random double in the range -1 < n < 1
-inline double RandomClamped()    {return RandFloat() - RandFloat();}
+inline double randomClamped()    {return randFloat() - randFloat();}
 
 
 //returns a random number with a normal distribution. See method at
 //http://www.taygeta.com/random/gaussian.html
-inline double RandGaussian(double mean = 0.0, double standard_deviation = 1.0)
-{				        
-	double x1, x2, w, y1;
-	static double y2;
-	static int use_last = 0;
+inline double randGaussian(double mean = 0.0, double standardDeviation = 1.0)
+{
+  double x1, x2, w, y1;
+  static double y2;
+  static int useLast = 0;
 
-	if (use_last)		        /* use value from previous call */
-	{
-		y1 = y2;
-		use_last = 0;
-	}
-	else
-	{
-		do 
+  if (useLast)		        /* use value from previous call */
+  {
+    y1 = y2;
+    useLast = 0;
+  }
+  else
+  {
+    do
     {
-			x1 = 2.0 * RandFloat() - 1.0;
-			x2 = 2.0 * RandFloat() - 1.0;
-			w = x1 * x1 + x2 * x2;
-		}
+      x1 = 2.0 * randFloat() - 1.0;
+      x2 = 2.0 * randFloat() - 1.0;
+      w = x1 * x1 + x2 * x2;
+    }
     while ( w >= 1.0 );
 
-		w = sqrt( (-2.0 * log( w ) ) / w );
-		y1 = x1 * w;
-		y2 = x2 * w;
-		use_last = 1;
-	}
+    w = sqrt( (-2.0 * log( w ) ) / w );
+    y1 = x1 * w;
+    y2 = x2 * w;
+    useLast = 1;
+  }
 
-	return( mean + y1 * standard_deviation );
+  return( mean + y1 * standardDeviation );
 }
 
 
 
 //-----------------------------------------------------------------------
-//  
+//
 //  some handy little functions
 //-----------------------------------------------------------------------
 
 
-inline double Sigmoid(double input, double response = 1.0)
+inline double sigmoid(double input, double response = 1.0)
 {
-	return ( 1.0 / ( 1.0 + exp(-input / response)));
+  return ( 1.0 / ( 1.0 + exp(-input / response)));
 }
 
 
 //returns the maximum of two values
 template <class T>
-inline T MaxOf(const T& a, const T& b)
+inline T maxOf(const T& a, const T& b)
 {
   if (a>b) return a; return b;
 }
 
 //returns the minimum of two values
 template <class T>
-inline T MinOf(const T& a, const T& b)
+inline T minOf(const T& a, const T& b)
 {
   if (a<b) return a; return b;
 }
@@ -157,7 +157,7 @@ inline T MinOf(const T& a, const T& b)
 
 //clamps the first argument between the second two
 template <class T, class U, class V>
-inline void Clamp(T& arg, const U& minVal, const V& maxVal)
+inline void clamp(T& arg, const U& minVal, const V& maxVal)
 {
   assert ( (minVal < maxVal) && "<Clamp>MaxVal < MinVal!");
 
@@ -174,7 +174,7 @@ inline void Clamp(T& arg, const U& minVal, const V& maxVal)
 
 
 //rounds a double up or down depending on its value
-inline int Rounded(double val)
+inline int rounded(double val)
 {
   int    integral = (int)val;
   double mantissa = val - integral;
@@ -190,9 +190,9 @@ inline int Rounded(double val)
   }
 }
 
-//rounds a double up or down depending on whether its 
+//rounds a double up or down depending on whether its
 //mantissa is higher or lower than offset
-inline int RoundUnderOffset(double val, double offset)
+inline int roundUnderOffset(double val, double offset)
 {
   int    integral = (int)val;
   double mantissa = val - integral;
@@ -231,12 +231,12 @@ inline bool isEqual(double a, double b)
 
 
 template <class T>
-inline double Average(const std::vector<T>& v)
+inline double average(const std::vector<T>& v)
 {
   double average = 0.0;
-  
+
   for (unsigned int i=0; i < v.size(); ++i)
-  {    
+  {
     average += (double)v[i];
   }
 
@@ -244,14 +244,14 @@ inline double Average(const std::vector<T>& v)
 }
 
 
-inline double StandardDeviation(const std::vector<double>& v)
+inline double standardDeviation(const std::vector<double>& v)
 {
   double sd      = 0.0;
-  double average = Average(v);
+  double mean = average(v);
 
   for (unsigned int i=0; i<v.size(); ++i)
-  {     
-    sd += (v[i] - average) * (v[i] - average);
+  {
+    sd += (v[i] - mean) * (v[i] - mean);
   }
 
   sd = sd / v.size();
@@ -261,7 +261,7 @@ inline double StandardDeviation(const std::vector<double>& v)
 
 
 template <class container>
-inline void DeleteSTLContainer(container& c)
+inline void deleteStlContainer(container& c)
 {
   for (typename container::iterator it = c.begin(); it!=c.end(); ++it)
   {
@@ -271,7 +271,7 @@ inline void DeleteSTLContainer(container& c)
 }
 
 template <class map>
-inline void DeleteSTLMap(map& m)
+inline void deleteStlMap(map& m)
 {
   for (typename map::iterator it = m.begin(); it!=m.end(); ++it)
   {

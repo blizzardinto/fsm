@@ -14,65 +14,65 @@ class SoccerTeam;
 
 //------------------------------------------------------------------------
 class Attacking : public State<SoccerTeam>
-{ 
+{
 private:
-  
+
   Attacking(){}
 
 public:
 
   //this is a singleton
-  static Attacking* Instance();
+  static Attacking* instance();
 
-  void Enter(SoccerTeam* team);
+  void enter(SoccerTeam* team);
 
-  void Execute(SoccerTeam* team);
+  void execute(SoccerTeam* team);
 
-  void Exit(SoccerTeam* team);
+  void exit(SoccerTeam* team);
 
-  bool OnMessage(SoccerTeam*, const Telegram&){return false;}
+  bool onMessage(SoccerTeam*, const Telegram&){return false;}
 };
 
 //------------------------------------------------------------------------
 class Defending : public State<SoccerTeam>
-{ 
+{
 private:
-  
+
   Defending(){}
 
 public:
 
     //this is a singleton
-  static Defending* Instance();
+  static Defending* instance();
 
-  void Enter(SoccerTeam* team);
+  void enter(SoccerTeam* team);
 
-  void Execute(SoccerTeam* team);
+  void execute(SoccerTeam* team);
 
-  void Exit(SoccerTeam* team);
+  void exit(SoccerTeam* team);
 
-  bool OnMessage(SoccerTeam*, const Telegram&){return false;}
+  bool onMessage(SoccerTeam*, const Telegram&){return false;}
 };
 
 //------------------------------------------------------------------------
 class PrepareForKickOff : public State<SoccerTeam>
-{ 
+{
 private:
-  
+
   PrepareForKickOff(){}
 
 public:
 
     //this is a singleton
-  static PrepareForKickOff* Instance();
-  
-  void Enter(SoccerTeam* team);
+  static PrepareForKickOff* instance();
 
-  void Execute(SoccerTeam* team);
+  void enter(SoccerTeam* team);
 
-  void Exit(SoccerTeam* team);
+  void execute(SoccerTeam* team);
 
-  bool OnMessage(SoccerTeam*, const Telegram&){return false;}
+  void exit(SoccerTeam* team);
+
+  bool onMessage(SoccerTeam*, const Telegram&){return false;}
 };
 
 

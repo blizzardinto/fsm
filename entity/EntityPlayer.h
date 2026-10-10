@@ -3,10 +3,10 @@
 #define PLAYERBASE_H
 //------------------------------------------------------------------------
 //
-//  Name: EntityPlayer.h
+//  name: EntityPlayer.h
 //
 //  Desc: Definition of a soccer player base class. The player inherits
-//        from the autolist class so that any player created will be 
+//        from the autolist class so that any player created will be
 //        automatically added to a list that is easily accesible by any
 //        other game objects. (mainly used by the steering behaviors and
 //        player state classes)
@@ -34,86 +34,86 @@ class EntityPlayer : public EntityMovable,
 {
 
 public:
-  
-  enum player_role{goal_keeper, attacker, defender};
+
+  enum PlayerRole{goalKeeper, attacker, defender};
 
 protected:
 
   //this player's role in the team
-  player_role             m_PlayerRole;
+  PlayerRole             mPlayerRole;
 
   //a pointer to this player's team
-  SoccerTeam*             m_pTeam;
- 
+  SoccerTeam*             mTeam;
+
   //the steering behaviors
-  SteeringBehaviors*      m_pSteering;
+  SteeringBehaviors*      mSteering;
 
   //the region that this player is assigned to.
-  int                     m_iHomeRegion;
+  int                     mHomeRegion;
 
   //the region this player moves to before kickoff
-  int                     m_iDefaultRegion;
+  int                     mDefaultRegion;
 
-  //the distance to the ball (in squared-space). This value is queried 
+  //the distance to the ball (in squared-space). This value is queried
   //a lot so it's calculated once each time-step and stored here.
-  double                   m_dDistSqToBall;
+  double                   mDistSqToBall;
 
-  
+
   //the vertex buffer
-  std::vector<Vector2D>   m_vecPlayerVB;
+  std::vector<Vector2D>   mPlayerVertices;
   //the buffer for the transformed vertices
-  std::vector<Vector2D>   m_vecPlayerVBTrans;
+  std::vector<Vector2D>   mTransformedPlayerVertices;
 
 public:
 
 
-  EntityPlayer(SoccerTeam*    home_team,
-             int            home_region,
+  EntityPlayer(SoccerTeam*    homeTeam,
+             int            homeRegion,
              Vector2D       heading,
              Vector2D       velocity,
              double          mass,
-             double          max_force,
-             double          max_speed,
-             double          max_turn_rate,
+             double          maxForce,
+             double          maxSpeed,
+             double          maxTurnRate,
              double          scale,
-             player_role    role);
+             PlayerRole    role);
 
   virtual ~EntityPlayer();
 
 
-  //returns true if there is an opponent within this player's 
+  //returns true if there is an opponent within this player's
   //comfort zone
   bool        isThreatened()const;
 
   //rotates the player to face the ball or the player's current target
-  void        TrackBall();
-  void        TrackTarget();
+  void        trackBall();
+  void        trackTarget();
 
   //this messages the player that is closest to the supporting spot to
   //change state to support the attacking player
-  void        FindSupport()const;
+  void        findSupport()const;
 
   //returns true if the ball can be grabbed by the goalkeeper
-  bool        BallWithinKeeperRange()const;
+  bool        ballWithinKeeperRange()const;
 
   //returns true if the ball is within kicking range
-  bool        BallWithinKickingRange()const;
+  bool        ballWithinKickingRange()const;
 
   //returns true if a ball comes within range of a receiver
-  bool        BallWithinReceivingRange()const;
+  bool        ballWithinReceivingRange()const;
 
-  //returns true if the player is located within the boundaries 
+  //returns true if the player is located within the boundaries
   //of his home region
-  bool        InHomeRegion()const;
+  bool        inHomeRegion()const;
 
   //returns true if this player is ahead of the attacker
   bool        isAheadOfAttacker()const;
-  
+
   //returns true if a player is located at the designated support spot
-  bool        AtSupportSpot()const;
+  bool        atSupportSpot()const;
 
   //returns true if the player is located at his steering target
-  bool        AtTarget()const;
+  bool        atTarget()const;
 
   //returns true if the player is the closest player in his team to
   //the ball
@@ -121,7 +121,7 @@ public:
 
   //returns true if the point specified by 'position' is located in
   //front of the player
-  bool        PositionInFrontOfPlayer(Vector2D position)const;
+  bool        positionInFrontOfPlayer(Vector2D position)const;
 
   //returns true if the player is the closest player on the pitch to the ball
   bool        isClosestPlayerOnPitchToBall()const;
@@ -131,27 +131,27 @@ public:
 
   //returns true if the player is located in the designated 'hot region' --
   //the area close to the opponent's goal
-  bool        InHotRegion()const;
+  bool        inHotRegion()const;
 
-  player_role Role()const{return m_PlayerRole;}
+  PlayerRole role()const{return mPlayerRole;}
 
-  double       DistSqToBall()const{return m_dDistSqToBall;}
-  void        SetDistSqToBall(double val){m_dDistSqToBall = val;}
+  double       distSqToBall()const{return mDistSqToBall;}
+  void        setDistSqToBall(double val){mDistSqToBall = val;}
 
   //calculate distance to opponent's/home goal. Used frequently by the passing
   //methods
-  double       DistToOppGoal()const;
-  double       DistToHomeGoal()const;
+  double       distToOppGoal()const;
+  double       distToHomeGoal()const;
 
-  void        SetDefaultHomeRegion(){m_iHomeRegion = m_iDefaultRegion;}
+  void        setDefaultHomeRegion(){mHomeRegion = mDefaultRegion;}
 
-  SoccerBall* const        Ball()const;
-  SoccerPitch* const       Pitch()const;
-  SteeringBehaviors*const  Steering()const{return m_pSteering;}
-  const Region* const      HomeRegion()const;
-  void                     SetHomeRegion(int NewRegion){m_iHomeRegion = NewRegion;}
-  SoccerTeam*const         Team()const{return m_pTeam;}
-  
+  SoccerBall* const        ball()const;
+  SoccerPitch* const       pitch()const;
+  SteeringBehaviors*const  steering()const{return mSteering;}
+  const Region* const      homeRegion()const;
+  void                     setHomeRegion(int newRegion){mHomeRegion = newRegion;}
+  SoccerTeam*const         team()const{return mTeam;}
+
 };
 
 

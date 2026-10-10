@@ -1,31 +1,31 @@
 #include "EntityBase.h"
 
 
-int EntityBase::m_iNextValidID = 0;
+int EntityBase::mNextValidId = 0;
 
 //------------------------------ ctor -----------------------------------------
 //-----------------------------------------------------------------------------
-EntityBase::EntityBase(int ID):m_dBoundingRadius(0.0),
-                                       m_vScale(Vector2D(1.0,1.0)),
-                                       m_iType(default_entity_type),
-                                       m_bTag(false)
+EntityBase::EntityBase(int id):mBoundingRadius(0.0),
+                                       mScale(Vector2D(1.0,1.0)),
+                                       mType(defaultEntityType),
+                                       mTag(false)
 {
-  SetID(ID);
+  setId(id);
 }
 
-//----------------------------- SetID -----------------------------------------
+//----------------------------- setId -----------------------------------------
 //
-//  this must be called within each constructor to make sure the ID is set
+//  this must be called within each function Object() { [native code] } to make sure the id is set
 //  correctly. It verifies that the value passed to the method is greater
-//  or equal to the next valid ID, before setting the ID and incrementing
-//  the next valid ID
+//  or equal to the next valid id, before setting the id and incrementing
+//  the next valid id
 //-----------------------------------------------------------------------------
-void EntityBase::SetID(int val)
+void EntityBase::setId(int val)
 {
-  //make sure the val is equal to or greater than the next available ID
-  assert ( (val >= m_iNextValidID) && "<EntityBase::SetID>: invalid ID");
+  //make sure the val is equal to or greater than the next available id
+  assert ( (val >= mNextValidId) && "<EntityBase::SetID>: invalid ID");
 
-  m_ID = val;
-    
-  m_iNextValidID = m_ID + 1;
+  mId = val;
+
+  mNextValidId = mId + 1;
 }

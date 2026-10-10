@@ -6,55 +6,55 @@
 
 
 
-class Goal 
+class Goal
 {
 
 private:
 
-  Vector2D   m_vLeftPost;
-  Vector2D   m_vRightPost;
+  Vector2D   mLeftPost;
+  Vector2D   mRightPost;
 
   //a vector representing the facing direction of the goal
-  Vector2D   m_vFacing;
+  Vector2D   mFacing;
 
   //the position of the center of the goal line
-  Vector2D   m_vCenter;
+  Vector2D   mCenter;
 
-  //each time Scored() detects a goal this is incremented
-  int        m_iNumGoalsScored;
+  //each time scored() detects a goal this is incremented
+  int        mNumGoalsScored;
 
 public:
 
-  Goal(Vector2D left, Vector2D right, Vector2D facing):m_vLeftPost(left),
-                                                       m_vRightPost(right),
-                                                       m_vCenter((left+right)/2.0),
-                                                       m_iNumGoalsScored(0),
-                                                       m_vFacing(facing)
+  Goal(Vector2D left, Vector2D right, Vector2D facing):mLeftPost(left),
+                                                       mRightPost(right),
+                                                       mCenter((left+right)/2.0),
+                                                       mNumGoalsScored(0),
+                                                       mFacing(facing)
   {  }
 
   //Given the current ball position and the previous ball position,
-  //this method returns true if the ball has crossed the goal line 
-  //and increments m_iNumGoalsScored
-  inline bool Scored(const SoccerBall*const ball);
+  //this method returns true if the ball has crossed the goal line
+  //and increments mNumGoalsScored
+  inline bool scored(const SoccerBall*const ball);
 
   //-----------------------------------------------------accessor methods
-  Vector2D Center()const{return m_vCenter;}
-  Vector2D Facing()const{return m_vFacing;}
-  Vector2D LeftPost()const{return m_vLeftPost;}
-  Vector2D RightPost()const{return m_vRightPost;}
+  Vector2D center()const{return mCenter;}
+  Vector2D facing()const{return mFacing;}
+  Vector2D leftPost()const{return mLeftPost;}
+  Vector2D rightPost()const{return mRightPost;}
 
-  int      NumGoalsScored()const{return m_iNumGoalsScored;}
-  void     ResetGoalsScored(){m_iNumGoalsScored = 0;}
+  int      numGoalsScored()const{return mNumGoalsScored;}
+  void     resetGoalsScored(){mNumGoalsScored = 0;}
 };
 
 
 /////////////////////////////////////////////////////////////////////////
 
-bool Goal::Scored(const SoccerBall*const ball)
+bool Goal::scored(const SoccerBall*const ball)
 {
-  if (LineIntersection2D(ball->Pos(), ball->OldPos(), m_vLeftPost, m_vRightPost))
+  if (lineIntersection2D(ball->pos(), ball->oldPos(), mLeftPost, mRightPost))
   {
-    ++m_iNumGoalsScored;
+    ++mNumGoalsScored;
 
     return true;
   }

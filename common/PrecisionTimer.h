@@ -9,28 +9,28 @@ class PrecisionTimer
 
 private:
 
-  LONGLONG  m_CurrentTime,
-            m_LastTime,
-            m_LastTimeInTimeElapsed,
-            m_NextTime,
-            m_StartTime,
-            m_FrameTime,
-            m_PerfCountFreq;
+  LONGLONG  mCurrentTime,
+            mLastTime,
+            mLastTimeInTimeElapsed,
+            mNextTime,
+            mStartTime,
+            mFrameTime,
+            mPerfCountFreq;
 
-  double    m_TimeElapsed,
-            m_LastTimeElapsed,
-            m_TimeScale;
+  double    mTimeElapsed,
+            mLastTimeElapsed,
+            mTimeScale;
 
-  double    m_NormalFPS;
-  double    m_SlowFPS;
+  double    mNormalFps;
+  double    mSlowFps;
 
-  bool      m_bStarted;
+  bool      mStarted;
 
-  //if true a call to TimeElapsed() will return 0 if the current
+  //if true a call to timeElapsed() will return 0 if the current
   //time elapsed is much smaller than the previous. Used to counter
-  //the problems associated with the user using menus/resizing/moving 
+  //the problems associated with the user using menus/resizing/moving
   //a window etc
-  bool      m_bSmoothUpdates;
+  bool      mSmoothUpdates;
 
 
 public:
@@ -41,51 +41,51 @@ public:
 
 
   //whatdayaknow, this starts the timer
-  void    Start();
+  void    start();
 
   //determines if enough time has passed to move onto next frame
-  inline bool    ReadyForNextFrame();
+  inline bool    readyForNextFrame();
 
   //only use this after a call to the above.
-  //double  GetTimeElapsed(){return m_TimeElapsed;}
+  //double  GetTimeElapsed(){return mTimeElapsed;}
 
-  inline double  TimeElapsed();
+  inline double  timeElapsed();
 
-  double  CurrentTime()
-  { 
-    QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
+  double  currentTime()
+  {
+    QueryPerformanceCounter( (LARGE_INTEGER*) &mCurrentTime);
 
-    return (m_CurrentTime - m_StartTime) * m_TimeScale;
+    return (mCurrentTime - mStartTime) * mTimeScale;
   }
 
-  bool    Started()const{return m_bStarted;}
+  bool    started()const{return mStarted;}
 
-  void    SmoothUpdatesOn(){m_bSmoothUpdates = true;}
-  void    SmoothUpdatesOff(){m_bSmoothUpdates = false;}
+  void    smoothUpdatesOn(){mSmoothUpdates = true;}
+  void    smoothUpdatesOff(){mSmoothUpdates = false;}
 
 };
 
 
-//-------------------------ReadyForNextFrame()-------------------------------
+//-------------------------readyForNextFrame()-------------------------------
 //
-//  returns true if it is time to move on to the next frame step. To be used if
+//  returns true if it is time to move on to the next frame step. to be used if
 //  FPS is set.
 //
 //----------------------------------------------------------------------------
-inline bool PrecisionTimer::ReadyForNextFrame()
+inline bool PrecisionTimer::readyForNextFrame()
 {
-  assert(m_NormalFPS && "PrecisionTimer::ReadyForNextFrame<No FPS set in timer>");
-  
-  QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
+  assert(mNormalFps && "PrecisionTimer::ReadyForNextFrame<No FPS set in timer>");
 
-  if (m_CurrentTime > m_NextTime)
+  QueryPerformanceCounter( (LARGE_INTEGER*) &mCurrentTime);
+
+  if (mCurrentTime > mNextTime)
   {
 
-    m_TimeElapsed = (m_CurrentTime - m_LastTime) * m_TimeScale;
-    m_LastTime    = m_CurrentTime;
+    mTimeElapsed = (mCurrentTime - mLastTime) * mTimeScale;
+    mLastTime    = mCurrentTime;
 
     //update time to render next frame
-    m_NextTime = m_CurrentTime + m_FrameTime;
+    mNextTime = mCurrentTime + mFrameTime;
 
     return true;
   }
@@ -93,27 +93,27 @@ inline bool PrecisionTimer::ReadyForNextFrame()
   return false;
 }
 
-//--------------------------- TimeElapsed --------------------------------
+//--------------------------- timeElapsed --------------------------------
 //
 //  returns time elapsed since last call to this function.
 //-------------------------------------------------------------------------
-inline double PrecisionTimer::TimeElapsed()
+inline double PrecisionTimer::timeElapsed()
 {
-  m_LastTimeElapsed = m_TimeElapsed;
+  mLastTimeElapsed = mTimeElapsed;
 
-  QueryPerformanceCounter( (LARGE_INTEGER*) &m_CurrentTime);
-  
-  m_TimeElapsed = (m_CurrentTime - m_LastTimeInTimeElapsed) * m_TimeScale;
-  
-  m_LastTimeInTimeElapsed    = m_CurrentTime;
+  QueryPerformanceCounter( (LARGE_INTEGER*) &mCurrentTime);
 
-  const double Smoothness = 5.0;
+  mTimeElapsed = (mCurrentTime - mLastTimeInTimeElapsed) * mTimeScale;
 
-  if (m_bSmoothUpdates)
+  mLastTimeInTimeElapsed    = mCurrentTime;
+
+  const double smoothness = 5.0;
+
+  if (mSmoothUpdates)
   {
-    if (m_TimeElapsed < (m_LastTimeElapsed * Smoothness))
+    if (mTimeElapsed < (mLastTimeElapsed * smoothness))
     {
-      return m_TimeElapsed;
+      return mTimeElapsed;
     }
 
     else
@@ -121,16 +121,16 @@ inline double PrecisionTimer::TimeElapsed()
       return 0.0;
     }
   }
-  
+
   else
   {
-    return m_TimeElapsed;
+    return mTimeElapsed;
   }
-    
+
 }
 
 
 
 #endif
 
-  
+

@@ -2,7 +2,7 @@
 #define ASTAR_HEURISTIC_POLICIES_H
 //-----------------------------------------------------------------------------
 //
-//  Name:   AStarHeuristicPolicies.h
+//  name:   AStarHeuristicPolicies.h
 //
 //  Author: Mat Buckland (www.ai-junkie.com)
 //
@@ -14,37 +14,37 @@
 //-----------------------------------------------------------------------------
 //the euclidian heuristic (straight-line distance)
 //-----------------------------------------------------------------------------
-class Heuristic_Euclid 
+class HeuristicEuclid
 {
 public:
 
-  Heuristic_Euclid(){}
+  HeuristicEuclid(){}
 
   //calculate the straight line distance from node nd1 to node nd2
-  template <class graph_type>
-  static double Calculate(const graph_type& G, int nd1, int nd2)
+  template <class graphType>
+  static double calculate(const graphType& g, int nd1, int nd2)
   {
-    return Vec2DDistance(G.GetNode(nd1).Pos(), G.GetNode(nd2).Pos());
+    return vec2DDistance(g.getNode(nd1).pos(), g.getNode(nd2).pos());
   }
 };
 
 //-----------------------------------------------------------------------------
-//this uses the euclidian distance but adds in an amount of noise to the 
+//this uses the euclidian distance but adds in an amount of noise to the
 //result. You can use this heuristic to provide imperfect paths. This can
 //be handy if you find that you frequently have lots of agents all following
 //each other in single file to get from one place to another
 //-----------------------------------------------------------------------------
-class Heuristic_Noisy_Euclidian
+class HeuristicNoisyEuclidian
 {
 public:
 
-  Heuristic_Noisy_Euclidian(){}
+  HeuristicNoisyEuclidian(){}
 
   //calculate the straight line distance from node nd1 to node nd2
-  template <class graph_type>
-  static double Calculate(const graph_type& G, int nd1, int nd2)
+  template <class graphType>
+  static double calculate(const graphType& g, int nd1, int nd2)
   {
-    return Vec2DDistance(G.GetNode(nd1).Pos(), G.GetNode(nd2).Pos()) * RandInRange(0.9f, 1.1f);
+    return vec2DDistance(g.getNode(nd1).pos(), g.getNode(nd2).pos()) * randInRange(0.9f, 1.1f);
   }
 };
 
@@ -53,12 +53,12 @@ public:
 //this is because Dijkstra's is equivalent to an A* search using a heuristic
 //value that is always equal to zero.
 //-----------------------------------------------------------------------------
-class Heuristic_Dijkstra 
+class HeuristicDijkstra
 {
 public:
 
-  template <class graph_type>
-  static double Calculate(const graph_type& G, int nd1, int nd2)
+  template <class graphType>
+  static double calculate(const graphType& g, int nd1, int nd2)
   {
     return 0;
   }

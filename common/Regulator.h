@@ -1,7 +1,7 @@
 #ifndef REGULATOR
 #define REGULATOR
 #pragma comment(lib,"winmm.lib") //if you don't use MSVC make sure this library is included in your project
-#include "mmsystem.h" 
+#include "mmsystem.h"
 
 #include "utils.h"
 
@@ -12,58 +12,58 @@ class Regulator
 {
 private:
 
-  //the time period between updates 
-  double m_dUpdatePeriod;
+  //the time period between updates
+  double mUpdatePeriod;
 
   //the next time the regulator allows code flow
-  DWORD m_dwNextUpdateTime;
+  DWORD mNextUpdateTime;
 
 
 public:
 
-  
-  Regulator(double NumUpdatesPerSecondRqd)
+
+  Regulator(double numUpdatesPerSecondRqd)
   {
-    m_dwNextUpdateTime = (DWORD)(timeGetTime()+RandFloat()*1000);
+    mNextUpdateTime = (DWORD)(timeGetTime()+randFloat()*1000);
 
-    if (NumUpdatesPerSecondRqd > 0)
+    if (numUpdatesPerSecondRqd > 0)
     {
-      m_dUpdatePeriod = 1000.0 / NumUpdatesPerSecondRqd; 
+      mUpdatePeriod = 1000.0 / numUpdatesPerSecondRqd;
     }
 
-    else if (isEqual(0.0, NumUpdatesPerSecondRqd))
+    else if (isEqual(0.0, numUpdatesPerSecondRqd))
     {
-      m_dUpdatePeriod = 0.0;
+      mUpdatePeriod = 0.0;
     }
 
-    else if (NumUpdatesPerSecondRqd < 0)
+    else if (numUpdatesPerSecondRqd < 0)
     {
-      m_dUpdatePeriod = -1;
+      mUpdatePeriod = -1;
     }
   }
 
 
-  //returns true if the current time exceeds m_dwNextUpdateTime
+  //returns true if the current time exceeds mNextUpdateTime
   bool isReady()
   {
     //if a regulator is instantiated with a zero freq then it goes into
     //stealth mode (doesn't regulate)
-    if (isEqual(0.0, m_dUpdatePeriod)) return true;
+    if (isEqual(0.0, mUpdatePeriod)) return true;
 
     //if the regulator is instantiated with a negative freq then it will
     //never allow the code to flow
-    if (m_dUpdatePeriod < 0) return false;
+    if (mUpdatePeriod < 0) return false;
 
-    DWORD CurrentTime = timeGetTime();
+    DWORD currentTime = timeGetTime();
 
     //the number of milliseconds the update period can vary per required
     //update-step. This is here to make sure any multiple clients of this class
     //have their updates spread evenly
-    static const double UpdatePeriodVariator = 10.0;
+    static const double updatePeriodVariator = 10.0;
 
-    if (CurrentTime >= m_dwNextUpdateTime)
+    if (currentTime >= mNextUpdateTime)
     {
-      m_dwNextUpdateTime = (DWORD)(CurrentTime + m_dUpdatePeriod + RandInRange(-UpdatePeriodVariator, UpdatePeriodVariator));
+      mNextUpdateTime = (DWORD)(currentTime + mUpdatePeriod + randInRange(-updatePeriodVariator, updatePeriodVariator));
 
       return true;
     }

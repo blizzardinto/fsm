@@ -3,14 +3,14 @@
 #pragma warning (disable : 4786)
 
 //initialize static variable
-std::vector<std::string> DebugConsole::m_Buffer;
-HWND                     DebugConsole::m_hwnd       = NULL;
-bool                     DebugConsole::m_bFlushed   = true;
-bool                     DebugConsole::m_bDestroyed = false;
-bool                     DebugConsole::m_bActive   = true;
-std::ofstream            DebugConsole::m_LogOut;
-int                      DebugConsole::m_iPosLeft;
-int                      DebugConsole::m_iPosTop;
+std::vector<std::string> DebugConsole::mBuffer;
+HWND                     DebugConsole::mHwnd       = NULL;
+bool                     DebugConsole::mFlushed   = true;
+bool                     DebugConsole::mDestroyed = false;
+bool                     DebugConsole::mActive   = true;
+std::ofstream            DebugConsole::mLogOut;
+int                      DebugConsole::mPosLeft;
+int                      DebugConsole::mPosTop;
 
 
 
@@ -18,13 +18,13 @@ int                      DebugConsole::m_iPosTop;
 //-----------------------------------InfoWinProc-----------------------------
 //
 //-----------------------------------------------------------------------
-LRESULT CALLBACK DebugConsole::DebugWindowProc(HWND hwnd, 
-						                             UINT msg, 
-                                         WPARAM wparam, 
+LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
+                                         UINT msg,
+                                         WPARAM wparam,
                                          LPARAM lparam)
 {
-	//these hold the dimensions of the client window area
-	static int cxClient, cyClient;
+  //these hold the dimensions of the client window area
+  static int cxClient, cyClient;
 
   //font dimensions
   static int cxChar, cyChar, cxCaps, cyPage;
@@ -32,18 +32,18 @@ LRESULT CALLBACK DebugConsole::DebugWindowProc(HWND hwnd,
   int iVertPos;
 
   TEXTMETRIC  tm;
-  SCROLLINFO  si;   
-  
+  SCROLLINFO  si;
+
   //get the size of the client window
   RECT rect;
   GetClientRect(hwnd, &rect);
-	cxClient = rect.right;
-	cyClient = rect.bottom;
+  cxClient = rect.right;
+  cyClient = rect.bottom;
 
-	switch(msg)
-	{	
-		case WM_CREATE: 
-		{
+  switch(msg)
+  {
+    case WM_CREATE:
+    {
       //get the font info
       HDC hdc = GetDC(hwnd);
 
@@ -51,7 +51,7 @@ LRESULT CALLBACK DebugConsole::DebugWindowProc(HWND hwnd,
       cxChar = tm.tmAveCharWidth;
       cxCaps = (tm.tmPitchAndFamily & 1 ? 3 : 2) * cxChar / 2;
       cyChar = tm.tmHeight + tm.tmExternalLeading;
-     
+
       // Set vertical scroll bar range and page size
       si.cbSize = sizeof (si) ;
       si.fMask  = SIF_RANGE | SIF_PAGE;
@@ -63,34 +63,34 @@ LRESULT CALLBACK DebugConsole::DebugWindowProc(HWND hwnd,
 
       ReleaseDC(hwnd, hdc);
 
-		} 
-			
-		break;
+    }
+
+    break;
 
     case WM_KEYUP:
       {
         switch(wparam)
         {
            case VK_ESCAPE:
-            {             
+            {
               SendMessage(hwnd, WM_DESTROY, NULL, NULL);
             }
-          
+
             break;
         }
       }
 
       break;
 
-    
+
     case WM_VSCROLL:
-       
+
       //Get all the vertical scroll bar information
       si.cbSize = sizeof (si);
       si.fMask  = SIF_ALL;
       GetScrollInfo (hwnd, SB_VERT, &si) ;
 
-      // Save the position for comparison later on
+      // save the position for comparison later on
       iVertPos = si.nPos ;
 
       switch (LOWORD (wparam))
@@ -98,19 +98,19 @@ LRESULT CALLBACK DebugConsole::DebugWindowProc(HWND hwnd,
         case SB_TOP:
              si.nPos = si.nMin ;
              break ;
-               
+
         case SB_BOTTOM:
              si.nPos = si.nMax ;
              break ;
-               
+
         case SB_LINEUP:
              si.nPos -= 1 ;
              break ;
-               
+
         case SB_LINEDOWN:
              si.nPos += 1 ;
              break ;
-               
+
         case SB_PAGEUP:
              si.nPos -= si.nPage ;
              break ;
@@ -118,15 +118,15 @@ LRESULT CALLBACK DebugConsole::DebugWindowProc(HWND hwnd,
         case SB_PAGEDOWN:
              si.nPos += si.nPage ;
              break ;
-               
+
         case SB_THUMBTRACK:
              si.nPos = si.nTrackPos ;
              break ;
-               
+
         default:
-             break ;         
+             break ;
       }
-          
+
       //Set the position and then retrieve it.  Due to adjustments
       //by Windows it may not be the same as the value set.
       si.fMask = SIF_POS ;
@@ -135,16 +135,16 @@ LRESULT CALLBACK DebugConsole::DebugWindowProc(HWND hwnd,
 
       // If the position has changed, scroll the window and update it
       if (si.nPos != iVertPos)
-      {                    
+      {
          ScrollWindow (hwnd, 0, cyChar * (iVertPos - si.nPos), NULL, NULL) ;
          UpdateWindow (hwnd) ;
-         DrawWindow();
+         drawWindow();
       }
-      
-      break ;
-          
 
-    case UM_SETSCROLL:
+      break ;
+
+
+    case umSetscroll:
     {
       //Get all the vertical scroll bar information
       si.cbSize = sizeof (si);
@@ -152,83 +152,83 @@ LRESULT CALLBACK DebugConsole::DebugWindowProc(HWND hwnd,
       GetScrollInfo (hwnd, SB_VERT, &si);
 
       si.nMin = 0;
-      si.nMax = m_Buffer.size();
+      si.nMax = mBuffer.size();
 
       si.nPos += 1;
 
       si.fMask  = SIF_RANGE | SIF_POS;
       SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
-                        
+
       ScrollWindow (hwnd, 0, cyChar * si.nPos, NULL, NULL);
-      DrawWindow();     
-    }  
+      drawWindow();
+    }
 
     break;
 
-		case WM_PAINT: 
-		{
+    case WM_PAINT:
+    {
       PAINTSTRUCT ps;
-      
-		  BeginPaint(hwnd, &ps);
+
+      BeginPaint(hwnd, &ps);
 
         SetBkMode(ps.hdc, TRANSPARENT);
         SetTextColor(ps.hdc, RGB(255,255,255));
 
-        if (m_Buffer.size() > 1)
+        if (mBuffer.size() > 1)
         {
-     
+
           // Get vertical scroll bar position
           si.cbSize = sizeof (si) ;
           si.fMask  = SIF_POS ;
           GetScrollInfo (hwnd, SB_VERT, &si) ;
           iVertPos = si.nPos ;
-     
-          //number of lines we can fit on this page
-          int PageSize = (int)(cyClient / cyChar) - 1;
 
-          int StartIndex = 0;
-      
-          if (iVertPos > PageSize)
+          //number of lines we can fit on this page
+          int pageSize = (int)(cyClient / cyChar) - 1;
+
+          int startIndex = 0;
+
+          if (iVertPos > pageSize)
           {
-            StartIndex = iVertPos - PageSize;
+            startIndex = iVertPos - pageSize;
           }
 
-          std::vector<std::string>::iterator beg = m_Buffer.begin() + StartIndex;
-          std::vector<std::string>::iterator end = m_Buffer.begin() + StartIndex+PageSize+1;
+          std::vector<std::string>::iterator beg = mBuffer.begin() + startIndex;
+          std::vector<std::string>::iterator end = mBuffer.begin() + startIndex+pageSize+1;
 
           int line=0;
 
-          for (beg; (beg !=end) && (beg != m_Buffer.end()); ++beg)
+          for (beg; (beg !=end) && (beg != mBuffer.end()); ++beg)
           {
-            TextOut(ps.hdc, 0, cyChar*line++, (*beg).c_str(), (*beg).size()); 
+            TextOut(ps.hdc, 0, cyChar*line++, (*beg).c_str(), (*beg).size());
           }
         }
-    
-			EndPaint(hwnd, &ps);
-		} 
-			
-		break;
+
+      EndPaint(hwnd, &ps);
+    }
+
+    break;
 
     case WM_SIZE:
       {
       }
       break;
 
-		case WM_DESTROY: 
-		{
-      m_bDestroyed = true;  
+    case WM_DESTROY:
+    {
+      mDestroyed = true;
 
-			DestroyWindow(m_hwnd);
- 		} 
-			
-		break;
+      DestroyWindow(mHwnd);
+     }
 
-		default:break;
+    break;
 
-	}//end switch
+    default:break;
 
-	// default msg handler 
-	if (!m_bDestroyed)
+  }//end switch
+
+  // default msg handler
+  if (!mDestroyed)
   {
     return DefWindowProc(hwnd, msg, wparam, lparam);
   }
@@ -240,32 +240,32 @@ LRESULT CALLBACK DebugConsole::DebugWindowProc(HWND hwnd,
 }
 
 
-//----------------------------- Create -----------------------------------
+//----------------------------- create -----------------------------------
 //
 //------------------------------------------------------------------------
-bool DebugConsole::Create()
+bool DebugConsole::create()
 {
-  m_hwnd       = NULL;
-  m_iPosLeft   = 0;
-  m_iPosTop    = 0;
-  m_bFlushed   = true;
+  mHwnd       = NULL;
+  mPosLeft   = 0;
+  mPosTop    = 0;
+  mFlushed   = true;
 
   //open log file
-  m_LogOut.open("DebugLog.txt");
+  mLogOut.open("DebugLog.txt");
 
-  
-  WNDCLASSEX wDebugConsole = {sizeof(WNDCLASSEX), 
+
+  WNDCLASSEX wDebugConsole = {sizeof(WNDCLASSEX),
                        CS_HREDRAW | CS_VREDRAW,
-                       DebugWindowProc,
+                       debugWindowProc,
                        0,
-                       0, 
+                       0,
                        GetModuleHandle(NULL),
-						           NULL,
-						           NULL,
-						           (HBRUSH)(GetStockObject(GRAY_BRUSH)),
-						           NULL,
-						           "Debug",
-						           NULL }; 
+                       NULL,
+                       NULL,
+                       (HBRUSH)(GetStockObject(GRAY_BRUSH)),
+                       NULL,
+                       "Debug",
+                       NULL };
 
 
   //register the window class
@@ -276,72 +276,72 @@ bool DebugConsole::Create()
     //exit the application
     return false;
   }
-	
+
 
   //get the size of the client window
  // RECT rectActive;
  // GetClientRect(GetActiveWindow(), &rectActive);
 
-	// Create the info window
-  m_hwnd = CreateWindow("Debug",
-                            "Debug Console", 
-									          WS_OVERLAPPED | WS_VISIBLE | WS_SYSMENU| WS_VSCROLL | WS_THICKFRAME,
+  // create the info window
+  mHwnd = CreateWindow("Debug",
+                            "Debug Console",
+                            WS_OVERLAPPED | WS_VISIBLE | WS_SYSMENU| WS_VSCROLL | WS_THICKFRAME,
                             0,
-									          0,
-                            DEBUG_WINDOW_WIDTH,
-									          DEBUG_WINDOW_HEIGHT,
-									          NULL,
-									          NULL,
-									          wDebugConsole.hInstance,
-									          NULL );
+                            0,
+                            debugWindowWidth,
+                            debugWindowHeight,
+                            NULL,
+                            NULL,
+                            wDebugConsole.hInstance,
+                            NULL );
 
     //make sure the window creation has gone OK
-  if(!m_hwnd)
+  if(!mHwnd)
   {
-    MessageBox(m_hwnd, "CreateWindowEx Failed!", "Error!", 0);
+    MessageBox(mHwnd, "CreateWindowEx Failed!", "Error!", 0);
 
     return false;
   }
-	
-	// Show the window
-	UpdateWindow(m_hwnd);
+
+  // Show the window
+  UpdateWindow(mHwnd);
 
   return true;
 
 }
 
-//---------------------------- Instance ---------------------------------------
-//  
+//---------------------------- instance ---------------------------------------
+//
 //  Retrieve a pointer to an instance of this class
 //-----------------------------------------------------------------------------
-DebugConsole* DebugConsole::Instance()
+DebugConsole* DebugConsole::instance()
 {
-   static DebugConsole instance;     
+   static DebugConsole instance;
    static bool created = false;
    if ( !created)
-   {Create();created = true;}
-   
+   {create();created = true;}
+
    return &instance;
 }
 
-//--------------------------- WriteAndResetBuffer -----------------------------
+//--------------------------- writeAndResetBuffer -----------------------------
 //-----------------------------------------------------------------------------
-void DebugConsole::WriteAndResetBuffer()
+void DebugConsole::writeAndResetBuffer()
 {
- 
-  m_iPosLeft   = 0;
-  m_iPosTop    = 0;
-  m_bFlushed   = true;
-      
-  //write out the contents of the buffer to a file
-  std::vector<std::string>::iterator it = m_Buffer.begin();
 
-  for (it; it != m_Buffer.end(); ++it)
+  mPosLeft   = 0;
+  mPosTop    = 0;
+  mFlushed   = true;
+
+  //write out the contents of the buffer to a file
+  std::vector<std::string>::iterator it = mBuffer.begin();
+
+  for (it; it != mBuffer.end(); ++it)
   {
-    m_LogOut << *it << std::endl;
+    mLogOut << *it << std::endl;
   }
 
-  m_Buffer.clear();
+  mBuffer.clear();
 
-  SendMessage(m_hwnd, UM_SETSCROLL, NULL, NULL);
+  SendMessage(mHwnd, umSetscroll, NULL, NULL);
 }

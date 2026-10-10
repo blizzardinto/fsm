@@ -3,21 +3,21 @@
 #include <fstream>
 #include <limits>
 
-//------------------------- Length ---------------------------------------
+//------------------------- length ---------------------------------------
 //
 //  returns the length of a 2D vector
 //------------------------------------------------------------------------
-double Vector2D::Length()const
+double Vector2D::length()const
 {
   return sqrt(x * x + y * y);
 }
 
 
-//------------------------- LengthSq -------------------------------------
+//------------------------- lengthSq -------------------------------------
 //
 //  returns the squared length of a 2D vector
 //------------------------------------------------------------------------
-double Vector2D::LengthSq()const
+double Vector2D::lengthSq()const
 {
   return (x * x + y * y);
 }
@@ -27,42 +27,42 @@ double Vector2D::LengthSq()const
 //
 //  calculates the dot product
 //------------------------------------------------------------------------
-double Vector2D::Dot(const Vector2D &v2)const
+double Vector2D::dot(const Vector2D &v2)const
 {
   return x*v2.x + y*v2.y;
 }
 
-//------------------------ Sign ------------------------------------------
+//------------------------ sign ------------------------------------------
 //
 //  returns positive if v2 is clockwise of this vector,
 //  minus if anticlockwise (Y axis pointing down, X axis to right)
 //------------------------------------------------------------------------
-int Vector2D::Sign(const Vector2D& v2)const
+int Vector2D::sign(const Vector2D& v2)const
 {
   if (y*v2.x > x*v2.y)
-  { 
+  {
     return anticlockwise;
   }
-  else 
+  else
   {
     return clockwise;
   }
 }
 
-//------------------------------ Perp ------------------------------------
+//------------------------------ perp ------------------------------------
 //
 //  Returns a vector perpendicular to this vector
 //------------------------------------------------------------------------
-Vector2D Vector2D::Perp()const
+Vector2D Vector2D::perp()const
 {
   return Vector2D(-y, x);
 }
 
-//------------------------------ Distance --------------------------------
+//------------------------------ distance --------------------------------
 //
 //  calculates the euclidean distance between two vectors
 //------------------------------------------------------------------------
-double Vector2D::Distance(const Vector2D &v2)const
+double Vector2D::distance(const Vector2D &v2)const
 {
   double ySeparation = v2.y - y;
   double xSeparation = v2.x - x;
@@ -71,11 +71,11 @@ double Vector2D::Distance(const Vector2D &v2)const
 }
 
 
-//------------------------------ DistanceSq ------------------------------
+//------------------------------ distanceSq ------------------------------
 //
-//  calculates the euclidean distance squared between two vectors 
+//  calculates the euclidean distance squared between two vectors
 //------------------------------------------------------------------------
-double Vector2D::DistanceSq(const Vector2D &v2)const
+double Vector2D::distanceSq(const Vector2D &v2)const
 {
   double ySeparation = v2.y - y;
   double xSeparation = v2.x - x;
@@ -83,52 +83,52 @@ double Vector2D::DistanceSq(const Vector2D &v2)const
   return ySeparation*ySeparation + xSeparation*xSeparation;
 }
 
-//----------------------------- Truncate ---------------------------------
+//----------------------------- truncate ---------------------------------
 //
 //  truncates a vector so that its length does not exceed max
 //------------------------------------------------------------------------
-void Vector2D::Truncate(double max)
+void Vector2D::truncate(double max)
 {
-  if (this->Length() > max)
+  if (this->length() > max)
   {
-    this->Normalize();
+    this->normalize();
 
     *this *= max;
-  } 
+  }
 }
 
-//--------------------------- Reflect ------------------------------------
+//--------------------------- reflect ------------------------------------
 //
 //  given a normalized vector this method reflects the vector it
 //  is operating upon. (like the path of a ball bouncing off a wall)
 //------------------------------------------------------------------------
-void Vector2D::Reflect(const Vector2D& norm)
+void Vector2D::reflect(const Vector2D& norm)
 {
-  *this += 2.0 * this->Dot(norm) * norm.GetReverse();
+  *this += 2.0 * this->dot(norm) * norm.getReverse();
 }
 
-//----------------------- GetReverse ----------------------------------------
+//----------------------- getReverse ----------------------------------------
 //
 //  returns the vector that is the reverse of this vector
 //------------------------------------------------------------------------
-Vector2D Vector2D::GetReverse()const
+Vector2D Vector2D::getReverse()const
 {
   return Vector2D(-this->x, -this->y);
 }
 
 
-//------------------------- Normalize ------------------------------------
+//------------------------- normalize ------------------------------------
 //
 //  normalizes a 2D Vector
 //------------------------------------------------------------------------
-void Vector2D::Normalize()
-{ 
-  double vector_length = this->Length();
+void Vector2D::normalize()
+{
+  double vectorLength = this->length();
 
-  if (vector_length > std::numeric_limits<double>::epsilon())
+  if (vectorLength > std::numeric_limits<double>::epsilon())
   {
-    this->x /= vector_length;
-    this->y /= vector_length;
+    this->x /= vectorLength;
+    this->y /= vectorLength;
   }
 }
 
@@ -178,23 +178,23 @@ bool Vector2D::operator!=(const Vector2D& rhs)const
 
 //------------------------------------------------------------------------non member functions
 
-Vector2D Vec2DNormalize(const Vector2D &v)
+Vector2D vec2DNormalize(const Vector2D &v)
 {
   Vector2D vec = v;
 
-  double vector_length = vec.Length();
+  double vectorLength = vec.length();
 
-  if (vector_length > std::numeric_limits<double>::epsilon())
+  if (vectorLength > std::numeric_limits<double>::epsilon())
   {
-    vec.x /= vector_length;
-    vec.y /= vector_length;
+    vec.x /= vectorLength;
+    vec.y /= vectorLength;
   }
 
   return vec;
 }
 
 
-double Vec2DDistance(const Vector2D &v1, const Vector2D &v2)
+double vec2DDistance(const Vector2D &v1, const Vector2D &v2)
 {
   double ySeparation = v2.y - v1.y;
   double xSeparation = v2.x - v1.x;
@@ -202,7 +202,7 @@ double Vec2DDistance(const Vector2D &v1, const Vector2D &v2)
   return sqrt(ySeparation*ySeparation + xSeparation*xSeparation);
 }
 
-double Vec2DDistanceSq(const Vector2D &v1, const Vector2D &v2)
+double vec2DDistanceSq(const Vector2D &v1, const Vector2D &v2)
 {
   double ySeparation = v2.y - v1.y;
   double xSeparation = v2.x - v1.x;
@@ -210,28 +210,28 @@ double Vec2DDistanceSq(const Vector2D &v1, const Vector2D &v2)
   return ySeparation*ySeparation + xSeparation*xSeparation;
 }
 
-double Vec2DLength(const Vector2D& v)
+double vec2DLength(const Vector2D& v)
 {
   return sqrt(v.x*v.x + v.y*v.y);
 }
 
-double Vec2DLengthSq(const Vector2D& v)
+double vec2DLengthSq(const Vector2D& v)
 {
   return (v.x*v.x + v.y*v.y);
 }
 
 
-Vector2D POINTStoVector(const POINTS& p)
+Vector2D pointsToVector(const POINTS& p)
 {
   return Vector2D(p.x, p.y);
 }
 
-Vector2D POINTtoVector(const POINT& p)
+Vector2D pointToVector(const POINT& p)
 {
   return Vector2D((double)p.x, (double)p.y);
 }
 
-POINTS VectorToPOINTS(const Vector2D& v)
+POINTS vectorToPoints(const Vector2D& v)
 {
   POINTS p;
   p.x = (short)v.x;
@@ -240,7 +240,7 @@ POINTS VectorToPOINTS(const Vector2D& v)
   return p;
 }
 
-POINT VectorToPOINT(const Vector2D& v)
+POINT vectorToPoint(const Vector2D& v)
 {
   POINT p;
   p.x = (long)v.x;
@@ -272,7 +272,7 @@ Vector2D operator-(const Vector2D &lhs, const Vector2D &rhs)
   Vector2D result(lhs);
   result.x -= rhs.x;
   result.y -= rhs.y;
-  
+
   return result;
 }
 
@@ -282,7 +282,7 @@ Vector2D operator+(const Vector2D &lhs, const Vector2D &rhs)
   Vector2D result(lhs);
   result.x += rhs.x;
   result.y += rhs.y;
-  
+
   return result;
 }
 
@@ -312,51 +312,51 @@ std::ifstream& operator>>(std::ifstream& is, Vector2D& lhs)
 
 
 //treats a window as a toroid
-void WrapAround(Vector2D &pos, int MaxX, int MaxY)
+void wrapAround(Vector2D &pos, int maxX, int maxY)
 {
-  if (pos.x > MaxX) {pos.x = 0.0;}
+  if (pos.x > maxX) {pos.x = 0.0;}
 
-  if (pos.x < 0)    {pos.x = (double)MaxX;}
+  if (pos.x < 0)    {pos.x = (double)maxX;}
 
-  if (pos.y < 0)    {pos.y = (double)MaxY;}
+  if (pos.y < 0)    {pos.y = (double)maxY;}
 
-  if (pos.y > MaxY) {pos.y = 0.0;}
+  if (pos.y > maxY) {pos.y = 0.0;}
 }
 
-//returns true if the point p is not inside the region defined by top_left
-//and bot_rgt
-bool NotInsideRegion(Vector2D p,
-                     Vector2D top_left,
-                     Vector2D bot_rgt)
+//returns true if the point p is not inside the region defined by topLeft
+//and botRgt
+bool notInsideRegion(Vector2D p,
+                     Vector2D topLeft,
+                     Vector2D botRgt)
 {
-  return (p.x < top_left.x) || (p.x > bot_rgt.x) || 
-         (p.y < top_left.y) || (p.y > bot_rgt.y);
+  return (p.x < topLeft.x) || (p.x > botRgt.x) ||
+         (p.y < topLeft.y) || (p.y > botRgt.y);
 }
 
-bool InsideRegion(Vector2D p,
-                  Vector2D top_left,
-                  Vector2D bot_rgt)
+bool insideRegion(Vector2D p,
+                  Vector2D topLeft,
+                  Vector2D botRgt)
 {
-  return !((p.x < top_left.x) || (p.x > bot_rgt.x) || 
-         (p.y < top_left.y) || (p.y > bot_rgt.y));
+  return !((p.x < topLeft.x) || (p.x > botRgt.x) ||
+         (p.y < topLeft.y) || (p.y > botRgt.y));
 }
 
-bool InsideRegion(Vector2D p, int left, int top, int right, int bottom)
+bool insideRegion(Vector2D p, int left, int top, int right, int bottom)
 {
   return !( (p.x < left) || (p.x > right) || (p.y < top) || (p.y > bottom) );
 }
 
-//------------------ isSecondInFOVOfFirst -------------------------------------
+//------------------ isSecondInFovOfFirst -------------------------------------
 //
 //  returns true if the target position is in the field of view of the entity
 //  positioned at posFirst facing in facingFirst
 //-----------------------------------------------------------------------------
-bool isSecondInFOVOfFirst(Vector2D posFirst,
+bool isSecondInFovOfFirst(Vector2D posFirst,
                           Vector2D facingFirst,
                           Vector2D posSecond,
                           double    fov)
 {
-  Vector2D toTarget = Vec2DNormalize(posSecond - posFirst);
+  Vector2D toTarget = vec2DNormalize(posSecond - posFirst);
 
-  return facingFirst.Dot(toTarget) >= cos(fov/2.0);
+  return facingFirst.dot(toTarget) >= cos(fov/2.0);
 }

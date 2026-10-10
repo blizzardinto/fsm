@@ -2,10 +2,10 @@
 #define TELEGRAM_H
 //------------------------------------------------------------------------
 //
-//  Name:   Telegram.h
+//  name:   Telegram.h
 //
 //  Desc:   This defines a telegram. A telegram is a data structure that
-//          records information required to dispatch messages. Messages 
+//          records information required to dispatch messages. Messages
 //          are used by game agents to communicate with each other.
 //
 //  Author: Mat Buckland (fup@ai-junkie.com)
@@ -18,28 +18,28 @@
 struct Telegram
 {
   //the entity that sent this telegram
-  int          Sender;
+  int          sender;
 
   //the entity that is to receive this telegram
-  int          Receiver;
+  int          receiver;
 
   //the message itself. These are all enumerated in the file
   //"MessageTypes.h"
-  int          Msg;
+  int          msg;
 
   //messages can be dispatched immediately or delayed for a specified amount
-  //of time. If a delay is necessary this field is stamped with the time 
+  //of time. If a delay is necessary this field is stamped with the time
   //the message should be dispatched.
-  double       DispatchTime;
+  double       dispatchTime;
 
   //any additional information that may accompany the message
-  void*        ExtraInfo;
+  void*        extraInfo;
 
 
-  Telegram():DispatchTime(-1),
-                  Sender(-1),
-                  Receiver(-1),
-                  Msg(-1)
+  Telegram():dispatchTime(-1),
+                  sender(-1),
+                  receiver(-1),
+                  msg(-1)
   {}
 
 
@@ -47,29 +47,29 @@ struct Telegram
            int    sender,
            int    receiver,
            int    msg,
-           void*  info = NULL): DispatchTime(time),
-                               Sender(sender),
-                               Receiver(receiver),
-                               Msg(msg),
-                               ExtraInfo(info)
+           void*  info = NULL): dispatchTime(time),
+                               sender(sender),
+                               receiver(receiver),
+                               msg(msg),
+                               extraInfo(info)
   {}
- 
+
 };
 
 
 //these telegrams will be stored in a priority queue. Therefore the >
 //operator needs to be overloaded so that the PQ can sort the telegrams
 //by time priority. Note how the times must be smaller than
-//SmallestDelay apart before two Telegrams are considered unique.
-const double SmallestDelay = 0.25;
+//smallestDelay apart before two Telegrams are considered unique.
+const double smallestDelay = 0.25;
 
 
 inline bool operator==(const Telegram& t1, const Telegram& t2)
 {
-  return ( fabs(t1.DispatchTime-t2.DispatchTime) < SmallestDelay) &&
-          (t1.Sender == t2.Sender)        &&
-          (t1.Receiver == t2.Receiver)    &&
-          (t1.Msg == t2.Msg);
+  return ( fabs(t1.dispatchTime-t2.dispatchTime) < smallestDelay) &&
+          (t1.sender == t2.sender)        &&
+          (t1.receiver == t2.receiver)    &&
+          (t1.msg == t2.msg);
 }
 
 inline bool operator<(const Telegram& t1, const Telegram& t2)
@@ -81,22 +81,22 @@ inline bool operator<(const Telegram& t1, const Telegram& t2)
 
   else
   {
-    return  (t1.DispatchTime < t2.DispatchTime);
+    return  (t1.dispatchTime < t2.dispatchTime);
   }
 }
 
 inline std::ostream& operator<<(std::ostream& os, const Telegram& t)
 {
-  os << "time: " << t.DispatchTime << "  Sender: " << t.Sender
-     << "   Receiver: " << t.Receiver << "   Msg: " << t.Msg;
+  os << "time: " << t.dispatchTime << "  Sender: " << t.sender
+     << "   Receiver: " << t.receiver << "   Msg: " << t.msg;
 
   return os;
 }
 
-//handy helper function for dereferencing the ExtraInfo field of the Telegram 
+//handy helper function for dereferencing the extraInfo field of the Telegram
 //to the required type.
 template <class T>
-inline T DereferenceToType(void* p)
+inline T dereferenceToType(void* p)
 {
   return *(T*)(p);
 }

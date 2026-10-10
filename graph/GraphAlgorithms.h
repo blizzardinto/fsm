@@ -4,15 +4,15 @@
 
 //------------------------------------------------------------------------
 //
-//  Name:   GraphSearches.h
+//  name:   GraphSearches.h
 //
-//  Desc:   classes to implement graph algorithms, including DFS, BFS,
+//  Desc:   classes to implement graph algorithms, including dfs, bfs,
 //          Dijkstra's, A*, Prims etc. (based upon the code created
 //          by Robert Sedgewick in his book "Algorithms in C++")
 //
 //          Any graphs passed to these functions must conform to the
 //          same interface used by the SparseGraph
-//          
+//
 //  Author: Mat Buckland (fup@ai-junkie.com)
 //
 //------------------------------------------------------------------------
@@ -25,130 +25,130 @@
 #include "PriorityQueue.h"
 
 
-//----------------------------- Graph_SearchDFS -------------------------------
+//----------------------------- GraphSearchDfs -------------------------------
 //
-//  class to implement a depth first search. 
+//  class to implement a depth first search.
 //-----------------------------------------------------------------------------
-template<class graph_type>
-class Graph_SearchDFS
+template<class graphType>
+class GraphSearchDfs
 {
 private:
 
   //to aid legibility
-  enum {visited, unvisited, no_parent_assigned};
+  enum {visited, unvisited, noParentAssigned};
 
   //create a typedef for the edge and node types used by the graph
-  typedef typename graph_type::EdgeType Edge;
-  typedef typename graph_type::NodeType Node;
+  typedef typename graphType::EdgeType Edge;
+  typedef typename graphType::NodeType Node;
 
 private:
 
   //a reference to the graph to be searched
-  const graph_type& m_Graph;
+  const graphType& mGraph;
 
   //this records the indexes of all the nodes that are visited as the
   //search progresses
-  std::vector<int>  m_Visited;
+  std::vector<int>  mVisited;
 
   //this holds the route taken to the target. Given a node index, the value
   //at that index is the node's parent. ie if the path to the target is
-  //3-8-27, then m_Route[8] will hold 3 and m_Route[27] will hold 8.
-  std::vector<int>  m_Route;
+  //3-8-27, then mRoute[8] will hold 3 and mRoute[27] will hold 8.
+  std::vector<int>  mRoute;
 
   //As the search progresses, this will hold all the edges the algorithm has
   //examined. THIS IS NOT NECESSARY FOR THE SEARCH, IT IS HERE PURELY
   //TO PROVIDE THE USER WITH SOME VISUAL FEEDBACK
-  std::vector<const Edge*>  m_SpanningTree;
+  std::vector<const Edge*>  mSpanningTree;
 
   //the source and target node indices
-  int               m_iSource,
-                    m_iTarget;
+  int               mSource,
+                    mTarget;
 
   //true if a path to the target has been found
-  bool              m_bFound;
+  bool              mFound;
 
 
-  //this method performs the DFS search
-  bool Search();
-  
+  //this method performs the dfs search
+  bool search();
+
 public:
 
-  Graph_SearchDFS(const graph_type& graph,
+  GraphSearchDfs(const graphType& graph,
                   int          source,
                   int          target = -1 ):
-  
-                                      m_Graph(graph),
-                                      m_iSource(source),
-                                      m_iTarget(target),
-                                      m_bFound(false),
-                                      m_Visited(m_Graph.NumNodes(), unvisited),
-                                      m_Route(m_Graph.NumNodes(), no_parent_assigned)
 
-  {                                                                         
-    m_bFound = Search(); 
+                                      mGraph(graph),
+                                      mSource(source),
+                                      mTarget(target),
+                                      mFound(false),
+                                      mVisited(mGraph.numNodes(), unvisited),
+                                      mRoute(mGraph.numNodes(), noParentAssigned)
+
+  {
+    mFound = search();
   }
 
 
   //returns a vector containing pointers to all the edges the search has examined
-  std::vector<const Edge*> GetSearchTree()const{return m_SpanningTree;}
+  std::vector<const Edge*> getSearchTree()const{return mSpanningTree;}
 
   //returns true if the target node has been located
-  bool   Found()const{return m_bFound;}
+  bool   found()const{return mFound;}
 
   //returns a vector of node indexes that comprise the shortest path
   //from the source to the target
-  std::list<int> GetPathToTarget()const;  
+  std::list<int> getPathToTarget()const;
 };
 
 //-----------------------------------------------------------------------------
-template <class graph_type>
-bool Graph_SearchDFS<graph_type>::Search()
+template <class graphType>
+bool GraphSearchDfs<graphType>::search()
 {
   //create a std stack of edges
   std::stack<const Edge*> stack;
 
   //create a dummy edge and put on the stack
-  Edge Dummy(m_iSource, m_iSource, 0);
-  
-  stack.push(&Dummy);
+  Edge dummy(mSource, mSource, 0);
+
+  stack.push(&dummy);
 
   //while there are edges in the stack keep searching
   while (!stack.empty())
   {
     //grab the next edge
-    const Edge* Next = stack.top();
+    const Edge* next = stack.top();
 
     //remove the edge from the stack
     stack.pop();
 
     //make a note of the parent of the node this edge points to
-    m_Route[Next->To()] = Next->From();
+    mRoute[next->to()] = next->from();
 
     //put it on the tree. (making sure the dummy edge is not placed on the tree)
-    if (Next != &Dummy)
+    if (next != &dummy)
     {
-      m_SpanningTree.push_back(Next);
+      mSpanningTree.push_back(next);
     }
-   
+
     //and mark it visited
-    m_Visited[Next->To()] = visited;
+    mVisited[next->to()] = visited;
 
     //if the target has been found the method can return success
-    if (Next->To() == m_iTarget)
+    if (next->to() == mTarget)
     {
       return true;
     }
 
     //push the edges leading from the node this edge points to onto
-    //the stack (provided the edge does not point to a previously 
+    //the stack (provided the edge does not point to a previously
     //visited node)
-    typename graph_type::ConstEdgeIterator ConstEdgeItr(m_Graph, Next->To());
+    typename graphType::ConstEdgeIterator constEdgeItr(mGraph, next->to());
 
-    for (const Edge* pE=ConstEdgeItr.begin();
-        !ConstEdgeItr.end();
-         pE=ConstEdgeItr.next())
+    for (const Edge* pE=constEdgeItr.begin();
+        !constEdgeItr.end();
+         pE=constEdgeItr.next())
     {
-      if (m_Visited[pE->To()] == unvisited)
+      if (mVisited[pE->to()] == unvisited)
       {
         stack.push(pE);
       }
@@ -160,22 +160,22 @@ bool Graph_SearchDFS<graph_type>::Search()
 }
 
 //-----------------------------------------------------------------------------
-template <class graph_type>
-std::list<int> Graph_SearchDFS<graph_type>::GetPathToTarget()const 
+template <class graphType>
+std::list<int> GraphSearchDfs<graphType>::getPathToTarget()const
 {
   std::list<int> path;
 
   //just return an empty path if no path to target found or if
   //no target has been specified
-  if (!m_bFound || m_iTarget<0) return path;
+  if (!mFound || mTarget<0) return path;
 
-  int nd = m_iTarget;
+  int nd = mTarget;
 
   path.push_front(nd);
 
-  while (nd != m_iSource)
+  while (nd != mSource)
   {
-    nd = m_Route[nd];
+    nd = mRoute[nd];
 
     path.push_front(nd);
   }
@@ -185,132 +185,132 @@ std::list<int> Graph_SearchDFS<graph_type>::GetPathToTarget()const
 
 
 
-//----------------------------- Graph_SearchBFS -------------------------------
+//----------------------------- GraphSearchBfs -------------------------------
 //
 //-----------------------------------------------------------------------------
-template<class graph_type>
-class Graph_SearchBFS
+template<class graphType>
+class GraphSearchBfs
 {
 private:
 
   //to aid legibility
-  enum {visited, unvisited, no_parent_assigned};
+  enum {visited, unvisited, noParentAssigned};
 
   //create a typedef for the edge type used by the graph
-  typedef typename graph_type::EdgeType Edge;
+  typedef typename graphType::EdgeType Edge;
 
 private:
 
   //a reference to the graph to be searched
-  const graph_type&      m_Graph;
+  const graphType&      mGraph;
 
   //this records the indexes of all the nodes that are visited as the
   //search progresses
-  std::vector<int>  m_Visited;
+  std::vector<int>  mVisited;
 
   //this holds the route taken to the target. Given a node index, the value
   //at that index is the node's parent. ie if the path to the target is
-  //3-8-27, then m_Route[8] will hold 3 and m_Route[27] will hold 8.
-  std::vector<int>  m_Route;
+  //3-8-27, then mRoute[8] will hold 3 and mRoute[27] will hold 8.
+  std::vector<int>  mRoute;
 
   //the source and target node indices
-  int               m_iSource,
-                    m_iTarget;
+  int               mSource,
+                    mTarget;
 
   //true if a path to the target has been found
-  bool              m_bFound;
+  bool              mFound;
 
   //As the search progresses, this will hold all the edges the algorithm has
   //examined. THIS IS NOT NECESSARY FOR THE SEARCH, IT IS HERE PURELY
   //TO PROVIDE THE USER WITH SOME VISUAL FEEDBACK
-  std::vector<const Edge*>  m_SpanningTree;
+  std::vector<const Edge*>  mSpanningTree;
 
-  
-  //the BFS algorithm is very similar to the DFS except that it uses a
+
+  //the bfs algorithm is very similar to the dfs except that it uses a
   //FIFO queue instead of a stack.
-  bool Search();
-  
-  
+  bool search();
+
+
 public:
 
-  Graph_SearchBFS(const graph_type& graph,
+  GraphSearchBfs(const graphType& graph,
              int          source,
-             int          target = -1 ):m_Graph(graph),
-                                        m_iSource(source),
-                                        m_iTarget(target),
-                                        m_bFound(false),
-                                        m_Visited(m_Graph.NumNodes(), unvisited),
-                                        m_Route(m_Graph.NumNodes(), no_parent_assigned)
+             int          target = -1 ):mGraph(graph),
+                                        mSource(source),
+                                        mTarget(target),
+                                        mFound(false),
+                                        mVisited(mGraph.numNodes(), unvisited),
+                                        mRoute(mGraph.numNodes(), noParentAssigned)
 
-  {                                                                         
-    m_bFound = Search();   
+  {
+    mFound = search();
   }
 
-  bool   Found()const{return m_bFound;}
+  bool   found()const{return mFound;}
 
   //returns a vector containing pointers to all the edges the search has examined
-  std::vector<const Edge*> GetSearchTree()const{return m_SpanningTree;}
+  std::vector<const Edge*> getSearchTree()const{return mSpanningTree;}
 
   //returns a vector of node indexes that comprise the shortest path
   //from the source to the target
-  std::list<int> GetPathToTarget()const; 
+  std::list<int> getPathToTarget()const;
 };
 
 //-----------------------------------------------------------------------------
 
-template <class graph_type>
-bool Graph_SearchBFS<graph_type>::Search()
+template <class graphType>
+bool GraphSearchBfs<graphType>::search()
 {
   //create a std queue of edges
-  std::queue<const Edge*> Q;
+  std::queue<const Edge*> queue;
 
-  const Edge Dummy(m_iSource, m_iSource, 0);
+  const Edge dummy(mSource, mSource, 0);
 
   //create a dummy edge and put on the queue
-  Q.push(&Dummy);
+  queue.push(&dummy);
 
   //mark the source node as visited
-  m_Visited[m_iSource] = visited;
+  mVisited[mSource] = visited;
 
   //while there are edges in the queue keep searching
-  while (!Q.empty())
+  while (!queue.empty())
   {
     //grab the next edge
-    const Edge* Next = Q.front();
+    const Edge* next = queue.front();
 
-    Q.pop();
+    queue.pop();
 
     //mark the parent of this node
-    m_Route[Next->To()] = Next->From();
+    mRoute[next->to()] = next->from();
 
     //put it on the tree. (making sure the dummy edge is not placed on the tree)
-    if (Next != &Dummy)
+    if (next != &dummy)
     {
-      m_SpanningTree.push_back(Next);
+      mSpanningTree.push_back(next);
     }
 
     //exit if the target has been found
-    if (Next->To() == m_iTarget)
+    if (next->to() == mTarget)
     {
       return true;
     }
 
-    //push the edges leading from the node at the end of this edge 
+    //push the edges leading from the node at the end of this edge
     //onto the queue
-    typename graph_type::ConstEdgeIterator ConstEdgeItr(m_Graph, Next->To());
+    typename graphType::ConstEdgeIterator constEdgeItr(mGraph, next->to());
 
-    for (const Edge* pE=ConstEdgeItr.begin();
-        !ConstEdgeItr.end();
-         pE=ConstEdgeItr.next())
+    for (const Edge* pE=constEdgeItr.begin();
+        !constEdgeItr.end();
+         pE=constEdgeItr.next())
     {
       //if the node hasn't already been visited we can push the
       //edge onto the queue
-      if (m_Visited[pE->To()] == unvisited)
+      if (mVisited[pE->to()] == unvisited)
       {
-        Q.push(pE);
+        queue.push(pE);
 
         //and mark it visited
-        m_Visited[pE->To()] = visited;
+        mVisited[pE->to()] = visited;
       }
     }
   }
@@ -321,22 +321,22 @@ bool Graph_SearchBFS<graph_type>::Search()
 
 
 //-----------------------------------------------------------------------------
-template <class graph_type>
-std::list<int> Graph_SearchBFS<graph_type>::GetPathToTarget()const 
+template <class graphType>
+std::list<int> GraphSearchBfs<graphType>::getPathToTarget()const
 {
   std::list<int> path;
 
   //just return an empty path if no path to target found or if
   //no target has been specified
-  if (!m_bFound || m_iTarget<0) return path;
+  if (!mFound || mTarget<0) return path;
 
-  int nd = m_iTarget;
+  int nd = mTarget;
 
   path.push_front(nd);
 
-  while (nd != m_iSource)
+  while (nd != mSource)
   {
-    nd = m_Route[nd];
+    nd = mRoute[nd];
 
     path.push_front(nd);
   }
@@ -346,97 +346,97 @@ std::list<int> Graph_SearchBFS<graph_type>::GetPathToTarget()const
 
 
 
-//----------------------- Graph_SearchDijkstra --------------------------------
+//----------------------- GraphSearchDijkstra --------------------------------
 //
 //  Given a graph, source and optional target this class solves for
-//  single source shortest paths (without a target being specified) or 
+//  single source shortest paths (without a target being specified) or
 //  shortest path from source to target.
 //
 //  The algorithm used is a priority queue implementation of Dijkstra's.
-//  note how similar this is to the algorithm used in Graph_MinSpanningTree.
+//  note how similar this is to the algorithm used in GraphMinSpanningTree.
 //  The main difference is in the calculation of the priority in the line:
-//  
-//  double NewCost = m_CostToThisNode[best] + pE->Cost;
+//
+//  double newCost = mCostToThisNode[best] + pE->cost;
 //------------------------------------------------------------------------
-template <class graph_type>
-class Graph_SearchDijkstra
+template <class graphType>
+class GraphSearchDijkstra
 {
 private:
 
   //create a typedef for the edge type used by the graph
-  typedef typename graph_type::EdgeType Edge;
-  
+  typedef typename graphType::EdgeType Edge;
+
 private:
 
-  const graph_type&             m_Graph;
+  const graphType&             mGraph;
 
   //this vector contains the edges that comprise the shortest path tree -
-  //a directed subtree of the graph that encapsulates the best paths from 
+  //a directed subtree of the graph that encapsulates the best paths from
   //every node on the SPT to the source node.
-  std::vector<const Edge*>      m_ShortestPathTree;
+  std::vector<const Edge*>      mShortestPathTree;
 
   //this is indexed into by node index and holds the total cost of the best
-  //path found so far to the given node. For example, m_CostToThisNode[5]
+  //path found so far to the given node. For example, mCostToThisNode[5]
   //will hold the total cost of all the edges that comprise the best path
-  //to node 5, found so far in the search (if node 5 is present and has 
+  //to node 5, found so far in the search (if node 5 is present and has
   //been visited)
-  std::vector<double>            m_CostToThisNode; 
+  std::vector<double>            mCostToThisNode;
 
-  //this is an indexed (by node) vector of 'parent' edges leading to nodes 
+  //this is an indexed (by node) vector of 'parent' edges leading to nodes
   //connected to the SPT but that have not been added to the SPT yet. This is
   //a little like the stack or queue used in BST and DST searches.
-  std::vector<const Edge*>     m_SearchFrontier;
+  std::vector<const Edge*>     mSearchFrontier;
 
-  int                           m_iSource;
-  int                           m_iTarget;
+  int                           mSource;
+  int                           mTarget;
 
-  void Search();
+  void search();
 
 public:
 
-  Graph_SearchDijkstra(const graph_type   &graph,
+  GraphSearchDijkstra(const graphType   &graph,
                        int           source,
-                       int           target = -1):m_Graph(graph),
-                                       m_ShortestPathTree(graph.NumNodes()),                              
-                                       m_SearchFrontier(graph.NumNodes()),
-                                       m_CostToThisNode(graph.NumNodes()),
-                                       m_iSource(source),
-                                       m_iTarget(target)
-  {                                           
-    Search();     
+                       int           target = -1):mGraph(graph),
+                                       mShortestPathTree(graph.numNodes()),
+                                       mSearchFrontier(graph.numNodes()),
+                                       mCostToThisNode(graph.numNodes()),
+                                       mSource(source),
+                                       mTarget(target)
+  {
+    search();
   }
- 
+
   //returns the vector of edges that defines the SPT. If a target was given
-  //in the constructor then this will be an SPT comprising of all the nodes
+  //in the function Object() { [native code] } then this will be an SPT comprising of all the nodes
   //examined before the target was found, else it will contain all the nodes
   //in the graph.
-  std::vector<const Edge*> GetSPT()const{return m_ShortestPathTree;}
+  std::vector<const Edge*> getSpt()const{return mShortestPathTree;}
 
   //returns a vector of node indexes that comprise the shortest path
   //from the source to the target. It calculates the path by working
   //backwards through the SPT from the target node.
-  std::list<int> GetPathToTarget()const;
+  std::list<int> getPathToTarget()const;
 
   //returns the total cost to the target
-  double GetCostToTarget()const{return m_CostToThisNode[m_iTarget];}
+  double getCostToTarget()const{return mCostToThisNode[mTarget];}
 
   //returns the total cost to the given node
-  double GetCostToNode(unsigned int nd)const{return m_CostToThisNode[nd];}
+  double getCostToNode(unsigned int nd)const{return mCostToThisNode[nd];}
 };
 
 
 //-----------------------------------------------------------------------------
-template <class graph_type>
-void Graph_SearchDijkstra<graph_type>::Search()
+template <class graphType>
+void GraphSearchDijkstra<graphType>::search()
 {
   //create an indexed priority queue that sorts smallest to largest
   //(front to back).Note that the maximum number of elements the iPQ
-  //may contain is N. This is because no node can be represented on the 
+  //may contain is N. This is because no node can be represented on the
   //queue more than once.
-  IndexedPriorityQLow<double> pq(m_CostToThisNode, m_Graph.NumNodes());
+  IndexedPriorityQLow<double> pq(mCostToThisNode, mGraph.numNodes());
 
   //put the source node on the queue
-  pq.insert(m_iSource);
+  pq.insert(mSource);
 
   //while the queue is not empty
   while(!pq.empty())
@@ -444,36 +444,36 @@ void Graph_SearchDijkstra<graph_type>::Search()
     //get lowest cost node from the queue. Don't forget, the return value
     //is a *node index*, not the node itself. This node is the node not already
     //on the SPT that is the closest to the source node
-    int NextClosestNode = pq.Pop();
+    int nextClosestNode = pq.pop();
 
     //move this edge from the frontier to the shortest path tree
-    m_ShortestPathTree[NextClosestNode] = m_SearchFrontier[NextClosestNode];
+    mShortestPathTree[nextClosestNode] = mSearchFrontier[nextClosestNode];
 
     //if the target has been found exit
-    if (NextClosestNode == m_iTarget) return;
+    if (nextClosestNode == mTarget) return;
 
     //now to relax the edges.
-    typename graph_type::ConstEdgeIterator ConstEdgeItr(m_Graph, NextClosestNode);
+    typename graphType::ConstEdgeIterator constEdgeItr(mGraph, nextClosestNode);
 
     //for each edge connected to the next closest node
-    for (const Edge* pE=ConstEdgeItr.begin();
-        !ConstEdgeItr.end();
-        pE=ConstEdgeItr.next())
+    for (const Edge* pE=constEdgeItr.begin();
+        !constEdgeItr.end();
+        pE=constEdgeItr.next())
     {
       //the total cost to the node this edge points to is the cost to the
       //current node plus the cost of the edge connecting them.
-      double NewCost = m_CostToThisNode[NextClosestNode] + pE->Cost();
+      double newCost = mCostToThisNode[nextClosestNode] + pE->cost();
 
       //if this edge has never been on the frontier make a note of the cost
       //to get to the node it points to, then add the edge to the frontier
       //and the destination node to the PQ.
-      if (m_SearchFrontier[pE->To()] == 0)
+      if (mSearchFrontier[pE->to()] == 0)
       {
-        m_CostToThisNode[pE->To()] = NewCost;
+        mCostToThisNode[pE->to()] = newCost;
 
-        pq.insert(pE->To());
+        pq.insert(pE->to());
 
-        m_SearchFrontier[pE->To()] = pE;
+        mSearchFrontier[pE->to()] = pE;
       }
 
       //else test to see if the cost to reach the destination node via the
@@ -481,37 +481,37 @@ void Graph_SearchDijkstra<graph_type>::Search()
       //this path is cheaper, we assign the new cost to the destination
       //node, update its entry in the PQ to reflect the change and add the
       //edge to the frontier
-      else if ( (NewCost < m_CostToThisNode[pE->To()]) &&
-                (m_ShortestPathTree[pE->To()] == 0) )
+      else if ( (newCost < mCostToThisNode[pE->to()]) &&
+                (mShortestPathTree[pE->to()] == 0) )
       {
-        m_CostToThisNode[pE->To()] = NewCost;
+        mCostToThisNode[pE->to()] = newCost;
 
         //because the cost is less than it was previously, the PQ must be
         //re-sorted to account for this.
-        pq.ChangePriority(pE->To());
+        pq.changePriority(pE->to());
 
-        m_SearchFrontier[pE->To()] = pE;
+        mSearchFrontier[pE->to()] = pE;
       }
     }
   }
 }
 
 //-----------------------------------------------------------------------------
-template <class graph_type>
-std::list<int> Graph_SearchDijkstra<graph_type>::GetPathToTarget()const
+template <class graphType>
+std::list<int> GraphSearchDijkstra<graphType>::getPathToTarget()const
 {
   std::list<int> path;
 
   //just return an empty path if no target or no path found
-  if (m_iTarget < 0)  return path;
+  if (mTarget < 0)  return path;
 
-  int nd = m_iTarget;
+  int nd = mTarget;
 
   path.push_front(nd);
 
-  while ((nd != m_iSource) && (m_ShortestPathTree[nd] != 0))
+  while ((nd != mSource) && (mShortestPathTree[nd] != 0))
   {
-    nd = m_ShortestPathTree[nd]->From();
+    nd = mShortestPathTree[nd]->from();
 
     path.push_front(nd);
   }
@@ -519,184 +519,184 @@ std::list<int> Graph_SearchDijkstra<graph_type>::GetPathToTarget()const
   return path;
 }
 
-//------------------------------- Graph_SearchAStar --------------------------
+//------------------------------- GraphSearchAStar --------------------------
 //
-//  this searchs a graph using the distance between the target node and the 
+//  this searchs a graph using the distance between the target node and the
 //  currently considered node as a heuristic.
 //
 //  This search is more commonly known as A* (pronounced Ay-Star)
 //-----------------------------------------------------------------------------
-template <class graph_type, class heuristic>
-class Graph_SearchAStar
+template <class graphType, class heuristic>
+class GraphSearchAStar
 {
 private:
 
   //create a typedef for the edge type used by the graph
-  typedef typename graph_type::EdgeType Edge;
+  typedef typename graphType::EdgeType Edge;
 
 private:
 
-  const graph_type&              m_Graph;
+  const graphType&              mGraph;
 
   //indexed into my node. Contains the 'real' accumulative cost to that node
-  std::vector<double>             m_GCosts; 
+  std::vector<double>             mGCosts;
 
-  //indexed into by node. Contains the cost from adding m_GCosts[n] to
+  //indexed into by node. Contains the cost from adding mGCosts[n] to
   //the heuristic cost from n to the target node. This is the vector the
   //iPQ indexes into.
-  std::vector<double>             m_FCosts;
+  std::vector<double>             mFCosts;
 
-  std::vector<const Edge*>       m_ShortestPathTree;
-  std::vector<const Edge*>       m_SearchFrontier;
+  std::vector<const Edge*>       mShortestPathTree;
+  std::vector<const Edge*>       mSearchFrontier;
 
-  int                            m_iSource;
-  int                            m_iTarget;
+  int                            mSource;
+  int                            mTarget;
 
   //the A* search algorithm
-  void Search();
+  void search();
 
 public:
 
-  Graph_SearchAStar(graph_type &graph,
+  GraphSearchAStar(graphType &graph,
                     int   source,
-                    int   target):m_Graph(graph),
-                                  m_ShortestPathTree(graph.NumNodes()),                              
-                                  m_SearchFrontier(graph.NumNodes()),
-                                  m_GCosts(graph.NumNodes(), 0.0),
-                                  m_FCosts(graph.NumNodes(), 0.0),
-                                  m_iSource(source),
-                                  m_iTarget(target)
+                    int   target):mGraph(graph),
+                                  mShortestPathTree(graph.numNodes()),
+                                  mSearchFrontier(graph.numNodes()),
+                                  mGCosts(graph.numNodes(), 0.0),
+                                  mFCosts(graph.numNodes(), 0.0),
+                                  mSource(source),
+                                  mTarget(target)
   {
-    Search();   
+    search();
   }
- 
+
   //returns the vector of edges that the algorithm has examined
-  std::vector<const Edge*> GetSPT()const{return m_ShortestPathTree;}
+  std::vector<const Edge*> getSpt()const{return mShortestPathTree;}
 
   //returns a vector of node indexes that comprise the shortest path
   //from the source to the target
-  std::list<int> GetPathToTarget()const;
+  std::list<int> getPathToTarget()const;
 
   //returns the total cost to the target
-  double GetCostToTarget()const{return m_GCosts[m_iTarget];}
+  double getCostToTarget()const{return mGCosts[mTarget];}
 };
 
 //-----------------------------------------------------------------------------
-template <class graph_type, class heuristic>
-void Graph_SearchAStar<graph_type, heuristic>::Search()
+template <class graphType, class heuristic>
+void GraphSearchAStar<graphType, heuristic>::search()
 {
   //create an indexed priority queue of nodes. The nodes with the
   //lowest overall F cost (G+H) are positioned at the front.
-  IndexedPriorityQLow<double> pq(m_FCosts, m_Graph.NumNodes());
+  IndexedPriorityQLow<double> pq(mFCosts, mGraph.numNodes());
 
   //put the source node on the queue
-  pq.insert(m_iSource);
+  pq.insert(mSource);
 
   //while the queue is not empty
   while(!pq.empty())
   {
     //get lowest cost node from the queue
-    int NextClosestNode = pq.Pop();
+    int nextClosestNode = pq.pop();
 
     //move this node from the frontier to the spanning tree
-    m_ShortestPathTree[NextClosestNode] = m_SearchFrontier[NextClosestNode];
+    mShortestPathTree[nextClosestNode] = mSearchFrontier[nextClosestNode];
 
     //if the target has been found exit
-    if (NextClosestNode == m_iTarget) return;
+    if (nextClosestNode == mTarget) return;
 
     //now to test all the edges attached to this node
-    typename graph_type::ConstEdgeIterator ConstEdgeItr(m_Graph, NextClosestNode);
+    typename graphType::ConstEdgeIterator constEdgeItr(mGraph, nextClosestNode);
 
-    for (const Edge* pE=ConstEdgeItr.begin();
-        !ConstEdgeItr.end(); 
-         pE=ConstEdgeItr.next())
+    for (const Edge* pE=constEdgeItr.begin();
+        !constEdgeItr.end();
+         pE=constEdgeItr.next())
     {
-      //calculate the heuristic cost from this node to the target (H)                       
-      double HCost = heuristic::Calculate(m_Graph, m_iTarget, pE->To()); 
+      //calculate the heuristic cost from this node to the target (H)
+      double hCost = heuristic::calculate(mGraph, mTarget, pE->to());
 
       //calculate the 'real' cost to this node from the source (G)
-      double GCost = m_GCosts[NextClosestNode] + pE->Cost();
+      double gCost = mGCosts[nextClosestNode] + pE->cost();
 
       //if the node has not been added to the frontier, add it and update
       //the G and F costs
-      if (m_SearchFrontier[pE->To()] == NULL)
+      if (mSearchFrontier[pE->to()] == NULL)
       {
-        m_FCosts[pE->To()] = GCost + HCost;
-        m_GCosts[pE->To()] = GCost;
+        mFCosts[pE->to()] = gCost + hCost;
+        mGCosts[pE->to()] = gCost;
 
-        pq.insert(pE->To());
+        pq.insert(pE->to());
 
-        m_SearchFrontier[pE->To()] = pE;
+        mSearchFrontier[pE->to()] = pE;
       }
 
       //if this node is already on the frontier but the cost to get here
       //is cheaper than has been found previously, update the node
       //costs and frontier accordingly.
-      else if ((GCost < m_GCosts[pE->To()]) && (m_ShortestPathTree[pE->To()]==NULL))
+      else if ((gCost < mGCosts[pE->to()]) && (mShortestPathTree[pE->to()]==NULL))
       {
-        m_FCosts[pE->To()] = GCost + HCost;
-        m_GCosts[pE->To()] = GCost;
+        mFCosts[pE->to()] = gCost + hCost;
+        mGCosts[pE->to()] = gCost;
 
-        pq.ChangePriority(pE->To());
+        pq.changePriority(pE->to());
 
-        m_SearchFrontier[pE->To()] = pE;
+        mSearchFrontier[pE->to()] = pE;
       }
     }
   }
 }
 
 //-----------------------------------------------------------------------------
-template <class graph_type, class heuristic>
-std::list<int> Graph_SearchAStar<graph_type, heuristic>::GetPathToTarget()const
+template <class graphType, class heuristic>
+std::list<int> GraphSearchAStar<graphType, heuristic>::getPathToTarget()const
 {
   std::list<int> path;
 
   //just return an empty path if no target or no path found
-  if (m_iTarget < 0)  return path;    
+  if (mTarget < 0)  return path;
 
-  int nd = m_iTarget;
+  int nd = mTarget;
 
   path.push_front(nd);
-    
-  while ((nd != m_iSource) && (m_ShortestPathTree[nd] != 0))
+
+  while ((nd != mSource) && (mShortestPathTree[nd] != 0))
   {
-    nd = m_ShortestPathTree[nd]->From();
+    nd = mShortestPathTree[nd]->from();
 
     path.push_front(nd);
   }
 
   return path;
-} 
+}
 
 
 
-//---------------------- Graph_MinSpanningTree --------------------------------
+//---------------------- GraphMinSpanningTree --------------------------------
 //
 //  given a graph and a source node you can use this class to calculate
-//  the minimum spanning tree. If no source node is specified then the 
-//  algorithm will calculate a spanning forest starting from node 1 
+//  the minimum spanning tree. If no source node is specified then the
+//  algorithm will calculate a spanning forest starting from node 1
 //
 //  It uses a priority first queue implementation of Prims algorithm
 //------------------------------------------------------------------------
-template <class graph_type>
-class Graph_MinSpanningTree
+template <class graphType>
+class GraphMinSpanningTree
 {
 private:
 
   //create a typedef for the edge type used by the graph
-  typedef typename graph_type::EdgeType Edge;
+  typedef typename graphType::EdgeType Edge;
 
-  const graph_type&              m_Graph;
+  const graphType&              mGraph;
 
-  std::vector<double>            m_CostToThisNode; 
+  std::vector<double>            mCostToThisNode;
 
-  std::vector<const Edge*>  m_SpanningTree;
-  std::vector<const Edge*>  m_Fringe;
+  std::vector<const Edge*>  mSpanningTree;
+  std::vector<const Edge*>  mFringe;
 
-  void Search(const int source)
+  void search(const int source)
   {
     //create a priority queue
-    IndexedPriorityQLow<double> pq(m_CostToThisNode, m_Graph.NumNodes());
+    IndexedPriorityQLow<double> pq(mCostToThisNode, mGraph.numNodes());
 
     //put the source node on the queue
     pq.insert(source);
@@ -705,34 +705,34 @@ private:
     while(!pq.empty())
     {
       //get lowest cost edge from the queue
-      int best = pq.Pop();
+      int best = pq.pop();
 
       //move this edge from the fringe to the spanning tree
-      m_SpanningTree[best] = m_Fringe[best];
+      mSpanningTree[best] = mFringe[best];
 
       //now to test the edges attached to this node
-      typename graph_type::ConstEdgeIterator ConstEdgeItr(m_Graph, best);
+      typename graphType::ConstEdgeIterator constEdgeItr(mGraph, best);
 
-      for (const Edge* pE=ConstEdgeItr.begin(); !ConstEdgeItr.end(); pE=ConstEdgeItr.next())
+      for (const Edge* pE=constEdgeItr.begin(); !constEdgeItr.end(); pE=constEdgeItr.next())
       {
-        double Priority = pE->Cost();
+        double priority = pE->cost();
 
-        if (m_Fringe[pE->To()] == 0)
+        if (mFringe[pE->to()] == 0)
         {
-          m_CostToThisNode[pE->To()] = Priority;
+          mCostToThisNode[pE->to()] = priority;
 
-          pq.insert(pE->To());
+          pq.insert(pE->to());
 
-          m_Fringe[pE->To()] = pE;
+          mFringe[pE->to()] = pE;
         }
 
-        else if ((Priority<m_CostToThisNode[pE->To()]) && (m_SpanningTree[pE->To()]==0))
+        else if ((priority<mCostToThisNode[pE->to()]) && (mSpanningTree[pE->to()]==0))
         {
-          m_CostToThisNode[pE->To()] = Priority;
+          mCostToThisNode[pE->to()] = priority;
 
-          pq.ChangePriority(pE->To());
+          pq.changePriority(pE->to());
 
-          m_Fringe[pE->To()] = pE;
+          mFringe[pE->to()] = pE;
         }
       }
     }
@@ -740,31 +740,31 @@ private:
 
 public:
 
-  Graph_MinSpanningTree(graph_type &G,
-                   int   source = -1):m_Graph(G),
-                                   m_SpanningTree(G.NumNodes()),                              
-                                   m_Fringe(G.NumNodes()),
-                                   m_CostToThisNode(G.NumNodes(), -1)
-  {                                                                             
+  GraphMinSpanningTree(graphType &g,
+                   int   source = -1):mGraph(g),
+                                   mSpanningTree(g.numNodes()),
+                                   mFringe(g.numNodes()),
+                                   mCostToThisNode(g.numNodes(), -1)
+  {
     if (source < 0)
     {
-      for (int nd=0; nd<G.NumNodes(); ++nd)
+      for (int nd=0; nd<g.numNodes(); ++nd)
       {
-        if (m_SpanningTree[nd] == 0)
+        if (mSpanningTree[nd] == 0)
         {
-          Search(nd);
+          search(nd);
         }
       }
     }
 
     else
     {
-      Search(source);   
+      search(source);
     }
   }
 
-  std::vector<const Edge*> GetSpanningTree()const{return m_SpanningTree;}
-  
+  std::vector<const Edge*> getSpanningTree()const{return mSpanningTree;}
+
 };
 
 

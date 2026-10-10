@@ -13,17 +13,17 @@
 
 
 
-void ChangePlayerHomeRegions(SoccerTeam* team, const int NewRegions[TeamSize])
+void changePlayerHomeRegions(SoccerTeam* team, const int newRegions[teamSize])
 {
-  for (int plyr=0; plyr<TeamSize; ++plyr)
+  for (int plyr=0; plyr<teamSize; ++plyr)
   {
-    team->SetPlayerHomeRegion(plyr, NewRegions[plyr]);
+    team->setPlayerHomeRegion(plyr, newRegions[plyr]);
   }
 }
 
 //************************************************************************ ATTACKING
 
-Attacking* Attacking::Instance()
+Attacking* Attacking::instance()
 {
   static Attacking instance;
 
@@ -31,132 +31,132 @@ Attacking* Attacking::Instance()
 }
 
 
-void Attacking::Enter(SoccerTeam* team)
+void Attacking::enter(SoccerTeam* team)
 {
 #ifdef DEBUG_TEAM_STATES
-  debug_con << team->Name() << " entering Attacking state" << "";
+  debugCon << team->name() << " entering Attacking state" << "";
 #endif
 
   //these define the home regions for this state of each of the players
-  const int BlueRegions[TeamSize] = {1,12,14,6,4};
-  const int RedRegions[TeamSize] = {16,3,5,9,13};
+  const int blueRegions[teamSize] = {1,12,14,6,4};
+  const int redRegions[teamSize] = {16,3,5,9,13};
 
   //set up the player's home regions
-  if (team->Color() == SoccerTeam::blue)
+  if (team->color() == SoccerTeam::blue)
   {
-    ChangePlayerHomeRegions(team, BlueRegions);
+    changePlayerHomeRegions(team, blueRegions);
   }
   else
   {
-    ChangePlayerHomeRegions(team, RedRegions);
+    changePlayerHomeRegions(team, redRegions);
   }
 
   //if a player is in either the Wait or ReturnToHomeRegion states, its
   //steering target must be updated to that of its new home region to enable
   //it to move into the correct position.
-  team->UpdateTargetsOfWaitingPlayers();
+  team->updateTargetsOfWaitingPlayers();
 }
 
 
-void Attacking::Execute(SoccerTeam* team)
+void Attacking::execute(SoccerTeam* team)
 {
   //if this team is no longer in control change states
-  if (!team->InControl())
+  if (!team->inControl())
   {
-    team->GetFSM()->ChangeState(Defending::Instance()); return;
+    team->getFsm()->changeState(Defending::instance()); return;
   }
 
   //calculate the best position for any supporting attacker to move to
-  team->DetermineBestSupportingPosition();
+  team->determineBestSupportingPosition();
 }
 
-void Attacking::Exit(SoccerTeam* team)
+void Attacking::exit(SoccerTeam* team)
 {
   //there is no supporting player for defense
-  team->SetSupportingPlayer(NULL);
+  team->setSupportingPlayer(NULL);
 }
 
 
 
 //************************************************************************ DEFENDING
 
-Defending* Defending::Instance()
+Defending* Defending::instance()
 {
   static Defending instance;
 
   return &instance;
 }
 
-void Defending::Enter(SoccerTeam* team)
+void Defending::enter(SoccerTeam* team)
 {
 #ifdef DEBUG_TEAM_STATES
-  debug_con << team->Name() << " entering Defending state" << "";
+  debugCon << team->name() << " entering Defending state" << "";
 #endif
 
   //these define the home regions for this state of each of the players
-  const int BlueRegions[TeamSize] = {1,6,8,3,5};
-  const int RedRegions[TeamSize] = {16,9,11,12,14};
+  const int blueRegions[teamSize] = {1,6,8,3,5};
+  const int redRegions[teamSize] = {16,9,11,12,14};
 
   //set up the player's home regions
-  if (team->Color() == SoccerTeam::blue)
+  if (team->color() == SoccerTeam::blue)
   {
-    ChangePlayerHomeRegions(team, BlueRegions);
+    changePlayerHomeRegions(team, blueRegions);
   }
   else
   {
-    ChangePlayerHomeRegions(team, RedRegions);
+    changePlayerHomeRegions(team, redRegions);
   }
-  
+
   //if a player is in either the Wait or ReturnToHomeRegion states, its
   //steering target must be updated to that of its new home region
-  team->UpdateTargetsOfWaitingPlayers();
+  team->updateTargetsOfWaitingPlayers();
 }
 
-void Defending::Execute(SoccerTeam* team)
+void Defending::execute(SoccerTeam* team)
 {
   //if in control change states
-  if (team->InControl())
+  if (team->inControl())
   {
-    team->GetFSM()->ChangeState(Attacking::Instance()); return;
+    team->getFsm()->changeState(Attacking::instance()); return;
   }
 }
 
 
-void Defending::Exit(SoccerTeam* team){}
+void Defending::exit(SoccerTeam* team){}
 
 
 //************************************************************************ KICKOFF
-PrepareForKickOff* PrepareForKickOff::Instance()
+PrepareForKickOff* PrepareForKickOff::instance()
 {
   static PrepareForKickOff instance;
 
   return &instance;
 }
 
-void PrepareForKickOff::Enter(SoccerTeam* team)
+void PrepareForKickOff::enter(SoccerTeam* team)
 {
   //reset key player pointers
-  team->SetControllingPlayer(NULL);
-  team->SetSupportingPlayer(NULL);
-  team->SetReceiver(NULL);
-  team->SetPlayerClosestToBall(NULL);
+  team->setControllingPlayer(NULL);
+  team->setSupportingPlayer(NULL);
+  team->setReceiver(NULL);
+  team->setPlayerClosestToBall(NULL);
 
-  //send Msg_GoHome to each player.
-  team->ReturnAllEntityPlayerOnFieldsToHome();
+  //send msgGoHome to each player.
+  team->returnAllEntityPlayerOnFieldsToHome();
 }
 
-void PrepareForKickOff::Execute(SoccerTeam* team)
+void PrepareForKickOff::execute(SoccerTeam* team)
 {
   //if both teams in position, start the game
-  if (team->AllPlayersAtHome() && team->Opponents()->AllPlayersAtHome())
+  if (team->allPlayersAtHome() && team->opponents()->allPlayersAtHome())
   {
-    team->GetFSM()->ChangeState(Defending::Instance());
+    team->getFsm()->changeState(Defending::instance());
   }
 }
 
-void PrepareForKickOff::Exit(SoccerTeam* team)
+void PrepareForKickOff::exit(SoccerTeam* team)
 {
-  team->Pitch()->SetGameOn();
+  team->pitch()->setGameOn();
 }
 
 

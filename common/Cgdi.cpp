@@ -1,11 +1,11 @@
 #include "Cgdi.h"
 
 
-//--------------------------- Instance ----------------------------------------
+//--------------------------- instance ----------------------------------------
 //
 //   this class is a singleton
 //-----------------------------------------------------------------------------
-Cgdi* Cgdi::Instance()
+Cgdi* Cgdi::instance()
 {
   static Cgdi instance;
   return &instance;
@@ -13,316 +13,316 @@ Cgdi* Cgdi::Instance()
 
 Cgdi::Cgdi()
 {
-  m_BlackPen = CreatePen(PS_SOLID, 1, colors[black]);
-  m_WhitePen = CreatePen(PS_SOLID, 1, colors[white]);
-  m_RedPen = CreatePen(PS_SOLID, 1, colors[red]);
-  m_GreenPen = CreatePen(PS_SOLID, 1, colors[green]);
-  m_BluePen = CreatePen(PS_SOLID, 1, colors[blue]);
-  m_GreyPen = CreatePen(PS_SOLID, 1, colors[grey]);
-  m_PinkPen = CreatePen(PS_SOLID, 1, colors[pink]);
-  m_YellowPen = CreatePen(PS_SOLID, 1, colors[yellow]);
-  m_OrangePen = CreatePen(PS_SOLID, 1, colors[orange]);
-  m_PurplePen = CreatePen(PS_SOLID, 1, colors[purple]);
-  m_BrownPen = CreatePen(PS_SOLID, 1, colors[brown]);
-  
-  m_DarkGreenPen = CreatePen(PS_SOLID, 1, colors[dark_green]);
+  mBlackPen = CreatePen(PS_SOLID, 1, colors[black]);
+  mWhitePen = CreatePen(PS_SOLID, 1, colors[white]);
+  mRedPen = CreatePen(PS_SOLID, 1, colors[red]);
+  mGreenPen = CreatePen(PS_SOLID, 1, colors[green]);
+  mBluePen = CreatePen(PS_SOLID, 1, colors[blue]);
+  mGreyPen = CreatePen(PS_SOLID, 1, colors[grey]);
+  mPinkPen = CreatePen(PS_SOLID, 1, colors[pink]);
+  mYellowPen = CreatePen(PS_SOLID, 1, colors[yellow]);
+  mOrangePen = CreatePen(PS_SOLID, 1, colors[orange]);
+  mPurplePen = CreatePen(PS_SOLID, 1, colors[purple]);
+  mBrownPen = CreatePen(PS_SOLID, 1, colors[brown]);
 
-  m_LightBluePen = CreatePen(PS_SOLID, 1, colors[light_blue]);
-  m_LightGreyPen = CreatePen(PS_SOLID, 1, colors[light_grey]);
-  m_LightPinkPen = CreatePen(PS_SOLID, 1, colors[light_pink]);
+  mDarkGreenPen = CreatePen(PS_SOLID, 1, colors[darkGreen]);
 
-  m_ThickBlackPen = CreatePen(PS_SOLID, 2, colors[black]);
-  m_ThickWhitePen = CreatePen(PS_SOLID, 2, colors[white]);
-  m_ThickRedPen = CreatePen(PS_SOLID, 2, colors[red]);
-  m_ThickGreenPen = CreatePen(PS_SOLID, 2, colors[green]);
-  m_ThickBluePen = CreatePen(PS_SOLID, 2, colors[blue]);
+  mLightBluePen = CreatePen(PS_SOLID, 1, colors[lightBlue]);
+  mLightGreyPen = CreatePen(PS_SOLID, 1, colors[lightGrey]);
+  mLightPinkPen = CreatePen(PS_SOLID, 1, colors[lightPink]);
 
-  m_GreenBrush = CreateSolidBrush(colors[green]);
-  m_RedBrush   = CreateSolidBrush(colors[red]);
-  m_BlueBrush  = CreateSolidBrush(colors[blue]);
-  m_GreyBrush  = CreateSolidBrush(colors[grey]);
-  m_BrownBrush = CreateSolidBrush(colors[brown]);
-  m_YellowBrush = CreateSolidBrush(colors[yellow]);
-  m_LightBlueBrush = CreateSolidBrush(RGB(0,255,255));
-  m_DarkGreenBrush = CreateSolidBrush(colors[dark_green]);
-  m_OrangeBrush = CreateSolidBrush(colors[orange]);
+  mThickBlackPen = CreatePen(PS_SOLID, 2, colors[black]);
+  mThickWhitePen = CreatePen(PS_SOLID, 2, colors[white]);
+  mThickRedPen = CreatePen(PS_SOLID, 2, colors[red]);
+  mThickGreenPen = CreatePen(PS_SOLID, 2, colors[green]);
+  mThickBluePen = CreatePen(PS_SOLID, 2, colors[blue]);
 
-  m_hdc = NULL;
+  mGreenBrush = CreateSolidBrush(colors[green]);
+  mRedBrush   = CreateSolidBrush(colors[red]);
+  mBlueBrush  = CreateSolidBrush(colors[blue]);
+  mGreyBrush  = CreateSolidBrush(colors[grey]);
+  mBrownBrush = CreateSolidBrush(colors[brown]);
+  mYellowBrush = CreateSolidBrush(colors[yellow]);
+  mLightBlueBrush = CreateSolidBrush(RGB(0,255,255));
+  mDarkGreenBrush = CreateSolidBrush(colors[darkGreen]);
+  mOrangeBrush = CreateSolidBrush(colors[orange]);
+
+  mHdc = NULL;
 }
 
 Cgdi::~Cgdi()
 {
-  DeleteObject(m_BlackPen);
-  DeleteObject(m_WhitePen);
-  DeleteObject(m_RedPen);
-  DeleteObject(m_GreenPen);
-  DeleteObject(m_BluePen);
-  DeleteObject(m_GreyPen);
-  DeleteObject(m_PinkPen);
-  DeleteObject(m_OrangePen);
-  DeleteObject(m_YellowPen);
-  DeleteObject(m_PurplePen);
-  DeleteObject(m_BrownPen);
-  DeleteObject(m_OldPen);
-  
-  DeleteObject(m_DarkGreenPen);
+  DeleteObject(mBlackPen);
+  DeleteObject(mWhitePen);
+  DeleteObject(mRedPen);
+  DeleteObject(mGreenPen);
+  DeleteObject(mBluePen);
+  DeleteObject(mGreyPen);
+  DeleteObject(mPinkPen);
+  DeleteObject(mOrangePen);
+  DeleteObject(mYellowPen);
+  DeleteObject(mPurplePen);
+  DeleteObject(mBrownPen);
+  DeleteObject(mOldPen);
 
-  DeleteObject(m_LightBluePen);
-  DeleteObject(m_LightGreyPen);
-  DeleteObject(m_LightPinkPen);
-  
-  DeleteObject(m_ThickBlackPen);
-  DeleteObject(m_ThickWhitePen);
-  DeleteObject(m_ThickRedPen);
-  DeleteObject(m_ThickGreenPen);
-  DeleteObject(m_ThickBluePen);
+  DeleteObject(mDarkGreenPen);
 
-  DeleteObject(m_GreenBrush);
-  DeleteObject(m_RedBrush);
-  DeleteObject(m_BlueBrush);
-  DeleteObject(m_OldBrush);
-  DeleteObject(m_GreyBrush);
-  DeleteObject(m_BrownBrush);
-  DeleteObject(m_LightBlueBrush);
-  DeleteObject(m_YellowBrush);
-  DeleteObject(m_DarkGreenBrush);
-  DeleteObject(m_OrangeBrush);
+  DeleteObject(mLightBluePen);
+  DeleteObject(mLightGreyPen);
+  DeleteObject(mLightPinkPen);
+
+  DeleteObject(mThickBlackPen);
+  DeleteObject(mThickWhitePen);
+  DeleteObject(mThickRedPen);
+  DeleteObject(mThickGreenPen);
+  DeleteObject(mThickBluePen);
+
+  DeleteObject(mGreenBrush);
+  DeleteObject(mRedBrush);
+  DeleteObject(mBlueBrush);
+  DeleteObject(mOldBrush);
+  DeleteObject(mGreyBrush);
+  DeleteObject(mBrownBrush);
+  DeleteObject(mLightBlueBrush);
+  DeleteObject(mYellowBrush);
+  DeleteObject(mDarkGreenBrush);
+  DeleteObject(mOrangeBrush);
 
 }
 
-void Cgdi::BlackPen(){if(m_hdc){SelectObject(m_hdc, m_BlackPen);}}
-void Cgdi::WhitePen(){if(m_hdc){SelectObject(m_hdc, m_WhitePen);}}
-void Cgdi::RedPen()  {if(m_hdc){SelectObject(m_hdc, m_RedPen);}}
-void Cgdi::GreenPen(){if(m_hdc){SelectObject(m_hdc, m_GreenPen);}}
-void Cgdi::BluePen() {if(m_hdc){SelectObject(m_hdc, m_BluePen);}}
-void Cgdi::GreyPen() {if(m_hdc){SelectObject(m_hdc, m_GreyPen);}}
-void Cgdi::PinkPen() {if(m_hdc){SelectObject(m_hdc, m_PinkPen);}}
-void Cgdi::YellowPen() {if(m_hdc){SelectObject(m_hdc, m_YellowPen);}}
-void Cgdi::OrangePen() {if(m_hdc){SelectObject(m_hdc, m_OrangePen);}}
-void Cgdi::PurplePen() {if(m_hdc){SelectObject(m_hdc, m_PurplePen);}}
-void Cgdi::BrownPen() {if(m_hdc){SelectObject(m_hdc, m_BrownPen);}}
+void Cgdi::blackPen(){if(mHdc){SelectObject(mHdc, mBlackPen);}}
+void Cgdi::whitePen(){if(mHdc){SelectObject(mHdc, mWhitePen);}}
+void Cgdi::redPen()  {if(mHdc){SelectObject(mHdc, mRedPen);}}
+void Cgdi::greenPen(){if(mHdc){SelectObject(mHdc, mGreenPen);}}
+void Cgdi::bluePen() {if(mHdc){SelectObject(mHdc, mBluePen);}}
+void Cgdi::greyPen() {if(mHdc){SelectObject(mHdc, mGreyPen);}}
+void Cgdi::pinkPen() {if(mHdc){SelectObject(mHdc, mPinkPen);}}
+void Cgdi::yellowPen() {if(mHdc){SelectObject(mHdc, mYellowPen);}}
+void Cgdi::orangePen() {if(mHdc){SelectObject(mHdc, mOrangePen);}}
+void Cgdi::purplePen() {if(mHdc){SelectObject(mHdc, mPurplePen);}}
+void Cgdi::brownPen() {if(mHdc){SelectObject(mHdc, mBrownPen);}}
 
-void Cgdi::DarkGreenPen() {if(m_hdc){SelectObject(m_hdc, m_DarkGreenPen);}}
-void Cgdi::LightBluePen() {if(m_hdc){SelectObject(m_hdc, m_LightBluePen);}}
-void Cgdi::LightGreyPen() {if(m_hdc){SelectObject(m_hdc, m_LightGreyPen);}}
-void Cgdi::LightPinkPen() {if(m_hdc){SelectObject(m_hdc, m_LightPinkPen);}}
+void Cgdi::darkGreenPen() {if(mHdc){SelectObject(mHdc, mDarkGreenPen);}}
+void Cgdi::lightBluePen() {if(mHdc){SelectObject(mHdc, mLightBluePen);}}
+void Cgdi::lightGreyPen() {if(mHdc){SelectObject(mHdc, mLightGreyPen);}}
+void Cgdi::lightPinkPen() {if(mHdc){SelectObject(mHdc, mLightPinkPen);}}
 
-void Cgdi::ThickBlackPen(){if(m_hdc){SelectObject(m_hdc, m_ThickBlackPen);}}
-void Cgdi::ThickWhitePen(){if(m_hdc){SelectObject(m_hdc, m_ThickWhitePen);}}
-void Cgdi::ThickRedPen()  {if(m_hdc){SelectObject(m_hdc, m_ThickRedPen);}}
-void Cgdi::ThickGreenPen(){if(m_hdc){SelectObject(m_hdc, m_ThickGreenPen);}}
-void Cgdi::ThickBluePen() {if(m_hdc){SelectObject(m_hdc, m_ThickBluePen);}}
+void Cgdi::thickBlackPen(){if(mHdc){SelectObject(mHdc, mThickBlackPen);}}
+void Cgdi::thickWhitePen(){if(mHdc){SelectObject(mHdc, mThickWhitePen);}}
+void Cgdi::thickRedPen()  {if(mHdc){SelectObject(mHdc, mThickRedPen);}}
+void Cgdi::thickGreenPen(){if(mHdc){SelectObject(mHdc, mThickGreenPen);}}
+void Cgdi::thickBluePen() {if(mHdc){SelectObject(mHdc, mThickBluePen);}}
 
-void Cgdi::BlackBrush(){if(m_hdc)SelectObject(m_hdc, GetStockObject(BLACK_BRUSH));}
-void Cgdi::WhiteBrush(){if(m_hdc)SelectObject(m_hdc, GetStockObject(WHITE_BRUSH));} 
-void Cgdi::HollowBrush(){if(m_hdc)SelectObject(m_hdc, GetStockObject(HOLLOW_BRUSH));}
-void Cgdi::GreenBrush(){if(m_hdc)SelectObject(m_hdc, m_GreenBrush);}
-void Cgdi::RedBrush()  {if(m_hdc)SelectObject(m_hdc, m_RedBrush);}
-void Cgdi::BlueBrush()  {if(m_hdc)SelectObject(m_hdc, m_BlueBrush);}
-void Cgdi::GreyBrush()  {if(m_hdc)SelectObject(m_hdc, m_GreyBrush);}
-void Cgdi::BrownBrush() {if(m_hdc)SelectObject(m_hdc, m_BrownBrush);}
-void Cgdi::YellowBrush() {if(m_hdc)SelectObject(m_hdc, m_YellowBrush);}
-void Cgdi::LightBlueBrush() {if(m_hdc)SelectObject(m_hdc, m_LightBlueBrush);}
-void Cgdi::DarkGreenBrush() {if(m_hdc)SelectObject(m_hdc, m_DarkGreenBrush);}
-void Cgdi::OrangeBrush() {if(m_hdc)SelectObject(m_hdc, m_OrangeBrush);}
+void Cgdi::blackBrush(){if(mHdc)SelectObject(mHdc, GetStockObject(BLACK_BRUSH));}
+void Cgdi::whiteBrush(){if(mHdc)SelectObject(mHdc, GetStockObject(WHITE_BRUSH));}
+void Cgdi::hollowBrush(){if(mHdc)SelectObject(mHdc, GetStockObject(HOLLOW_BRUSH));}
+void Cgdi::greenBrush(){if(mHdc)SelectObject(mHdc, mGreenBrush);}
+void Cgdi::redBrush()  {if(mHdc)SelectObject(mHdc, mRedBrush);}
+void Cgdi::blueBrush()  {if(mHdc)SelectObject(mHdc, mBlueBrush);}
+void Cgdi::greyBrush()  {if(mHdc)SelectObject(mHdc, mGreyBrush);}
+void Cgdi::brownBrush() {if(mHdc)SelectObject(mHdc, mBrownBrush);}
+void Cgdi::yellowBrush() {if(mHdc)SelectObject(mHdc, mYellowBrush);}
+void Cgdi::lightBlueBrush() {if(mHdc)SelectObject(mHdc, mLightBlueBrush);}
+void Cgdi::darkGreenBrush() {if(mHdc)SelectObject(mHdc, mDarkGreenBrush);}
+void Cgdi::orangeBrush() {if(mHdc)SelectObject(mHdc, mOrangeBrush);}
 
 //ALWAYS call this before drawing
-void Cgdi::StartDrawing(HDC hdc)
+void Cgdi::startDrawing(HDC hdc)
 {
-  assert(m_hdc == NULL);
-  
-  m_hdc = hdc;
+  assert(mHdc == NULL);
+
+  mHdc = hdc;
 
   //get the current pen
-  m_OldPen = (HPEN)SelectObject(hdc, m_BlackPen);
+  mOldPen = (HPEN)SelectObject(hdc, mBlackPen);
   //select it back in
-  SelectObject(hdc, m_OldPen);
+  SelectObject(hdc, mOldPen);
 
-  m_OldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(BLACK_BRUSH));
-  SelectObject(hdc, m_OldBrush);
+  mOldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(BLACK_BRUSH));
+  SelectObject(hdc, mOldBrush);
 }
 
 //ALWAYS call this after drawing
-void Cgdi::StopDrawing(HDC hdc)
+void Cgdi::stopDrawing(HDC hdc)
 {
   assert(hdc != NULL);
-  
-  SelectObject(hdc, m_OldPen);
-  SelectObject(hdc, m_OldBrush);
 
-  m_hdc = NULL;
+  SelectObject(hdc, mOldPen);
+  SelectObject(hdc, mOldBrush);
+
+  mHdc = NULL;
 }
 
 //---------------------------Text
 
-void Cgdi::TextAtPos(int x, int y, const std::string &s)
+void Cgdi::textAtPos(int x, int y, const std::string &s)
 {
-  TextOut(m_hdc, x, y, s.c_str(), (int)s.size());
+  TextOut(mHdc, x, y, s.c_str(), (int)s.size());
 }
 
-void Cgdi::TextAtPos(double x, double y, const std::string &s)
+void Cgdi::textAtPos(double x, double y, const std::string &s)
 {
-  TextOut(m_hdc, (int)x, (int)y, s.c_str(), (int)s.size());
+  TextOut(mHdc, (int)x, (int)y, s.c_str(), (int)s.size());
 }
 
-void Cgdi::TextAtPos(Vector2D pos, const std::string &s)
+void Cgdi::textAtPos(Vector2D pos, const std::string &s)
 {
-  TextOut(m_hdc, (int)pos.x, (int)pos.y, s.c_str(), (int)s.size());
+  TextOut(mHdc, (int)pos.x, (int)pos.y, s.c_str(), (int)s.size());
 }
 
-void Cgdi::TransparentText(){SetBkMode(m_hdc, TRANSPARENT);}
+void Cgdi::transparentText(){SetBkMode(mHdc, TRANSPARENT);}
 
-void Cgdi::OpaqueText(){SetBkMode(m_hdc, OPAQUE);}
+void Cgdi::opaqueText(){SetBkMode(mHdc, OPAQUE);}
 
-void Cgdi::TextColor(int color){assert(color < NumColors); SetTextColor(m_hdc, colors[color]);}
-void Cgdi::TextColor(int r, int g, int b){SetTextColor(m_hdc, RGB(r,g,b));}
+void Cgdi::textColor(int color){assert(color < numColors); SetTextColor(mHdc, colors[color]);}
+void Cgdi::textColor(int r, int g, int b){SetTextColor(mHdc, RGB(r,g,b));}
 
 //----------------------------pixels
-void Cgdi::DrawDot(Vector2D pos, COLORREF color)
+void Cgdi::drawDot(Vector2D pos, COLORREF color)
 {
-  SetPixel(m_hdc, (int)pos.x, (int)pos.y, color);
+  SetPixel(mHdc, (int)pos.x, (int)pos.y, color);
 }
 
-void Cgdi::DrawDot(int x, int y, COLORREF color)
+void Cgdi::drawDot(int x, int y, COLORREF color)
 {
-  SetPixel(m_hdc, x, y, color);
+  SetPixel(mHdc, x, y, color);
 }
 
-//-------------------------Line Drawing
+//-------------------------line Drawing
 
-void Cgdi::Line(Vector2D from, Vector2D to)
+void Cgdi::line(Vector2D from, Vector2D to)
 {
-  MoveToEx(m_hdc, (int)from.x, (int)from.y, NULL);
-  LineTo(m_hdc, (int)to.x, (int)to.y);
+  MoveToEx(mHdc, (int)from.x, (int)from.y, NULL);
+  LineTo(mHdc, (int)to.x, (int)to.y);
 }
 
-void Cgdi::Line(int a, int b, int x, int y)
+void Cgdi::line(int a, int b, int x, int y)
 {
-  MoveToEx(m_hdc, a, b, NULL);
-  LineTo(m_hdc, x, y);
+  MoveToEx(mHdc, a, b, NULL);
+  LineTo(mHdc, x, y);
 }
 
-void Cgdi::Line(double a, double b, double x, double y)
+void Cgdi::line(double a, double b, double x, double y)
 {
-  MoveToEx(m_hdc, (int)a, (int)b, NULL);
-  LineTo(m_hdc, (int)x, (int)y);
+  MoveToEx(mHdc, (int)a, (int)b, NULL);
+  LineTo(mHdc, (int)x, (int)y);
 }
 
-void Cgdi::PolyLine(const std::vector<Vector2D>& points)
+void Cgdi::polyLine(const std::vector<Vector2D>& points)
 {
   //make sure we have at least 2 points
   if (points.size() < 2) return;
 
-  MoveToEx(m_hdc, (int)points[0].x, (int)points[0].y, NULL);
+  MoveToEx(mHdc, (int)points[0].x, (int)points[0].y, NULL);
 
   for (unsigned int p=1; p<points.size(); ++p)
   {
-    LineTo(m_hdc, (int)points[p].x, (int)points[p].y);
+    LineTo(mHdc, (int)points[p].x, (int)points[p].y);
   }
 }
 
-void Cgdi::LineWithArrow(Vector2D from, Vector2D to, double size)
+void Cgdi::lineWithArrow(Vector2D from, Vector2D to, double size)
 {
-  Vector2D norm = Vec2DNormalize(to-from);
+  Vector2D norm = vec2DNormalize(to-from);
 
   //calculate where the arrow is attached
-  Vector2D CrossingPoint = to - (norm * size);
-  
+  Vector2D crossingPoint = to - (norm * size);
+
   //calculate the two extra points required to make the arrowhead
-  Vector2D ArrowPoint1 = CrossingPoint + (norm.Perp() * 0.4f * size); 
-  Vector2D ArrowPoint2 = CrossingPoint - (norm.Perp() * 0.4f * size); 
+  Vector2D arrowPoint1 = crossingPoint + (norm.perp() * 0.4f * size);
+  Vector2D arrowPoint2 = crossingPoint - (norm.perp() * 0.4f * size);
 
   //draw the line
-  MoveToEx(m_hdc, (int)from.x, (int)from.y, NULL);
-  LineTo(m_hdc, (int)CrossingPoint.x, (int)CrossingPoint.y);
+  MoveToEx(mHdc, (int)from.x, (int)from.y, NULL);
+  LineTo(mHdc, (int)crossingPoint.x, (int)crossingPoint.y);
 
   //draw the arrowhead (filled with the currently selected brush)
   POINT p[3];
-  
-  p[0] = VectorToPOINT(ArrowPoint1);
-  p[1] = VectorToPOINT(ArrowPoint2);
-  p[2] = VectorToPOINT(to);                  
-                     
-  SetPolyFillMode(m_hdc, WINDING);
-  Polygon(m_hdc, p, 3);
+
+  p[0] = vectorToPoint(arrowPoint1);
+  p[1] = vectorToPoint(arrowPoint2);
+  p[2] = vectorToPoint(to);
+
+  SetPolyFillMode(mHdc, WINDING);
+  Polygon(mHdc, p, 3);
 }
 
-void Cgdi::Cross(Vector2D pos, int diameter)
+void Cgdi::cross(Vector2D pos, int diameter)
 {
-  Line((int)pos.x-diameter, (int)pos.y-diameter, (int)pos.x+diameter, (int)pos.y+diameter);
-  Line((int)pos.x-diameter,(int)pos.y+diameter, (int)pos.x+diameter, (int)pos.y-diameter);
+  line((int)pos.x-diameter, (int)pos.y-diameter, (int)pos.x+diameter, (int)pos.y+diameter);
+  line((int)pos.x-diameter,(int)pos.y+diameter, (int)pos.x+diameter, (int)pos.y-diameter);
 }
 
 //---------------------Geometry drawing methods
 
-void Cgdi::Rect(int left, int top, int right, int bot)
+void Cgdi::rect(int left, int top, int right, int bot)
 {
-  Rectangle(m_hdc, left, top, right, bot);
+  Rectangle(mHdc, left, top, right, bot);
 }
 
-void Cgdi::Rect(double left, double top, double right, double bot)
+void Cgdi::rect(double left, double top, double right, double bot)
 {
-  Rectangle(m_hdc, (int)left, (int)top, (int)right, (int)bot);
+  Rectangle(mHdc, (int)left, (int)top, (int)right, (int)bot);
 }
 
-void Cgdi::ClosedShape(const std::vector<Vector2D> &points)
+void Cgdi::closedShape(const std::vector<Vector2D> &points)
 {
-  MoveToEx(m_hdc, (int)points[0].x, (int)points[0].y, NULL);
-  
+  MoveToEx(mHdc, (int)points[0].x, (int)points[0].y, NULL);
+
   for (unsigned int p=1; p<points.size(); ++p)
   {
-    LineTo(m_hdc, (int)points[p].x, (int)points[p].y);
+    LineTo(mHdc, (int)points[p].x, (int)points[p].y);
   }
 
-  LineTo(m_hdc, (int)points[0].x, (int)points[0].y);
+  LineTo(mHdc, (int)points[0].x, (int)points[0].y);
 }
 
-void Cgdi::Circle(Vector2D pos, double radius)
+void Cgdi::circle(Vector2D pos, double radius)
 {
-  Ellipse(m_hdc,
+  Ellipse(mHdc,
          (int)(pos.x-radius),
          (int)(pos.y-radius),
          (int)(pos.x+radius+1),
          (int)(pos.y+radius+1));
 }
 
-void Cgdi::Circle(double x, double y, double radius)
+void Cgdi::circle(double x, double y, double radius)
 {
-  Ellipse(m_hdc,
+  Ellipse(mHdc,
          (int)(x-radius),
          (int)(y-radius),
          (int)(x+radius+1),
          (int)(y+radius+1));
 }
 
-void Cgdi::Circle(int x, int y, double radius)
+void Cgdi::circle(int x, int y, double radius)
 {
-  Ellipse(m_hdc,
+  Ellipse(mHdc,
          (int)(x-radius),
          (int)(y-radius),
          (int)(x+radius+1),
          (int)(y+radius+1));
 }
 
-void Cgdi::SetPenColor(int color)
+void Cgdi::setPenColor(int color)
 {
-  assert (color < NumColors);
-  
+  assert (color < numColors);
+
  switch (color)
  {
-  case black:BlackPen(); return;
-  case white:WhitePen(); return;
-  case red: RedPen(); return;
-  case green: GreenPen(); return;
-  case blue: BluePen(); return;
-  case pink: PinkPen(); return;
-  case grey: GreyPen(); return;
-  case yellow: YellowPen(); return;
-  case orange: OrangePen(); return;
-  case purple: PurplePen(); return;
-  case brown: BrownPen(); return;
-  case light_blue: LightBluePen(); return;
-  case light_grey: LightGreyPen(); return;
-  case light_pink: LightPinkPen(); return;
+  case black:blackPen(); return;
+  case white:whitePen(); return;
+  case red: redPen(); return;
+  case green: greenPen(); return;
+  case blue: bluePen(); return;
+  case pink: pinkPen(); return;
+  case grey: greyPen(); return;
+  case yellow: yellowPen(); return;
+  case orange: orangePen(); return;
+  case purple: purplePen(); return;
+  case brown: brownPen(); return;
+  case lightBlue: lightBluePen(); return;
+  case lightGrey: lightGreyPen(); return;
+  case lightPink: lightPinkPen(); return;
   }//end switch
 }

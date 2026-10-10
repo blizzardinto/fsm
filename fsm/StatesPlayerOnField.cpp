@@ -21,7 +21,7 @@
 
 //************************************************************************ Global state
 
-GlobalPlayerState* GlobalPlayerState::Instance()
+GlobalPlayerState* GlobalPlayerState::instance()
 {
   static GlobalPlayerState instance;
 
@@ -29,126 +29,126 @@ GlobalPlayerState* GlobalPlayerState::Instance()
 }
 
 
-void GlobalPlayerState::Execute(EntityPlayerOnField* player)                                     
+void GlobalPlayerState::execute(EntityPlayerOnField* player)
 {
   //if a player is in possession and close to the ball reduce his max speed
-  if((player->BallWithinReceivingRange()) && (player->isControllingPlayer()))
+  if((player->ballWithinReceivingRange()) && (player->isControllingPlayer()))
   {
-    player->SetMaxSpeed(Prm.PlayerMaxSpeedWithBall);
+    player->setMaxSpeed(prm.playerMaxSpeedWithBall);
   }
 
   else
   {
-     player->SetMaxSpeed(Prm.PlayerMaxSpeedWithoutBall);
+     player->setMaxSpeed(prm.playerMaxSpeedWithoutBall);
   }
-    
+
 }
 
 
-bool GlobalPlayerState::OnMessage(EntityPlayerOnField* player, const Telegram& telegram)
+bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& telegram)
 {
-  switch(telegram.Msg)
+  switch(telegram.msg)
   {
-  case Msg_ReceiveBall:
+  case msgReceiveBall:
     {
       //set the target
-      player->Steering()->SetTarget(*(static_cast<Vector2D*>(telegram.ExtraInfo)));
+      player->steering()->setTarget(*(static_cast<Vector2D*>(telegram.extraInfo)));
 
-      //change state 
-      player->GetFSM()->ChangeState(ReceiveBall::Instance());
+      //change state
+      player->getFsm()->changeState(ReceiveBall::instance());
 
       return true;
     }
 
     break;
 
-  case Msg_SupportAttacker:
+  case msgSupportAttacker:
     {
       //if already supporting just return
-      if (player->GetFSM()->isInState(*SupportAttacker::Instance()))
+      if (player->getFsm()->isInState(*SupportAttacker::instance()))
       {
         return true;
       }
-      
+
       //set the target to be the best supporting position
-      player->Steering()->SetTarget(player->Team()->GetSupportSpot());
+      player->steering()->setTarget(player->team()->getSupportSpot());
 
       //change the state
-      player->GetFSM()->ChangeState(SupportAttacker::Instance());
+      player->getFsm()->changeState(SupportAttacker::instance());
 
       return true;
     }
 
     break;
 
- case Msg_Wait:
+ case msgWait:
     {
       //change the state
-      player->GetFSM()->ChangeState(Wait::Instance());
+      player->getFsm()->changeState(Wait::instance());
 
       return true;
     }
 
     break;
 
-  case Msg_GoHome:
+  case msgGoHome:
     {
-      player->SetDefaultHomeRegion();
-      
-      player->GetFSM()->ChangeState(ReturnToHomeRegion::Instance());
+      player->setDefaultHomeRegion();
+
+      player->getFsm()->changeState(ReturnToHomeRegion::instance());
 
       return true;
     }
 
     break;
 
-  case Msg_PassToMe:
-    {  
-      
-      //get the position of the player requesting the pass 
-      EntityPlayerOnField* receiver = static_cast<EntityPlayerOnField*>(telegram.ExtraInfo);
+  case msgPassToMe:
+    {
+
+      //get the position of the player requesting the pass
+      EntityPlayerOnField* receiver = static_cast<EntityPlayerOnField*>(telegram.extraInfo);
 
       #ifdef PLAYER_STATE_INFO_ON
-      debug_con << "Player " << player->ID() << " received request from " <<
-                    receiver->ID() << " to make pass" << "";
+      debugCon << "Player " << player->id() << " received request from " <<
+                    receiver->id() << " to make pass" << "";
       #endif
 
-      //if the ball is not within kicking range or their is already a 
+      //if the ball is not within kicking range or their is already a
       //receiving player, this player cannot pass the ball to the player
       //making the request.
-      if (player->Team()->Receiver() != NULL ||
-         !player->BallWithinKickingRange() )
+      if (player->team()->receiver() != NULL ||
+         !player->ballWithinKickingRange() )
       {
         #ifdef PLAYER_STATE_INFO_ON
-        debug_con << "Player " << player->ID() << " cannot make requested pass <cannot kick ball>" << "";
+        debugCon << "Player " << player->id() << " cannot make requested pass <cannot kick ball>" << "";
         #endif
 
         return true;
       }
-      
-      //make the pass   
-      player->Ball()->Kick(receiver->Pos() - player->Ball()->Pos(),
-                           Prm.MaxPassingForce);
 
-          
+      //make the pass
+      player->ball()->kick(receiver->pos() - player->ball()->pos(),
+                           prm.maxPassingForce);
+
+
      #ifdef PLAYER_STATE_INFO_ON
-     debug_con << "Player " << player->ID() << " Passed ball to requesting player" << "";
+     debugCon << "Player " << player->id() << " Passed ball to requesting player" << "";
      #endif
-        
-      //let the receiver know a pass is coming 
-      Vector2D passTarget = receiver->Pos();
-      Dispatcher->DispatchMsg(SEND_MSG_IMMEDIATELY,
-                              player->ID(),
-                              receiver->ID(),
-                              Msg_ReceiveBall,
+
+      //let the receiver know a pass is coming
+      Vector2D passTarget = receiver->pos();
+      dispatcher->dispatchMsg(sendMsgImmediately,
+                              player->id(),
+                              receiver->id(),
+                              msgReceiveBall,
                               &passTarget);
 
-   
 
-      //change state   
-      player->GetFSM()->ChangeState(Wait::Instance());
 
-      player->FindSupport();
+      //change state
+      player->getFsm()->changeState(Wait::instance());
+
+      player->findSupport();
 
       return true;
     }
@@ -159,13 +159,13 @@ bool GlobalPlayerState::OnMessage(EntityPlayerOnField* player, const Telegram& t
 
   return false;
 }
-                                
 
-       
+
+
 
 //***************************************************************************** CHASEBALL
 
-ChaseBall* ChaseBall::Instance()
+ChaseBall* ChaseBall::instance()
 {
   static ChaseBall instance;
 
@@ -173,50 +173,50 @@ ChaseBall* ChaseBall::Instance()
 }
 
 
-void ChaseBall::Enter(EntityPlayerOnField* player)
+void ChaseBall::enter(EntityPlayerOnField* player)
 {
-  player->Steering()->SeekOn();
+  player->steering()->seekOn();
 
   #ifdef PLAYER_STATE_INFO_ON
-  debug_con << "Player " << player->ID() << " enters chase state" << "";
+  debugCon << "Player " << player->id() << " enters chase state" << "";
   #endif
 }
 
-void ChaseBall::Execute(EntityPlayerOnField* player)                                     
+void ChaseBall::execute(EntityPlayerOnField* player)
 {
   //if the ball is within kicking range the player changes state to KickBall.
-  if (player->BallWithinKickingRange())
+  if (player->ballWithinKickingRange())
   {
-    player->GetFSM()->ChangeState(KickBall::Instance());
-    
+    player->getFsm()->changeState(KickBall::instance());
+
     return;
   }
-                                                                              
+
   //if the player is the closest player to the ball then he should keep
   //chasing it
   if (player->isClosestTeamMemberToBall())
   {
-    player->Steering()->SetTarget(player->Ball()->Pos());
+    player->steering()->setTarget(player->ball()->pos());
 
     return;
   }
-  
+
   //if the player is not closest to the ball anymore, he should return back
   //to his home region and wait for another opportunity
-  player->GetFSM()->ChangeState(ReturnToHomeRegion::Instance());
+  player->getFsm()->changeState(ReturnToHomeRegion::instance());
 }
 
 
-void ChaseBall::Exit(EntityPlayerOnField* player)
+void ChaseBall::exit(EntityPlayerOnField* player)
 {
-  player->Steering()->SeekOff();
+  player->steering()->seekOff();
 }
 
 
 
 //*****************************************************************************SUPPORT ATTACKING PLAYER
 
-SupportAttacker* SupportAttacker::Instance()
+SupportAttacker* SupportAttacker::instance()
 {
   static SupportAttacker instance;
 
@@ -224,70 +224,70 @@ SupportAttacker* SupportAttacker::Instance()
 }
 
 
-void SupportAttacker::Enter(EntityPlayerOnField* player)
+void SupportAttacker::enter(EntityPlayerOnField* player)
 {
-  player->Steering()->ArriveOn();
+  player->steering()->arriveOn();
 
-  player->Steering()->SetTarget(player->Team()->GetSupportSpot());
-  
+  player->steering()->setTarget(player->team()->getSupportSpot());
+
   #ifdef PLAYER_STATE_INFO_ON
-  debug_con << "Player " << player->ID() << " enters support state" << "";
+  debugCon << "Player " << player->id() << " enters support state" << "";
   #endif
 }
 
-void SupportAttacker::Execute(EntityPlayerOnField* player)                                     
+void SupportAttacker::execute(EntityPlayerOnField* player)
 {
   //if his team loses control go back home
-  if (!player->Team()->InControl())
+  if (!player->team()->inControl())
   {
-    player->GetFSM()->ChangeState(ReturnToHomeRegion::Instance()); return;
-  } 
+    player->getFsm()->changeState(ReturnToHomeRegion::instance()); return;
+  }
 
 
   //if the best supporting spot changes, change the steering target
-  if (player->Team()->GetSupportSpot() != player->Steering()->Target())
-  {    
-    player->Steering()->SetTarget(player->Team()->GetSupportSpot());
+  if (player->team()->getSupportSpot() != player->steering()->target())
+  {
+    player->steering()->setTarget(player->team()->getSupportSpot());
 
-    player->Steering()->ArriveOn();
+    player->steering()->arriveOn();
   }
 
   //if this player has a shot at the goal AND the attacker can pass
   //the ball to him the attacker should pass the ball to this player
-  if( player->Team()->CanShoot(player->Pos(),
-                               Prm.MaxShootingForce))
+  if( player->team()->canShoot(player->pos(),
+                               prm.maxShootingForce))
   {
-    player->Team()->RequestPass(player);
+    player->team()->requestPass(player);
   }
 
 
   //if this player is located at the support spot and his team still have
   //possession, he should remain still and turn to face the ball
-  if (player->AtTarget())
+  if (player->atTarget())
   {
-    player->Steering()->ArriveOff();
-        
-    //the player should keep his eyes on the ball!
-    player->TrackBall();
+    player->steering()->arriveOff();
 
-    player->SetVelocity(Vector2D(0,0));
+    //the player should keep his eyes on the ball!
+    player->trackBall();
+
+    player->setVelocity(Vector2D(0,0));
 
     //if not threatened by another player request a pass
     if (!player->isThreatened())
     {
-      player->Team()->RequestPass(player);
+      player->team()->requestPass(player);
     }
   }
 }
 
 
-void SupportAttacker::Exit(EntityPlayerOnField* player)
+void SupportAttacker::exit(EntityPlayerOnField* player)
 {
-  //set supporting player to null so that the team knows it has to 
+  //set supporting player to null so that the team knows it has to
   //determine a new one.
-  player->Team()->SetSupportingPlayer(NULL);
+  player->team()->setSupportingPlayer(NULL);
 
-  player->Steering()->ArriveOff();
+  player->steering()->arriveOff();
 }
 
 
@@ -295,7 +295,7 @@ void SupportAttacker::Exit(EntityPlayerOnField* player)
 
 //************************************************************************ RETURN TO HOME REGION
 
-ReturnToHomeRegion* ReturnToHomeRegion::Instance()
+ReturnToHomeRegion* ReturnToHomeRegion::instance()
 {
   static ReturnToHomeRegion instance;
 
@@ -303,57 +303,57 @@ ReturnToHomeRegion* ReturnToHomeRegion::Instance()
 }
 
 
-void ReturnToHomeRegion::Enter(EntityPlayerOnField* player)
+void ReturnToHomeRegion::enter(EntityPlayerOnField* player)
 {
-  player->Steering()->ArriveOn();
+  player->steering()->arriveOn();
 
-  if (!player->HomeRegion()->Inside(player->Steering()->Target(), Region::halfsize))
+  if (!player->homeRegion()->inside(player->steering()->target(), Region::halfsize))
   {
-    player->Steering()->SetTarget(player->HomeRegion()->Center());
+    player->steering()->setTarget(player->homeRegion()->center());
   }
 
   #ifdef PLAYER_STATE_INFO_ON
-  debug_con << "Player " << player->ID() << " enters ReturnToHome state" << "";
+  debugCon << "Player " << player->id() << " enters ReturnToHome state" << "";
   #endif
 }
 
-void ReturnToHomeRegion::Execute(EntityPlayerOnField* player)
+void ReturnToHomeRegion::execute(EntityPlayerOnField* player)
 {
-  if (player->Pitch()->GameOn())
+  if (player->pitch()->gameOn())
   {
     //if the ball is nearer this player than any other team member  &&
     //there is not an assigned receiver && the goalkeeper does not gave
     //the ball, go chase it
     if ( player->isClosestTeamMemberToBall() &&
-         (player->Team()->Receiver() == NULL) &&
-         !player->Pitch()->EntityPlayerGoalKeeperHasBall())
+         (player->team()->receiver() == NULL) &&
+         !player->pitch()->entityPlayerGoalKeeperHasBall())
     {
-      player->GetFSM()->ChangeState(ChaseBall::Instance());
+      player->getFsm()->changeState(ChaseBall::instance());
 
       return;
     }
   }
 
-  //if game is on and close enough to home, change state to wait and set the 
-  //player target to his current position.(so that if he gets jostled out of 
+  //if game is on and close enough to home, change state to wait and set the
+  //player target to his current position.(so that if he gets jostled out of
   //position he can move back to it)
-  if (player->Pitch()->GameOn() && player->HomeRegion()->Inside(player->Pos(),
+  if (player->pitch()->gameOn() && player->homeRegion()->inside(player->pos(),
                                                              Region::halfsize))
   {
-    player->Steering()->SetTarget(player->Pos());
-    player->GetFSM()->ChangeState(Wait::Instance());
+    player->steering()->setTarget(player->pos());
+    player->getFsm()->changeState(Wait::instance());
   }
   //if game is not on the player must return much closer to the center of his
   //home region
-  else if(!player->Pitch()->GameOn() && player->AtTarget())
+  else if(!player->pitch()->gameOn() && player->atTarget())
   {
-    player->GetFSM()->ChangeState(Wait::Instance());
+    player->getFsm()->changeState(Wait::instance());
   }
 }
 
-void ReturnToHomeRegion::Exit(EntityPlayerOnField* player)
+void ReturnToHomeRegion::exit(EntityPlayerOnField* player)
 {
-  player->Steering()->ArriveOff();
+  player->steering()->arriveOff();
 }
 
 
@@ -361,7 +361,7 @@ void ReturnToHomeRegion::Exit(EntityPlayerOnField* player)
 
 //***************************************************************************** WAIT
 
-Wait* Wait::Instance()
+Wait* Wait::instance()
 {
   static Wait instance;
 
@@ -369,76 +369,76 @@ Wait* Wait::Instance()
 }
 
 
-void Wait::Enter(EntityPlayerOnField* player)
+void Wait::enter(EntityPlayerOnField* player)
 {
   #ifdef PLAYER_STATE_INFO_ON
-  debug_con << "Player " << player->ID() << " enters wait state" << "";
+  debugCon << "Player " << player->id() << " enters wait state" << "";
   #endif
 
   //if the game is not on make sure the target is the center of the player's
   //home region. This is ensure all the players are in the correct positions
   //ready for kick off
-  if (!player->Pitch()->GameOn())
+  if (!player->pitch()->gameOn())
   {
-    player->Steering()->SetTarget(player->HomeRegion()->Center());
+    player->steering()->setTarget(player->homeRegion()->center());
   }
 }
 
-void Wait::Execute(EntityPlayerOnField* player)
-{    
-  //if the player has been jostled out of position, get back in position  
-  if (!player->AtTarget())
+void Wait::execute(EntityPlayerOnField* player)
+{
+  //if the player has been jostled out of position, get back in position
+  if (!player->atTarget())
   {
-    player->Steering()->ArriveOn();
+    player->steering()->arriveOn();
 
     return;
   }
 
   else
   {
-    player->Steering()->ArriveOff();
+    player->steering()->arriveOff();
 
-    player->SetVelocity(Vector2D(0,0));
+    player->setVelocity(Vector2D(0,0));
 
     //the player should keep his eyes on the ball!
-    player->TrackBall();
+    player->trackBall();
   }
 
   //if this player's team is controlling AND this player is not the attacker
   //AND is further up the field than the attacker he should request a pass.
-  if ( player->Team()->InControl()    &&
+  if ( player->team()->inControl()    &&
      (!player->isControllingPlayer()) &&
        player->isAheadOfAttacker() )
   {
-    player->Team()->RequestPass(player);
+    player->team()->requestPass(player);
 
     return;
   }
 
-  if (player->Pitch()->GameOn())
+  if (player->pitch()->gameOn())
   {
    //if the ball is nearer this player than any other team member  AND
     //there is not an assigned receiver AND neither goalkeeper has
     //the ball, go chase it
    if (player->isClosestTeamMemberToBall() &&
-       player->Team()->Receiver() == NULL  &&
-       !player->Pitch()->EntityPlayerGoalKeeperHasBall())
+       player->team()->receiver() == NULL  &&
+       !player->pitch()->entityPlayerGoalKeeperHasBall())
    {
-     player->GetFSM()->ChangeState(ChaseBall::Instance());
+     player->getFsm()->changeState(ChaseBall::instance());
 
      return;
    }
-  } 
+  }
 }
 
-void Wait::Exit(EntityPlayerOnField* player){}
+void Wait::exit(EntityPlayerOnField* player){}
 
 
 
 
 //************************************************************************ KICK BALL
 
-KickBall* KickBall::Instance()
+KickBall* KickBall::instance()
 {
   static KickBall instance;
 
@@ -446,83 +446,83 @@ KickBall* KickBall::Instance()
 }
 
 
-void KickBall::Enter(EntityPlayerOnField* player)
+void KickBall::enter(EntityPlayerOnField* player)
 {
   //let the team know this player is controlling
-   player->Team()->SetControllingPlayer(player);
-   
+   player->team()->setControllingPlayer(player);
+
    //the player can only make so many kick attempts per second.
-   if (!player->isReadyForNextKick()) 
+   if (!player->isReadyForNextKick())
    {
-     player->GetFSM()->ChangeState(ChaseBall::Instance());
+     player->getFsm()->changeState(ChaseBall::instance());
    }
 
-   
+
   #ifdef PLAYER_STATE_INFO_ON
-  debug_con << "Player " << player->ID() << " enters kick state" << "";
+  debugCon << "Player " << player->id() << " enters kick state" << "";
   #endif
 }
 
-void KickBall::Execute(EntityPlayerOnField* player)
-{ 
+void KickBall::execute(EntityPlayerOnField* player)
+{
   //calculate the dot product of the vector pointing to the ball
   //and the player's heading
-  Vector2D ToBall = player->Ball()->Pos() - player->Pos();
-  double   dot    = player->Heading().Dot(Vec2DNormalize(ToBall)); 
+  Vector2D toBall = player->ball()->pos() - player->pos();
+  double   dot    = player->heading().dot(vec2DNormalize(toBall));
 
-  //cannot kick the ball if the goalkeeper is in possession or if it is 
+  //cannot kick the ball if the goalkeeper is in possession or if it is
   //behind the player or if there is already an assigned receiver. So just
   //continue chasing the ball
-  if (player->Team()->Receiver() != NULL   ||
-      player->Pitch()->EntityPlayerGoalKeeperHasBall() ||
-      (dot < 0) ) 
+  if (player->team()->receiver() != NULL   ||
+      player->pitch()->entityPlayerGoalKeeperHasBall() ||
+      (dot < 0) )
   {
     #ifdef PLAYER_STATE_INFO_ON
-    debug_con << "Goaly has ball / ball behind player" << "";
+    debugCon << "Goaly has ball / ball behind player" << "";
     #endif
-    
-    player->GetFSM()->ChangeState(ChaseBall::Instance());
+
+    player->getFsm()->changeState(ChaseBall::instance());
 
     return;
   }
 
   /* Attempt a shot at the goal */
 
-  //if a shot is possible, this vector will hold the position along the 
+  //if a shot is possible, this vector will hold the position along the
   //opponent's goal line the player should aim for.
-  Vector2D    BallTarget;
+  Vector2D    ballTarget;
 
   //the dot product is used to adjust the shooting force. The more
   //directly the ball is ahead, the more forceful the kick
-  double power = Prm.MaxShootingForce * dot;
+  double power = prm.maxShootingForce * dot;
 
   //if it is determined that the player could score a goal from this position
   //OR if he should just kick the ball anyway, the player will attempt
   //to make the shot
-  if (player->Team()->CanShoot(player->Ball()->Pos(),
+  if (player->team()->canShoot(player->ball()->pos(),
                                power,
-                               BallTarget)                   || 
-     (RandFloat() < Prm.ChancePlayerAttemptsPotShot))
+                               ballTarget)                   ||
+     (randFloat() < prm.chancePlayerAttemptsPotShot))
   {
    #ifdef PLAYER_STATE_INFO_ON
-   debug_con << "Player " << player->ID() << " attempts a shot at " << BallTarget << "";
+   debugCon << "Player " << player->id() << " attempts a shot at " << ballTarget << "";
    #endif
 
-   //add some noise to the kick. We don't want players who are 
+   //add some noise to the kick. We don't want players who are
    //too accurate! The amount of noise can be adjusted by altering
-   //Prm.PlayerKickingAccuracy
-   BallTarget = AddNoiseToKick(player->Ball()->Pos(), BallTarget);
+   //prm.playerKickingAccuracy
+   ballTarget = addNoiseToKick(player->ball()->pos(), ballTarget);
 
    //this is the direction the ball will be kicked in
-   Vector2D KickDirection = BallTarget - player->Ball()->Pos();
-   
-   player->Ball()->Kick(KickDirection, power);
-    
-   //change state   
-   player->GetFSM()->ChangeState(Wait::Instance());
-   
-   player->FindSupport();
-  
+   Vector2D kickDirection = ballTarget - player->ball()->pos();
+
+   player->ball()->kick(kickDirection, power);
+
+   //change state
+   player->getFsm()->changeState(Wait::instance());
+
+   player->findSupport();
+
    return;
  }
 
@@ -532,59 +532,59 @@ void KickBall::Execute(EntityPlayerOnField* player)
   //if a receiver is found this will point to it
   EntityPlayer* receiver = NULL;
 
-  power = Prm.MaxPassingForce * dot;
-  
+  power = prm.maxPassingForce * dot;
+
   //test if there are any potential candidates available to receive a pass
   if (player->isThreatened()  &&
-      player->Team()->FindPass(player,
+      player->team()->findPass(player,
                               receiver,
-                              BallTarget,
+                              ballTarget,
                               power,
-                              Prm.MinPassDist))
-  {     
+                              prm.minPassDist))
+  {
     //add some noise to the kick
-    BallTarget = AddNoiseToKick(player->Ball()->Pos(), BallTarget);
+    ballTarget = addNoiseToKick(player->ball()->pos(), ballTarget);
 
-    Vector2D KickDirection = BallTarget - player->Ball()->Pos();
-   
-    player->Ball()->Kick(KickDirection, power);
+    Vector2D kickDirection = ballTarget - player->ball()->pos();
+
+    player->ball()->kick(kickDirection, power);
 
     #ifdef PLAYER_STATE_INFO_ON
-    debug_con << "Player " << player->ID() << " passes the ball with force " << power << "  to player " 
-              << receiver->ID() << "  Target is " << BallTarget << "";
+    debugCon << "Player " << player->id() << " passes the ball with force " << power << "  to player "
+              << receiver->id() << "  Target is " << ballTarget << "";
     #endif
 
-    
-    //let the receiver know a pass is coming 
-    Dispatcher->DispatchMsg(SEND_MSG_IMMEDIATELY,
-                            player->ID(),
-                            receiver->ID(),
-                            Msg_ReceiveBall,
-                            &BallTarget);                            
-   
+
+    //let the receiver know a pass is coming
+    dispatcher->dispatchMsg(sendMsgImmediately,
+                            player->id(),
+                            receiver->id(),
+                            msgReceiveBall,
+                            &ballTarget);
+
 
     //the player should wait at his current position unless instruced
-    //otherwise  
-    player->GetFSM()->ChangeState(Wait::Instance());
+    //otherwise
+    player->getFsm()->changeState(Wait::instance());
 
-    player->FindSupport();
+    player->findSupport();
 
     return;
   }
 
   //cannot shoot or pass, so dribble the ball upfield
   else
-  {   
-    player->FindSupport();
+  {
+    player->findSupport();
 
-    player->GetFSM()->ChangeState(Dribble::Instance());
-  }   
+    player->getFsm()->changeState(Dribble::instance());
+  }
 }
 
 
 //*************************************************************************** DRIBBLE
 
-Dribble* Dribble::Instance()
+Dribble* Dribble::instance()
 {
   static Dribble instance;
 
@@ -592,62 +592,62 @@ Dribble* Dribble::Instance()
 }
 
 
-void Dribble::Enter(EntityPlayerOnField* player)
+void Dribble::enter(EntityPlayerOnField* player)
 {
   //let the team know this player is controlling
-  player->Team()->SetControllingPlayer(player);
+  player->team()->setControllingPlayer(player);
 
 #ifdef PLAYER_STATE_INFO_ON
-  debug_con << "Player " << player->ID() << " enters dribble state" << "";
+  debugCon << "Player " << player->id() << " enters dribble state" << "";
   #endif
 }
 
-void Dribble::Execute(EntityPlayerOnField* player)
+void Dribble::execute(EntityPlayerOnField* player)
 {
-  double dot = player->Team()->HomeGoal()->Facing().Dot(player->Heading());
+  double dot = player->team()->homeGoal()->facing().dot(player->heading());
 
   //if the ball is between the player and the home goal, it needs to swivel
-  // the ball around by doing multiple small kicks and turns until the player 
+  // the ball around by doing multiple small kicks and turns until the player
   //is facing in the correct direction
   if (dot < 0)
   {
-    //the player's heading is going to be rotated by a small amount (Pi/4) 
+    //the player's heading is going to be rotated by a small amount (pi/4)
     //and then the ball will be kicked in that direction
-    Vector2D direction = player->Heading();
+    Vector2D direction = player->heading();
 
-    //calculate the sign (+/-) of the angle between the player heading and the 
-    //facing direction of the goal so that the player rotates around in the 
+    //calculate the sign (+/-) of the angle between the player heading and the
+    //facing direction of the goal so that the player rotates around in the
     //correct direction
-    double angle = QuarterPi * -1 *
-                 player->Team()->HomeGoal()->Facing().Sign(player->Heading());
+    double angle = quarterPi * -1 *
+                 player->team()->homeGoal()->facing().sign(player->heading());
 
-    Vec2DRotateAroundOrigin(direction, angle);
+    vec2DRotateAroundOrigin(direction, angle);
 
     //this value works well whjen the player is attempting to control the
     //ball and turn at the same time
-    const double KickingForce = 0.8;
+    const double kickingForce = 0.8;
 
-    player->Ball()->Kick(direction, KickingForce);
+    player->ball()->kick(direction, kickingForce);
   }
 
   //kick the ball down the field
   else
   {
-    player->Ball()->Kick(player->Team()->HomeGoal()->Facing(),
-                         Prm.MaxDribbleForce);  
+    player->ball()->kick(player->team()->homeGoal()->facing(),
+                         prm.maxDribbleForce);
   }
 
   //the player has kicked the ball so he must now change state to follow it
-  player->GetFSM()->ChangeState(ChaseBall::Instance());
-    
-  return;  
+  player->getFsm()->changeState(ChaseBall::instance());
+
+  return;
 }
 
 
 
 //************************************************************************     RECEIVEBALL
 
-ReceiveBall* ReceiveBall::Instance()
+ReceiveBall* ReceiveBall::instance()
 {
   static ReceiveBall instance;
 
@@ -655,83 +655,83 @@ ReceiveBall* ReceiveBall::Instance()
 }
 
 
-void ReceiveBall::Enter(EntityPlayerOnField* player)
+void ReceiveBall::enter(EntityPlayerOnField* player)
 {
   //let the team know this player is receiving the ball
-  player->Team()->SetReceiver(player);
-  
-  //this player is also now the controlling player
-  player->Team()->SetControllingPlayer(player);
+  player->team()->setReceiver(player);
 
-  //there are two types of receive behavior. One uses arrive to direct
+  //this player is also now the controlling player
+  player->team()->setControllingPlayer(player);
+
+  //there are two types of receive behavior. One uses arriveBehavior to direct
   //the receiver to the position sent by the passer in its telegram. The
-  //other uses the pursuit behavior to pursue the ball. 
+  //other uses the pursuitBehavior behavior to pursue the ball.
   //This statement selects between them dependent on the probability
-  //ChanceOfUsingArriveTypeReceiveBehavior, whether or not an opposing
+  //chanceOfUsingArriveTypeReceiveBehavior, whether or not an opposing
   //player is close to the receiving player, and whether or not the receiving
   //player is in the opponents 'hot region' (the third of the pitch closest
   //to the opponent's goal
-  const double PassThreatRadius = 70.0;
+  const double passThreatRadius = 70.0;
 
-  if (( player->InHotRegion() ||
-        RandFloat() < Prm.ChanceOfUsingArriveTypeReceiveBehavior) &&
-     !player->Team()->isOpponentWithinRadius(player->Pos(), PassThreatRadius))
+  if (( player->inHotRegion() ||
+        randFloat() < prm.chanceOfUsingArriveTypeReceiveBehavior) &&
+     !player->team()->isOpponentWithinRadius(player->pos(), passThreatRadius))
   {
-    player->Steering()->ArriveOn();
-    
+    player->steering()->arriveOn();
+
     #ifdef PLAYER_STATE_INFO_ON
-    debug_con << "Player " << player->ID() << " enters receive state (Using Arrive)" << "";
+    debugCon << "Player " << player->id() << " enters receive state (Using Arrive)" << "";
     #endif
   }
   else
   {
-    player->Steering()->PursuitOn();
+    player->steering()->pursuitOn();
 
     #ifdef PLAYER_STATE_INFO_ON
-    debug_con << "Player " << player->ID() << " enters receive state (Using Pursuit)" << "";
+    debugCon << "Player " << player->id() << " enters receive state (Using Pursuit)" << "";
     #endif
   }
 }
 
-void ReceiveBall::Execute(EntityPlayerOnField* player)
+void ReceiveBall::execute(EntityPlayerOnField* player)
 {
   //if the ball comes close enough to the player or if his team lose control
   //he should change state to chase the ball
-  if (player->BallWithinReceivingRange() || !player->Team()->InControl())
+  if (player->ballWithinReceivingRange() || !player->team()->inControl())
   {
-    player->GetFSM()->ChangeState(ChaseBall::Instance());
+    player->getFsm()->changeState(ChaseBall::instance());
 
     return;
-  }  
+  }
 
-  if (player->Steering()->PursuitIsOn())
+  if (player->steering()->pursuitIsOn())
   {
-    player->Steering()->SetTarget(player->Ball()->Pos());
+    player->steering()->setTarget(player->ball()->pos());
   }
 
   //if the player has 'arrived' at the steering target he should wait and
   //turn to face the ball
-  if (player->AtTarget())
+  if (player->atTarget())
   {
-    player->Steering()->ArriveOff();
-    player->Steering()->PursuitOff();
-    player->TrackBall();    
-    player->SetVelocity(Vector2D(0,0));
-  } 
+    player->steering()->arriveOff();
+    player->steering()->pursuitOff();
+    player->trackBall();
+    player->setVelocity(Vector2D(0,0));
+  }
 }
 
-void ReceiveBall::Exit(EntityPlayerOnField* player)
+void ReceiveBall::exit(EntityPlayerOnField* player)
 {
-  player->Steering()->ArriveOff();
-  player->Steering()->PursuitOff();
+  player->steering()->arriveOff();
+  player->steering()->pursuitOff();
 
-  player->Team()->SetReceiver(NULL);
+  player->team()->setReceiver(NULL);
 }
 
 
 
 
- 
+
 
 
 

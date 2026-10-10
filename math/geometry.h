@@ -9,189 +9,189 @@
 #include <math.h>
 #include <vector>
 
-const double pi = 3.14159;
+const double geometryPi = 3.14159;
 
-enum span_type { plane_backside, plane_front, on_plane };
+enum SpanType { planeBackside, planeFront, onPlane };
 
-//given a plane and a ray this function determins how far along the ray 
+//given a plane and a ray this function determins how far along the ray
 //an interestion occurs. Returns negative if the ray is parallel
-double DistanceToRayPlaneIntersection(Vector2D RayOrigin,
-                                     Vector2D RayHeading,
-                                     Vector2D PlanePoint,  //any point on the plane
-                                     Vector2D PlaneNormal);
+double distanceToRayPlaneIntersection(Vector2D rayOrigin,
+                                     Vector2D rayHeading,
+                                     Vector2D planePoint,  //any point on the plane
+                                     Vector2D planeNormal);
 
-//------------------------- WhereIsPoint --------------------------------------
-span_type WhereIsPoint(Vector2D point,
-                       Vector2D PointOnPlane, //any point on the plane
-                       Vector2D PlaneNormal);
+//------------------------- whereIsPoint --------------------------------------
+SpanType whereIsPoint(Vector2D point,
+                       Vector2D pointOnPlane, //any point on the plane
+                       Vector2D planeNormal);
 
 //-------------------------- GetRayCircleIntersec -----------------------------
-double GetRayCircleIntersect(Vector2D RayOrigin,
-                             Vector2D RayHeading,
-                             Vector2D CircleOrigin,
+double getRayCircleIntersect(Vector2D rayOrigin,
+                             Vector2D rayHeading,
+                             Vector2D circleOrigin,
                              double  radius);
 
-//----------------------------- DoRayCircleIntersect --------------------------
-bool DoRayCircleIntersect(Vector2D RayOrigin,
-                          Vector2D RayHeading,
-                          Vector2D CircleOrigin,
+//----------------------------- doRayCircleIntersect --------------------------
+bool doRayCircleIntersect(Vector2D rayOrigin,
+                          Vector2D rayHeading,
+                          Vector2D circleOrigin,
                           double     radius);
 
 //------------------------------------------------------------------------
 //  Given a point P and a circle of radius R centered at C this function
-//  determines the two points on the circle that intersect with the 
+//  determines the two points on the circle that intersect with the
 //  tangents from P to the circle. Returns false if P is within the circle.
 //------------------------------------------------------------------------
-bool GetTangentPoints (Vector2D C, double R, Vector2D P, Vector2D& T1, Vector2D& T2);
+bool getTangentPoints (Vector2D c, double radiusValue, Vector2D pointP, Vector2D& t1, Vector2D& t2);
 
-//------------------------- DistToLineSegment ----------------------------
+//------------------------- distToLineSegment ----------------------------
 //
-//  given a line segment AB and a point P, this function calculates the 
+//  given a line segment AB and a point P, this function calculates the
 //  perpendicular distance between them
 //------------------------------------------------------------------------
-double DistToLineSegment(Vector2D A,
-                         Vector2D B,
-                         Vector2D P);
+double distToLineSegment(Vector2D pointA,
+                         Vector2D pointB,
+                         Vector2D pointP);
 
-//------------------------- DistToLineSegmentSq ----------------------------
+//------------------------- distToLineSegmentSq ----------------------------
 //
 //  as above, but avoiding sqrt
 //------------------------------------------------------------------------
-double DistToLineSegmentSq(Vector2D A,
-                           Vector2D B,
-                           Vector2D P);
+double distToLineSegmentSq(Vector2D pointA,
+                           Vector2D pointB,
+                           Vector2D pointP);
 
-//--------------------LineIntersection2D-------------------------
+//--------------------lineIntersection2D-------------------------
 //
-//	Given 2 lines in 2D space AB, CD this returns true if an 
+//	Given 2 lines in 2D space AB, CD this returns true if an
 //	intersection occurs.
 //
-//----------------------------------------------------------------- 
-bool LineIntersection2D(Vector2D A,
-                        Vector2D B,
-                        Vector2D C, 
-                        Vector2D D);
+//-----------------------------------------------------------------
+bool lineIntersection2D(Vector2D pointA,
+                        Vector2D pointB,
+                        Vector2D c,
+                        Vector2D pointD);
 
-//--------------------LineIntersection2D-------------------------
+//--------------------lineIntersection2D-------------------------
 //
-//	Given 2 lines in 2D space AB, CD this returns true if an 
+//	Given 2 lines in 2D space AB, CD this returns true if an
 //	intersection occurs and sets dist to the distance the intersection
 //  occurs along AB
 //
-//----------------------------------------------------------------- 
-bool LineIntersection2D(Vector2D A,
-                        Vector2D B,
-                        Vector2D C, 
-                        Vector2D D,
+//-----------------------------------------------------------------
+bool lineIntersection2D(Vector2D pointA,
+                        Vector2D pointB,
+                        Vector2D c,
+                        Vector2D pointD,
                         double &dist);
 
-//-------------------- LineIntersection2D-------------------------
+//-------------------- lineIntersection2D-------------------------
 //
-//	Given 2 lines in 2D space AB, CD this returns true if an 
+//	Given 2 lines in 2D space AB, CD this returns true if an
 //	intersection occurs and sets dist to the distance the intersection
 //  occurs along AB. Also sets the 2d vector point to the point of
 //  intersection
-//----------------------------------------------------------------- 
-bool LineIntersection2D(Vector2D   A,
-                        Vector2D   B,
-                        Vector2D   C, 
-                        Vector2D   D,
+//-----------------------------------------------------------------
+bool lineIntersection2D(Vector2D   pointA,
+                        Vector2D   pointB,
+                        Vector2D   c,
+                        Vector2D   pointD,
                         double&     dist,
                         Vector2D&  point);
 
-//----------------------- ObjectIntersection2D ---------------------------
+//----------------------- objectIntersection2D ---------------------------
 //
 //  tests two polygons for intersection. *Does not check for enclosure*
 //------------------------------------------------------------------------
-bool ObjectIntersection2D(const std::vector<Vector2D>& object1,
+bool objectIntersection2D(const std::vector<Vector2D>& object1,
                           const std::vector<Vector2D>& object2);
 
-//----------------------- SegmentObjectIntersection2D --------------------
+//----------------------- segmentObjectIntersection2D --------------------
 //
 //  tests a line segment against a polygon for intersection
 //  *Does not check for enclosure*
 //------------------------------------------------------------------------
-bool SegmentObjectIntersection2D(const Vector2D& A,
-                                 const Vector2D& B,
+bool segmentObjectIntersection2D(const Vector2D& pointA,
+                                 const Vector2D& pointB,
                                  const std::vector<Vector2D>& object);
 
-//----------------------------- TwoCirclesOverlapped ---------------------
+//----------------------------- twoCirclesOverlapped ---------------------
 //
 //  Returns true if the two circles overlap
 //------------------------------------------------------------------------
-bool TwoCirclesOverlapped(double x1, double y1, double r1,
+bool twoCirclesOverlapped(double x1, double y1, double r1,
                           double x2, double y2, double r2);
 
-//----------------------------- TwoCirclesOverlapped ---------------------
+//----------------------------- twoCirclesOverlapped ---------------------
 //
 //  Returns true if the two circles overlap
 //------------------------------------------------------------------------
-bool TwoCirclesOverlapped(Vector2D c1, double r1,
+bool twoCirclesOverlapped(Vector2D c1, double r1,
                           Vector2D c2, double r2);
 
-//--------------------------- TwoCirclesEnclosed ---------------------------
+//--------------------------- twoCirclesEnclosed ---------------------------
 //
 //  returns true if one circle encloses the other
 //-------------------------------------------------------------------------
-bool TwoCirclesEnclosed(double x1, double y1, double r1,
+bool twoCirclesEnclosed(double x1, double y1, double r1,
                         double x2, double y2, double r2);
 
-//------------------------ TwoCirclesIntersectionPoints ------------------
+//------------------------ twoCirclesIntersectionPoints ------------------
 //
 //  Given two circles this function calculates the intersection points
 //  of any overlap.
 //
 //  returns false if no overlap found
-//------------------------------------------------------------------------ 
-bool TwoCirclesIntersectionPoints(double x1, double y1, double r1,
+//------------------------------------------------------------------------
+bool twoCirclesIntersectionPoints(double x1, double y1, double r1,
                                   double x2, double y2, double r2,
                                   double &p3X, double &p3Y,
                                   double &p4X, double &p4Y);
 
-//------------------------ TwoCirclesIntersectionArea --------------------
+//------------------------ twoCirclesIntersectionArea --------------------
 //
 //  Tests to see if two circles overlap and if so calculates the area
 //  defined by the union
 //-----------------------------------------------------------------------
-double TwoCirclesIntersectionArea(double x1, double y1, double r1,
+double twoCirclesIntersectionArea(double x1, double y1, double r1,
                                   double x2, double y2, double r2);
 
-//-------------------------------- CircleArea ---------------------------
+//-------------------------------- circleArea ---------------------------
 //
 //  given the radius, calculates the area of a circle
 //-----------------------------------------------------------------------
-double CircleArea(double radius);
+double circleArea(double radius);
 
-//----------------------- PointInCircle ----------------------------------
+//----------------------- pointInCircle ----------------------------------
 //
 //  returns true if the point p is within the radius of the given circle
 //------------------------------------------------------------------------
-bool PointInCircle(Vector2D Pos,
+bool pointInCircle(Vector2D pos,
                    double    radius,
                    Vector2D p);
 
-//--------------------- LineSegmentCircleIntersection ---------------------------
+//--------------------- lineSegmentCircleIntersection ---------------------------
 //
 //  returns true if the line segment AB intersects with a circle at
 //  position P with radius radius
 //------------------------------------------------------------------------
-bool LineSegmentCircleIntersection(Vector2D A,
-                                   Vector2D B,
-                                   Vector2D P,
+bool lineSegmentCircleIntersection(Vector2D pointA,
+                                   Vector2D pointB,
+                                   Vector2D pointP,
                                    double    radius);
 
-//------------------- GetLineSegmentCircleClosestIntersectionPoint ------------
+//------------------- getLineSegmentCircleClosestIntersectionPoint ------------
 //
 //  given a line segment AB and a circle position and radius, this function
-//  determines if there is an intersection and stores the position of the 
-//  closest intersection in the reference IntersectionPoint
+//  determines if there is an intersection and stores the position of the
+//  closest intersection in the reference intersectionPoint
 //
 //  returns false if no intersection point is found
 //-----------------------------------------------------------------------------
-bool GetLineSegmentCircleClosestIntersectionPoint(Vector2D A,
-                                                  Vector2D B,
+bool getLineSegmentCircleClosestIntersectionPoint(Vector2D pointA,
+                                                  Vector2D pointB,
                                                   Vector2D pos,
                                                   double    radius,
-                                                  Vector2D& IntersectionPoint);
+                                                  Vector2D& intersectionPoint);
 
 #endif

@@ -2,12 +2,12 @@
 #define GRAPH_EDGE_TYPES_H
 //-----------------------------------------------------------------------------
 //
-//  Name:   GraphEdgeTypes.h
+//  name:   GraphEdgeTypes.h
 //
 //  Author: Mat Buckland (www.ai-junkie.com)
 //
 //  Desc:   Class to define an edge connecting two nodes.
-//          
+//
 //          An edge has an associated cost.
 //-----------------------------------------------------------------------------
 #include <ostream>
@@ -21,55 +21,55 @@ class GraphEdge
 protected:
 
   //An edge connects two nodes. Valid node indices are always positive.
-  int     m_iFrom;
-  int     m_iTo;
+  int     mFrom;
+  int     mTo;
 
   //the cost of traversing the edge
-  double  m_dCost;
+  double  mCost;
 
 public:
 
   //ctors
-  GraphEdge(int from, int to, double cost):m_dCost(cost),
-                                           m_iFrom(from),
-                                           m_iTo(to)
-  {}
-  
-  GraphEdge(int from, int  to):m_dCost(1.0),
-                               m_iFrom(from),
-                               m_iTo(to)
-  {}
-  
-  GraphEdge():m_dCost(1.0),
-              m_iFrom(invalid_node_index),
-              m_iTo(invalid_node_index)
+  GraphEdge(int from, int to, double cost):mCost(cost),
+                                           mFrom(from),
+                                           mTo(to)
   {}
 
-  //stream constructor
+  GraphEdge(int from, int  to):mCost(1.0),
+                               mFrom(from),
+                               mTo(to)
+  {}
+
+  GraphEdge():mCost(1.0),
+              mFrom(invalidNodeIndex),
+              mTo(invalidNodeIndex)
+  {}
+
+  //stream function Object() { [native code] }
   GraphEdge(std::ifstream& stream)
   {
     char buffer[50];
-    stream  >> buffer >> m_iFrom >> buffer >> m_iTo >> buffer >> m_dCost;
+    stream  >> buffer >> mFrom >> buffer >> mTo >> buffer >> mCost;
   }
 
   virtual ~GraphEdge(){}
 
-  int   From()const{return m_iFrom;}
-  void  SetFrom(int NewIndex){m_iFrom = NewIndex;}
+  int   from()const{return mFrom;}
+  void  setFrom(int newIndex){mFrom = newIndex;}
 
-  int   To()const{return m_iTo;}
-  void  SetTo(int NewIndex){m_iTo = NewIndex;}
+  int   to()const{return mTo;}
+  void  setTo(int newIndex){mTo = newIndex;}
 
-  double Cost()const{return m_dCost;}
-  void  SetCost(double NewCost){m_dCost = NewCost;}
+  double cost()const{return mCost;}
+  void  setCost(double newCost){mCost = newCost;}
 
 
   //these two operators are required
   bool operator==(const GraphEdge& rhs)
   {
-    return rhs.m_iFrom == this->m_iFrom &&
-           rhs.m_iTo   == this->m_iTo   &&
-           rhs.m_dCost == this->m_dCost;
+    return rhs.mFrom == this->mFrom &&
+           rhs.mTo   == this->mTo   &&
+           rhs.mCost == this->mCost;
   }
 
   bool operator!=(const GraphEdge& rhs)
@@ -80,9 +80,9 @@ public:
   //for reading and writing to streams.
   friend std::ostream& operator<<(std::ostream& os, const GraphEdge& e)
   {
-    os << "m_iFrom: " << e.m_iFrom << " m_iTo: " << e.m_iTo 
-       << " m_dCost: " << e.m_dCost << std::endl;
-    
+    os << "m_iFrom: " << e.mFrom << " m_iTo: " << e.mTo
+       << " m_dCost: " << e.mCost << std::endl;
+
     return os;
   }
 
@@ -92,7 +92,7 @@ public:
 class NavGraphEdge : public GraphEdge
 {
 public:
-  
+
   //examples of typical flags
   enum
   {
@@ -103,52 +103,52 @@ public:
     jump              = 1 << 3,
     fly               = 1 << 4,
     grapple           = 1 << 5,
-    goes_through_door = 1 << 6
+    goesThroughDoor = 1 << 6
   };
 
 protected:
 
-  int   m_iFlags;
+  int   mFlags;
 
   //if this edge intersects with an object (such as a door or lift), then
-  //this is that object's ID. 
-  int  m_iIDofIntersectingEntity;
+  //this is that object's id.
+  int  mIdOfIntersectingEntity;
 
 public:
- 
-  
+
+
   NavGraphEdge(int    from,
                int    to,
                double cost,
                int    flags = 0,
                int    id = -1):GraphEdge(from,to,cost),
-                               m_iFlags(flags),
-                               m_iIDofIntersectingEntity(id)
+                               mFlags(flags),
+                               mIdOfIntersectingEntity(id)
 
-  {} 
+  {}
 
 
-  //stream constructor
+  //stream function Object() { [native code] }
   NavGraphEdge(std::ifstream& stream)
   {
     char buffer[50];
-    stream  >> buffer >> m_iFrom >> buffer >> m_iTo >> buffer >> m_dCost;
-    stream >> buffer >> m_iFlags >> buffer >> m_iIDofIntersectingEntity;
+    stream  >> buffer >> mFrom >> buffer >> mTo >> buffer >> mCost;
+    stream >> buffer >> mFlags >> buffer >> mIdOfIntersectingEntity;
   }
 
-  int  Flags()const{return m_iFlags;}
-  void SetFlags(int flags){m_iFlags = flags;}
-  
-  int  IDofIntersectingEntity()const{return m_iIDofIntersectingEntity;}
-  void SetIDofIntersectingEntity(int id){m_iIDofIntersectingEntity = id;}
+  int  flags()const{return mFlags;}
+  void setFlags(int flags){mFlags = flags;}
 
- 
+  int  iDofIntersectingEntity()const{return mIdOfIntersectingEntity;}
+  void setIdOfIntersectingEntity(int id){mIdOfIntersectingEntity = id;}
+
+
   friend std::ostream& operator<<(std::ostream& os, const NavGraphEdge& e)
   {
-    os << "m_iFrom: " << e.m_iFrom << " m_iTo: " << e.m_iTo 
-       << " m_dCost: " << e.m_dCost << " m_iFlags: " << e.m_iFlags
-       << " ID: " << e.m_iIDofIntersectingEntity << std::endl;
-    
+    os << "m_iFrom: " << e.mFrom << " m_iTo: " << e.mTo
+       << " m_dCost: " << e.mCost << " m_iFlags: " << e.mFlags
+       << " ID: " << e.mIdOfIntersectingEntity << std::endl;
+
     return os;
   }
 };

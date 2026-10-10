@@ -23,169 +23,169 @@ using std::vector;
 //----------------------------------------------------------------------------
 EntityPlayerOnField::~EntityPlayerOnField()
 {
-  delete m_pKickLimiter;
-  delete m_pStateMachine;
+  delete mKickLimiter;
+  delete mStateMachine;
 }
 
 //----------------------------- ctor -------------------------------------
 //------------------------------------------------------------------------
-EntityPlayerOnField::EntityPlayerOnField(SoccerTeam* home_team,
-                      int   home_region,
-                      State<EntityPlayerOnField>* start_state,
+EntityPlayerOnField::EntityPlayerOnField(SoccerTeam* homeTeam,
+                      int   homeRegion,
+                      State<EntityPlayerOnField>* startState,
                       Vector2D  heading,
                       Vector2D velocity,
                       double    mass,
-                      double    max_force,
-                      double    max_speed,
-                      double    max_turn_rate,
+                      double    maxForce,
+                      double    maxSpeed,
+                      double    maxTurnRate,
                       double    scale,
-                      player_role role): EntityPlayer(home_team,
-                                                    home_region,
+                      PlayerRole role): EntityPlayer(homeTeam,
+                                                    homeRegion,
                                                     heading,
                                                     velocity,
                                                     mass,
-                                                    max_force,
-                                                    max_speed,
-                                                    max_turn_rate,
+                                                    maxForce,
+                                                    maxSpeed,
+                                                    maxTurnRate,
                                                     scale,
-                                                    role)                                    
+                                                    role)
 {
   //set up the state machine
-  m_pStateMachine =  new StateMachine<EntityPlayerOnField>(this);
+  mStateMachine =  new StateMachine<EntityPlayerOnField>(this);
 
-  if (start_state)
-  {    
-    m_pStateMachine->SetCurrentState(start_state);
-    m_pStateMachine->SetPreviousState(start_state);
-    m_pStateMachine->SetGlobalState(GlobalPlayerState::Instance());
+  if (startState)
+  {
+    mStateMachine->setCurrentState(startState);
+    mStateMachine->setPreviousState(startState);
+    mStateMachine->setGlobalState(GlobalPlayerState::instance());
 
-    m_pStateMachine->CurrentState()->Enter(this);
-  }    
+    mStateMachine->currentState()->enter(this);
+  }
 
-  m_pSteering->SeparationOn();
+  mSteering->separationOn();
 
   //set up the kick regulator
-  m_pKickLimiter = new Regulator(Prm.PlayerKickFrequency);
+  mKickLimiter = new Regulator(prm.playerKickFrequency);
 }
 
-//------------------------------ Update ----------------------------------
+//------------------------------ update ----------------------------------
 //
-//  
+//
 //------------------------------------------------------------------------
-void EntityPlayerOnField::Update()
-{ 
+void EntityPlayerOnField::update()
+{
   //run the logic for the current state
-  m_pStateMachine->Update();
+  mStateMachine->update();
 
   //calculate the combined steering force
-  m_pSteering->Calculate();
+  mSteering->calculate();
 
   //if no steering force is produced decelerate the player by applying a
   //braking force
-  if (m_pSteering->Force().isZero())
+  if (mSteering->force().isZero())
   {
-    const double BrakingRate = 0.8; 
+    const double brakingRate = 0.8;
 
-    m_vVelocity = m_vVelocity * BrakingRate;                                     
+    mVelocity = mVelocity * brakingRate;
   }
-  
-  //the steering force's side component is a force that rotates the 
-  //player about its axis. We must limit the rotation so that a player
-  //can only turn by PlayerMaxTurnRate rads per update.
-  double TurningForce =   m_pSteering->SideComponent();
 
-  Clamp(TurningForce, -Prm.PlayerMaxTurnRate, Prm.PlayerMaxTurnRate);
+  //the steering force's side component is a force that rotates the
+  //player about its axis. We must limit the rotation so that a player
+  //can only turn by playerMaxTurnRate rads per update.
+  double turningForce =   mSteering->sideComponent();
+
+  clamp(turningForce, -prm.playerMaxTurnRate, prm.playerMaxTurnRate);
 
   //rotate the heading vector
-  Vec2DRotateAroundOrigin(m_vHeading, TurningForce);
+  vec2DRotateAroundOrigin(mHeading, turningForce);
 
   //make sure the velocity vector points in the same direction as
   //the heading vector
-  m_vVelocity = m_vHeading * m_vVelocity.Length();
+  mVelocity = mHeading * mVelocity.length();
 
-  //and recreate m_vSide
-  m_vSide = m_vHeading.Perp();
+  //and recreate mSide
+  mSide = mHeading.perp();
 
 
   //now to calculate the acceleration due to the force exerted by
   //the forward component of the steering force in the direction
   //of the player's heading
-  Vector2D accel = m_vHeading * m_pSteering->ForwardComponent() / m_dMass;
+  Vector2D accel = mHeading * mSteering->forwardComponent() / mMass;
 
-  m_vVelocity += accel;
+  mVelocity += accel;
 
   //make sure player does not exceed maximum velocity
-  m_vVelocity.Truncate(m_dMaxSpeed);
+  mVelocity.truncate(mMaxSpeed);
 
   //update the position
-  m_vPosition += m_vVelocity;
+  mPosition += mVelocity;
 
 
   //enforce a non-penetration constraint if desired
-  if(Prm.bNonPenetrationConstraint)
+  if(prm.bNonPenetrationConstraint)
   {
-    EnforceNonPenetrationContraint(this, AutoList<EntityPlayer>::GetAllMembers());
+    enforceNonPenetrationContraint(this, AutoList<EntityPlayer>::getAllMembers());
   }
 }
 
-//-------------------- HandleMessage -------------------------------------
+//-------------------- handleMessage -------------------------------------
 //
 //  routes any messages appropriately
 //------------------------------------------------------------------------
-bool EntityPlayerOnField::HandleMessage(const Telegram& msg)
+bool EntityPlayerOnField::handleMessage(const Telegram& msg)
 {
-  return m_pStateMachine->HandleMessage(msg);
+  return mStateMachine->handleMessage(msg);
 }
 
-//--------------------------- Render -------------------------------------
+//--------------------------- render -------------------------------------
 //
 //------------------------------------------------------------------------
-void EntityPlayerOnField::Render()                                         
+void EntityPlayerOnField::render()
 {
-  gdi->TransparentText();
-  gdi->TextColor(Cgdi::grey);
+  gdi->transparentText();
+  gdi->textColor(Cgdi::grey);
 
   //set appropriate team color
-  if (Team()->Color() == SoccerTeam::blue){gdi->BluePen();}
-  else{gdi->RedPen();}
+  if (team()->color() == SoccerTeam::blue){gdi->bluePen();}
+  else{gdi->redPen();}
 
-  
+
 
   //render the player's body
-  m_vecPlayerVBTrans = WorldTransform(m_vecPlayerVB,
-                                         Pos(),
-                                         Heading(),
-                                         Side(),
-                                         Scale());
-  gdi->ClosedShape(m_vecPlayerVBTrans);  
-  
-  //and 'is 'ead
-  gdi->BrownBrush();
-  if (Prm.bHighlightIfThreatened && (Team()->ControllingPlayer() == this) && isThreatened()) gdi->YellowBrush();
-  gdi->Circle(Pos(), 6);
+  mTransformedPlayerVertices = worldTransform(mPlayerVertices,
+                                         pos(),
+                                         heading(),
+                                         side(),
+                                         scale());
+  gdi->closedShape(mTransformedPlayerVertices);
 
-    
+  //and 'is 'ead
+  gdi->brownBrush();
+  if (prm.bHighlightIfThreatened && (team()->controllingPlayer() == this) && isThreatened()) gdi->yellowBrush();
+  gdi->circle(pos(), 6);
+
+
   //render the state
-  if (Prm.bStates)
-  {  
-    gdi->TextColor(0, 170, 0);
-    gdi->TextAtPos(m_vPosition.x, m_vPosition.y -20, std::string(m_pStateMachine->GetNameOfCurrentState()));
+  if (prm.bStates)
+  {
+    gdi->textColor(0, 170, 0);
+    gdi->textAtPos(mPosition.x, mPosition.y -20, std::string(mStateMachine->getNameOfCurrentState()));
   }
 
   //show IDs
-  if (Prm.bIDs)
+  if (prm.bIds)
   {
-    gdi->TextColor(0, 170, 0);
-    gdi->TextAtPos(Pos().x-20, Pos().y-20, ttos(ID()));
+    gdi->textColor(0, 170, 0);
+    gdi->textAtPos(pos().x-20, pos().y-20, ttos(id()));
   }
 
 
-  if (Prm.bViewTargets)
+  if (prm.bViewTargets)
   {
-    gdi->RedBrush();
-    gdi->Circle(Steering()->Target(), 3);
-    gdi->TextAtPos(Steering()->Target(), ttos(ID()));
-  }   
+    gdi->redBrush();
+    gdi->circle(steering()->target(), 3);
+    gdi->textAtPos(steering()->target(), ttos(id()));
+  }
 }
 
 

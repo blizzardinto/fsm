@@ -20,84 +20,84 @@ class CObstacle;
 class SteeringBehaviors
 {
 private:
-  
-  EntityPlayer*   m_pPlayer;                                                  
 
-  SoccerBall*   m_pBall;
+  EntityPlayer*   mPlayer;
+
+  SoccerBall*   mBall;
 
   //the steering force created by the combined effect of all
   //the selected behaviors
-  Vector2D     m_vSteeringForce;
+  Vector2D     mSteeringForce;
 
   //the current target (usually the ball or predicted ball position)
-  Vector2D     m_vTarget;
+  Vector2D     mTarget;
 
-  //the distance the player tries to interpose from the target
-  double        m_dInterposeDist;
+  //the distance the player tries to interposeBehavior from the target
+  double        mInterposeDist;
 
-  //multipliers. 
-  double        m_dMultSeparation;
+  //multipliers.
+  double        mMultSeparation;
 
   //how far it can 'see'
-  double        m_dViewDistance;
+  double        mViewDistance;
 
 
   //binary flags to indicate whether or not a behavior should be active
-  int           m_iFlags;
+  int           mFlags;
 
-  enum behavior_type
+  enum BehaviorType
   {
     none               = 0x0000,
-    seek               = 0x0001,
-    arrive             = 0x0002,
-    separation         = 0x0004,
-    pursuit            = 0x0008,
-    interpose          = 0x0010
+    seekBehavior               = 0x0001,
+    arriveBehavior             = 0x0002,
+    separationBehavior         = 0x0004,
+    pursuitBehavior            = 0x0008,
+    interposeBehavior          = 0x0010
   };
 
   //used by group behaviors to tag neighbours
-  bool         m_bTagged;
-  
-  //Arrive makes use of these to determine how quickly a vehicle
+  bool         mTagged;
+
+  //arrive makes use of these to determine how quickly a vehicle
   //should decelerate to its target
   enum Deceleration{slow = 3, normal = 2, fast = 1};
 
 
   //this behavior moves the agent towards a target position
-  Vector2D Seek(Vector2D target);
+  Vector2D seek(Vector2D target);
 
-  //this behavior is similar to seek but it attempts to arrive 
+  //this behavior is similar to seekBehavior but it attempts to arriveBehavior
   //at the target with a zero velocity
-  Vector2D Arrive(Vector2D target, Deceleration decel);
+  Vector2D arrive(Vector2D target, Deceleration decel);
 
   //This behavior predicts where its prey will be and seeks
   //to that location
-  Vector2D Pursuit(const SoccerBall* ball);
- 
-  Vector2D Separation();
+  Vector2D pursuit(const SoccerBall* ball);
+
+  Vector2D separation();
 
   //this attempts to steer the agent to a position between the opponent
   //and the object
-  Vector2D Interpose(const SoccerBall* ball,
+  Vector2D interpose(const SoccerBall* ball,
                      Vector2D pos,
-                     double    DistFromTarget);
+                     double    distFromTarget);
 
 
   //finds any neighbours within the view radius
-  void      FindNeighbours();
+  void      findNeighbours();
 
 
-  //this function tests if a specific bit of m_iFlags is set
-  bool      On(behavior_type bt){return (m_iFlags & bt) == bt;}
+  //this function tests if a specific bit of mFlags is set
+  bool      on(BehaviorType bt){return (mFlags & bt) == bt;}
 
-  bool      AccumulateForce(Vector2D &sf, Vector2D ForceToAdd);
+  bool      accumulateForce(Vector2D &sf, Vector2D forceToAdd);
 
-  Vector2D  SumForces();
+  Vector2D  sumForces();
 
   //a vertex buffer to contain the feelers rqd for dribbling
-  std::vector<Vector2D> m_Antenna;
+  std::vector<Vector2D> mAntenna;
 
-  
+
 public:
 
   SteeringBehaviors(EntityPlayer*       agent,
@@ -106,54 +106,54 @@ public:
 
   virtual ~SteeringBehaviors(){}
 
- 
-  Vector2D Calculate();
+
+  Vector2D calculate();
 
   //calculates the component of the steering force that is parallel
   //with the vehicle heading
-  double    ForwardComponent();
+  double    forwardComponent();
 
   //calculates the component of the steering force that is perpendicuar
   //with the vehicle heading
-  double    SideComponent();
+  double    sideComponent();
 
-  Vector2D Force()const{return m_vSteeringForce;}
+  Vector2D force()const{return mSteeringForce;}
 
   //renders visual aids and info for seeing how each behavior is
   //calculated
-  void      RenderInfo();
-  void      RenderAids();
+  void      renderInfo();
+  void      renderAids();
 
-  Vector2D  Target()const{return m_vTarget;}
-  void      SetTarget(const Vector2D t){m_vTarget = t;}
+  Vector2D  target()const{return mTarget;}
+  void      setTarget(const Vector2D t){mTarget = t;}
 
-  double     InterposeDistance()const{return m_dInterposeDist;}
-  void      SetInterposeDistance(double d){m_dInterposeDist = d;}
+  double     interposeDistance()const{return mInterposeDist;}
+  void      setInterposeDistance(double d){mInterposeDist = d;}
 
-  bool      Tagged()const{return m_bTagged;}
-  void      Tag(){m_bTagged = true;}
-  void      UnTag(){m_bTagged = false;}
-  
-
-  void SeekOn(){m_iFlags |= seek;}
-  void ArriveOn(){m_iFlags |= arrive;}
-  void PursuitOn(){m_iFlags |= pursuit;}
-  void SeparationOn(){m_iFlags |= separation;}
-  void InterposeOn(double d){m_iFlags |= interpose; m_dInterposeDist = d;}
-
-  
-  void SeekOff()  {if(On(seek))   m_iFlags ^=seek;}
-  void ArriveOff(){if(On(arrive)) m_iFlags ^=arrive;}
-  void PursuitOff(){if(On(pursuit)) m_iFlags ^=pursuit;}
-  void SeparationOff(){if(On(separation)) m_iFlags ^=separation;}
-  void InterposeOff(){if(On(interpose)) m_iFlags ^=interpose;}
+  bool      tagged()const{return mTagged;}
+  void      tag(){mTagged = true;}
+  void      unTag(){mTagged = false;}
 
 
-  bool SeekIsOn(){return On(seek);}
-  bool ArriveIsOn(){return On(arrive);}
-  bool PursuitIsOn(){return On(pursuit);}
-  bool SeparationIsOn(){return On(separation);}
-  bool InterposeIsOn(){return On(interpose);}
+  void seekOn(){mFlags |= seekBehavior;}
+  void arriveOn(){mFlags |= arriveBehavior;}
+  void pursuitOn(){mFlags |= pursuitBehavior;}
+  void separationOn(){mFlags |= separationBehavior;}
+  void interposeOn(double d){mFlags |= interposeBehavior; mInterposeDist = d;}
+
+
+  void seekOff()  {if(on(seekBehavior))   mFlags ^=seekBehavior;}
+  void arriveOff(){if(on(arriveBehavior)) mFlags ^=arriveBehavior;}
+  void pursuitOff(){if(on(pursuitBehavior)) mFlags ^=pursuitBehavior;}
+  void separationOff(){if(on(separationBehavior)) mFlags ^=separationBehavior;}
+  void interposeOff(){if(on(interposeBehavior)) mFlags ^=interposeBehavior;}
+
+
+  bool seekIsOn(){return on(seekBehavior);}
+  bool arriveIsOn(){return on(arriveBehavior);}
+  bool pursuitIsOn(){return on(pursuitBehavior);}
+  bool separationIsOn(){return on(separationBehavior);}
+  bool interposeIsOn(){return on(interposeBehavior);}
 
 };
 

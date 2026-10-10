@@ -17,90 +17,90 @@ class SupportSpotCalculator;
 
 
 
-                
-class SoccerTeam 
+
+class SoccerTeam
 {
 public:
-  
-  enum team_color {blue, red};
+
+  enum TeamColor {blue, red};
 
 private:
 
    //an instance of the state machine class
-  StateMachine<SoccerTeam>*  m_pStateMachine;
+  StateMachine<SoccerTeam>*  mStateMachine;
 
   //the team must know its own color!
-  team_color                m_Color;
+  TeamColor                mColor;
 
   //pointers to the team members
-  std::vector<EntityPlayer*>  m_Players;
+  std::vector<EntityPlayer*>  mPlayers;
 
   //a pointer to the soccer pitch
-  SoccerPitch*              m_pPitch;
+  SoccerPitch*              mPitch;
 
   //pointers to the goals
-  Goal*                     m_pOpponentsGoal;
-  Goal*                     m_pHomeGoal;
-  
+  Goal*                     mOpponentsGoal;
+  Goal*                     mHomeGoal;
+
   //a pointer to the opposing team
-  SoccerTeam*               m_pOpponents;
-   
+  SoccerTeam*               mOpponents;
+
   //pointers to 'key' players
-  EntityPlayer*               m_pControllingPlayer;
-  EntityPlayer*               m_pSupportingPlayer;
-  EntityPlayer*               m_pReceivingPlayer;
-  EntityPlayer*               m_pPlayerClosestToBall;
+  EntityPlayer*               mControllingPlayer;
+  EntityPlayer*               mSupportingPlayer;
+  EntityPlayer*               mReceivingPlayer;
+  EntityPlayer*               mPlayerClosestToBall;
 
   //the squared distance the closest player is from the ball
-  double                     m_dDistSqToBallOfClosestPlayer;
+  double                     mDistSqToBallOfClosestPlayer;
 
   //players use this to determine strategic positions on the playing field
-  SupportSpotCalculator*    m_pSupportSpotCalc;
+  SupportSpotCalculator*    mSupportSpotCalc;
 
 
   //creates all the players for this team
-  void CreatePlayers();
+  void createPlayers();
 
   //called each frame. Sets m_pClosestPlayerToBall to point to the player
-  //closest to the ball. 
-  void CalculateClosestPlayerToBall();
+  //closest to the ball.
+  void calculateClosestPlayerToBall();
 
 
 public:
 
-  SoccerTeam(Goal*        home_goal,
-             Goal*        opponents_goal,
+  SoccerTeam(Goal*        homeGoal,
+             Goal*        opponentsGoal,
              SoccerPitch* pitch,
-             team_color   color);
+             TeamColor   color);
 
   ~SoccerTeam();
 
   //the usual suspects
-  void        Render()const;
-  void        Update();
+  void        render()const;
+  void        update();
 
-  //calling this changes the state of all field players to that of 
+  //calling this changes the state of all field players to that of
   //ReturnToHomeRegion. Mainly used when a goal keeper has
   //possession
-  void        ReturnAllEntityPlayerOnFieldsToHome()const;
+  void        returnAllEntityPlayerOnFieldsToHome()const;
 
-  //returns true if player has a clean shot at the goal and sets ShotTarget
+  //returns true if player has a clean shot at the goal and sets shotTarget
   //to a normalized vector pointing in the direction the shot should be
   //made. Else returns false and sets heading to a zero vector
-  bool        CanShoot(Vector2D  BallPos,
-                       double     power, 
-                       Vector2D  ShotTarget = Vector2D())const;
+  bool        canShoot(Vector2D  ballPos,
+                       double     power,
+                       Vector2D  shotTarget = Vector2D())const;
 
-  //The best pass is considered to be the pass that cannot be intercepted 
-  //by an opponent and that is as far forward of the receiver as possible  
-  //If a pass is found, the receiver's address is returned in the 
-  //reference, 'receiver' and the position the pass will be made to is 
-  //returned in the  reference 'PassTarget'
-  bool        FindPass(const EntityPlayer*const passer,
+  //The best pass is considered to be the pass that cannot be intercepted
+  //by an opponent and that is as far forward of the receiver as possible
+  //If a pass is found, the receiver's address is returned in the
+  //reference, 'receiver' and the position the pass will be made to is
+  //returned in the  reference 'passTarget'
+  bool        findPass(const EntityPlayer*const passer,
                       EntityPlayer*&           receiver,
-                      Vector2D&              PassTarget,
+                      Vector2D&              passTarget,
                       double                  power,
-                      double                  MinPassingDistance)const;
+                      double                  minPassingDistance)const;
 
   //Three potential passes are calculated. One directly toward the receiver's
   //current position and two that are the tangents from the ball position
@@ -108,20 +108,20 @@ public:
   //These passes are then tested to see if they can be intercepted by an
   //opponent and to make sure they terminate within the playing area. If
   //all the passes are invalidated the function returns false. Otherwise
-  //the function returns the pass that takes the ball closest to the 
+  //the function returns the pass that takes the ball closest to the
   //opponent's goal area.
-  bool        GetBestPassToReceiver(const EntityPlayer* const passer,
+  bool        getBestPassToReceiver(const EntityPlayer* const passer,
                                     const EntityPlayer* const receiver,
-                                    Vector2D& PassTarget,
+                                    Vector2D& passTarget,
                                     const double power)const;
 
-  //test if a pass from positions 'from' to 'target' kicked with force 
-  //'PassingForce'can be intercepted by an opposing player
+  //test if a pass from positions 'from' to 'target' kicked with force
+  //'passingForce'can be intercepted by an opposing player
   bool        isPassSafeFromOpponent(Vector2D    from,
                                      Vector2D    target,
                                      const EntityPlayer* const receiver,
                                      const EntityPlayer* const opp,
-                                     double       PassingForce)const;
+                                     double       passingForce)const;
 
   //tests a pass from position 'from' to position 'target' against each member
   //of the opposing team. Returns true if the pass can be made without
@@ -129,7 +129,7 @@ public:
   bool        isPassSafeFromAllOpponents(Vector2D from,
                                          Vector2D target,
                                          const EntityPlayer* const receiver,
-                                         double     PassingForce)const;
+                                         double     passingForce)const;
 
   //returns true if there is an opponent within radius of position
   bool        isOpponentWithinRadius(Vector2D pos, double rad);
@@ -137,66 +137,66 @@ public:
   //this tests to see if a pass is possible between the requester and
   //the controlling player. If it is possible a message is sent to the
   //controlling player to pass the ball asap.
-  void        RequestPass(EntityPlayerOnField* requester)const;
+  void        requestPass(EntityPlayerOnField* requester)const;
 
   //calculates the best supporting position and finds the most appropriate
   //attacker to travel to the spot
-  EntityPlayer* DetermineBestSupportingAttacker();
-  
+  EntityPlayer* determineBestSupportingAttacker();
 
-  const std::vector<EntityPlayer*>& Members()const{return m_Players;}  
 
-  StateMachine<SoccerTeam>* GetFSM()const{return m_pStateMachine;}
-  
-  Goal*const           HomeGoal()const{return m_pHomeGoal;}
-  Goal*const           OpponentsGoal()const{return m_pOpponentsGoal;}
+  const std::vector<EntityPlayer*>& members()const{return mPlayers;}
 
-  SoccerPitch*const    Pitch()const{return m_pPitch;}           
+  StateMachine<SoccerTeam>* getFsm()const{return mStateMachine;}
 
-  SoccerTeam*const     Opponents()const{return m_pOpponents;}
-  void                 SetOpponents(SoccerTeam* opps){m_pOpponents = opps;}
+  Goal*const           homeGoal()const{return mHomeGoal;}
+  Goal*const           opponentsGoal()const{return mOpponentsGoal;}
 
-  team_color           Color()const{return m_Color;}
+  SoccerPitch*const    pitch()const{return mPitch;}
 
-  void                 SetPlayerClosestToBall(EntityPlayer* plyr){m_pPlayerClosestToBall=plyr;}
-  EntityPlayer*          PlayerClosestToBall()const{return m_pPlayerClosestToBall;}
-  
-  double               ClosestDistToBallSq()const{return m_dDistSqToBallOfClosestPlayer;}
+  SoccerTeam*const     opponents()const{return mOpponents;}
+  void                 setOpponents(SoccerTeam* opps){mOpponents = opps;}
 
-  Vector2D             GetSupportSpot()const{return m_pSupportSpotCalc->GetBestSupportingSpot();}
+  TeamColor           color()const{return mColor;}
 
-  EntityPlayer*          SupportingPlayer()const{return m_pSupportingPlayer;}
-  void                 SetSupportingPlayer(EntityPlayer* plyr){m_pSupportingPlayer = plyr;}
+  void                 setPlayerClosestToBall(EntityPlayer* plyr){mPlayerClosestToBall=plyr;}
+  EntityPlayer*          playerClosestToBall()const{return mPlayerClosestToBall;}
 
-  EntityPlayer*          Receiver()const{return m_pReceivingPlayer;}
-  void                 SetReceiver(EntityPlayer* plyr){m_pReceivingPlayer = plyr;}
+  double               closestDistToBallSq()const{return mDistSqToBallOfClosestPlayer;}
 
-  EntityPlayer*          ControllingPlayer()const{return m_pControllingPlayer;}
-  void                 SetControllingPlayer(EntityPlayer* plyr)
+  Vector2D             getSupportSpot()const{return mSupportSpotCalc->getBestSupportingSpot();}
+
+  EntityPlayer*          supportingPlayer()const{return mSupportingPlayer;}
+  void                 setSupportingPlayer(EntityPlayer* plyr){mSupportingPlayer = plyr;}
+
+  EntityPlayer*          receiver()const{return mReceivingPlayer;}
+  void                 setReceiver(EntityPlayer* plyr){mReceivingPlayer = plyr;}
+
+  EntityPlayer*          controllingPlayer()const{return mControllingPlayer;}
+  void                 setControllingPlayer(EntityPlayer* plyr)
   {
-    m_pControllingPlayer = plyr;
+    mControllingPlayer = plyr;
 
     //rub it in the opponents faces!
-    Opponents()->LostControl();
+    opponents()->lostControl();
   }
 
 
-  bool  InControl()const{if(m_pControllingPlayer)return true; else return false;}
-  void  LostControl(){m_pControllingPlayer = NULL;}
+  bool  inControl()const{if(mControllingPlayer)return true; else return false;}
+  void  lostControl(){mControllingPlayer = NULL;}
 
-  EntityPlayer*  GetPlayerFromID(int id)const;
-  
+  EntityPlayer*  getPlayerFromId(int id)const;
 
-  void SetPlayerHomeRegion(int plyr, int region)const;
 
-  void DetermineBestSupportingPosition()const{m_pSupportSpotCalc->DetermineBestSupportingPosition();}
+  void setPlayerHomeRegion(int plyr, int region)const;
 
-  void UpdateTargetsOfWaitingPlayers()const;
+  void determineBestSupportingPosition()const{mSupportSpotCalc->determineBestSupportingPosition();}
+
+  void updateTargetsOfWaitingPlayers()const;
 
   //returns false if any of the team are not located within their home region
-  bool AllPlayersAtHome()const;
+  bool allPlayersAtHome()const;
 
-  std::string Name()const{if (m_Color == blue) return "Blue"; return "Red";}
+  std::string name()const{if (mColor == blue) return "Blue"; return "Red";}
 
 };
 

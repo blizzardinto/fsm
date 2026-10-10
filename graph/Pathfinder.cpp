@@ -10,538 +10,538 @@
 #include <iostream>
 using namespace std;
 
-extern HWND g_hwndToolbar;
-extern const char*  g_szApplicationName;
-extern const char*	g_szWindowClassName;
+extern HWND gToolbar;
+extern const wchar_t* gApplicationName;
+extern const wchar_t* gWindowClassName;
 
-//----------------------- CreateGraph ------------------------------------
+//----------------------- createGraph ------------------------------------
 //
 //------------------------------------------------------------------------
-void Pathfinder::CreateGraph(int CellsUp,
-                              int CellsAcross)
+void Pathfinder::createGraph(int cellsUp,
+                              int cellsAcross)
 {
   //get the height of the toolbar
   RECT rectToolbar;
-  GetWindowRect(g_hwndToolbar, &rectToolbar);
-  
+  GetWindowRect(gToolbar, &rectToolbar);
+
   //get the dimensions of the client area
-  HWND hwndMainWindow = FindWindow(g_szWindowClassName, g_szApplicationName); 
+  HWND hwndMainWindow = FindWindowW(gWindowClassName, gApplicationName);
 
   RECT rect;
   GetClientRect(hwndMainWindow, &rect);
-  m_icxClient = rect.right;
-  m_icyClient = rect.bottom - abs(rectToolbar.bottom - rectToolbar.top) - InfoWindowHeight;
+  mClientWidth = rect.right;
+  mClientHeight = rect.bottom - abs(rectToolbar.bottom - rectToolbar.top) - infoWindowHeight;
 
   //initialize the terrain vector with normal terrain
-  m_TerrainType.assign(CellsUp * CellsAcross, normal);
+  mTerrainType.assign(cellsUp * cellsAcross, normal);
 
-  m_iCellsX     = CellsAcross;
-  m_iCellsY     = CellsUp;
-  m_dCellWidth  = (double)m_icxClient / (double)CellsAcross;
-  m_dCellHeight = (double)m_icyClient / (double)CellsUp;
+  mCellsX     = cellsAcross;
+  mCellsY     = cellsUp;
+  mCellWidth  = (double)mClientWidth / (double)cellsAcross;
+  mCellHeight = (double)mClientHeight / (double)cellsUp;
 
   //delete any old graph
-  delete m_pGraph;
+  delete mGraph;
 
   //create the graph
-  m_pGraph = new NavGraph(false);//not a digraph
+  mGraph = new NavGraph(false);//not a digraph
 
-  GraphHelper_CreateGrid(*m_pGraph, m_icxClient, m_icyClient, CellsUp, CellsAcross);
+  graphHelperCreateGrid(*mGraph, mClientWidth, mClientHeight, cellsUp, cellsAcross);
 
-  //initialize source and target indexes to mid top and bottom of grid 
-  PointToIndex(VectorToPOINTS(Vector2D(m_icxClient/2, m_dCellHeight*2)), m_iTargetCell);
-  PointToIndex(VectorToPOINTS(Vector2D(m_icxClient/2, m_icyClient -m_dCellHeight*2)), m_iSourceCell);
+  //initialize source and target indexes to mid top and bottom of grid
+  pointToIndex(vectorToPoints(Vector2D(mClientWidth/2, mCellHeight*2)), mTargetCell);
+  pointToIndex(vectorToPoints(Vector2D(mClientWidth/2, mClientHeight -mCellHeight*2)), mSourceCell);
 
-  m_Path.clear();
-  m_SubTree.clear();
+  mPath.clear();
+  mSubTree.clear();
 
-  m_CurrentAlgorithm = non;
-  m_dTimeTaken = 0;
+  mCurrentAlgorithm = non;
+  mTimeTaken = 0;
 }
 
-//--------------------- PointToIndex -------------------------------------
+//--------------------- pointToIndex -------------------------------------
 //
 //  converts a POINTS into an index into the graph
 //------------------------------------------------------------------------
-bool Pathfinder::PointToIndex(POINTS p, int& NodeIndex)
+bool Pathfinder::pointToIndex(POINTS p, int& nodeIndex)
 {
   //convert p to an index into the graph
-  int x = (int)((double)(p.x)/m_dCellWidth);  
-  int y = (int)((double)(p.y)/m_dCellHeight); 
-  
+  int x = (int)((double)(p.x)/mCellWidth);
+  int y = (int)((double)(p.y)/mCellHeight);
+
   //make sure the values are legal
-  if ( (x>m_iCellsX) || (y>m_iCellsY) )
+  if ( (x>mCellsX) || (y>mCellsY) )
   {
-    NodeIndex = -1;
+    nodeIndex = -1;
 
     return false;
   }
 
-  NodeIndex = y*m_iCellsX+x;
+  nodeIndex = y*mCellsX+x;
 
   return true;
 }
 
-//----------------- GetTerrainCost ---------------------------------------
+//----------------- getTerrainCost ---------------------------------------
 //
 //  returns the cost of the terrain represented by the current brush type
 //------------------------------------------------------------------------
-double Pathfinder::GetTerrainCost(const brush_type brush)
+double Pathfinder::getTerrainCost(const BrushType brush)
 {
-  const double cost_normal = 1.0;
-  const double cost_water  = 2.0;
-  const double cost_mud    = 1.5;
+  const double costNormal = 1.0;
+  const double costWater  = 2.0;
+  const double costMud    = 1.5;
 
   switch (brush)
   {
-    case normal: return cost_normal;
-    case water:  return cost_water;
-    case mud:    return cost_mud;
-    default:     return MaxDouble;
+    case normal: return costNormal;
+    case water:  return costWater;
+    case mud:    return costMud;
+    default:     return maxDouble;
   };
 }
-  
-//----------------------- PaintTerrain -----------------------------------
+
+//----------------------- paintTerrain -----------------------------------
 //
 //  this either changes the terrain at position p to whatever the current
 //  terrain brush is set to, or it adjusts the source/target cell
 //------------------------------------------------------------------------
-void Pathfinder::PaintTerrain(POINTS p)
+void Pathfinder::paintTerrain(POINTS p)
 {
   //convert p to an index into the graph
-  int x = (int)((double)(p.x)/m_dCellWidth);  
-  int y = (int)((double)(p.y)/m_dCellHeight); 
-  
+  int x = (int)((double)(p.x)/mCellWidth);
+  int y = (int)((double)(p.y)/mCellHeight);
+
   //make sure the values are legal
-  if ( (x>m_iCellsX) || (y>(m_iCellsY-1)) ) return;
+  if ( (x>mCellsX) || (y>(mCellsY-1)) ) return;
 
   //reset path and tree records
-  m_SubTree.clear();
-  m_Path.clear();
+  mSubTree.clear();
+  mPath.clear();
 
   //if the current terrain brush is set to either source or target we
   //should change the appropriate node
-  if ( (m_CurrentTerrainBrush == source) || (m_CurrentTerrainBrush == target) )
+  if ( (mCurrentTerrainBrush == source) || (mCurrentTerrainBrush == target) )
   {
-    switch (m_CurrentTerrainBrush)
+    switch (mCurrentTerrainBrush)
     {
     case source:
 
-      m_iSourceCell = y*m_iCellsX+x; break;
+      mSourceCell = y*mCellsX+x; break;
 
     case target:
 
-      m_iTargetCell = y*m_iCellsX+x; break;
-      
+      mTargetCell = y*mCellsX+x; break;
+
     }//end switch
   }
 
   //otherwise, change the terrain at the current mouse position
   else
   {
-    UpdateGraphFromBrush(m_CurrentTerrainBrush, y*m_iCellsX+x);
+    updateGraphFromBrush(mCurrentTerrainBrush, y*mCellsX+x);
   }
 
   //update any currently selected algorithm
-  UpdateAlgorithm();
+  updateAlgorithm();
 }
 
-//--------------------------- UpdateGraphFromBrush ----------------------------
+//--------------------------- updateGraphFromBrush ----------------------------
 //
 //  given a brush and a node index, this method updates the graph appropriately
 //  (by removing/adding nodes or changing the costs of the node's edges)
 //-----------------------------------------------------------------------------
-void Pathfinder::UpdateGraphFromBrush(int brush, int CellIndex)
+void Pathfinder::updateGraphFromBrush(int brush, int cellIndex)
 {
   //set the terrain type in the terrain index
-  m_TerrainType[CellIndex] = brush;
+  mTerrainType[cellIndex] = brush;
 
   //if current brush is an obstacle then this node must be removed
   //from the graph
   if (brush == 1)
   {
-    m_pGraph->RemoveNode(CellIndex);
+    mGraph->removeNode(cellIndex);
   }
 
   else
   {
     //make the node active again if it is currently inactive
-    if (!m_pGraph->isNodePresent(CellIndex))
+    if (!mGraph->isNodePresent(cellIndex))
     {
-      int y = CellIndex / m_iCellsY;
-      int x = CellIndex - (y*m_iCellsY);
+      int y = cellIndex / mCellsY;
+      int x = cellIndex - (y*mCellsY);
 
-      m_pGraph->AddNode(NavGraph::NodeType(CellIndex, Vector2D(x*m_dCellWidth + m_dCellWidth/2.0,
-                                                               y*m_dCellHeight+m_dCellHeight/2.0)));
+      mGraph->addNode(NavGraph::NodeType(cellIndex, Vector2D(x*mCellWidth + mCellWidth/2.0,
+                                                               y*mCellHeight+mCellHeight/2.0)));
 
-      GraphHelper_AddAllNeighboursToGridNode(*m_pGraph, y, x, m_iCellsX, m_iCellsY);
+      graphHelperAddAllNeighboursToGridNode(*mGraph, y, x, mCellsX, mCellsY);
     }
 
     //set the edge costs in the graph
-    WeightNavGraphNodeEdges(*m_pGraph, CellIndex, GetTerrainCost((brush_type)brush));                            
+    weightNavGraphNodeEdges(*mGraph, cellIndex, getTerrainCost((BrushType)brush));
   }
 }
 
-//--------------------------- UpdateAlgorithm ---------------------------------
-void Pathfinder::UpdateAlgorithm()
+//--------------------------- updateAlgorithm ---------------------------------
+void Pathfinder::updateAlgorithm()
 {
   //update any current algorithm
-  switch(m_CurrentAlgorithm)
+  switch(mCurrentAlgorithm)
   {
   case non:
 
     break;
 
-  case search_dfs:
+  case searchDfs:
 
-    CreatePathDFS(); break;
+    createPathDfs(); break;
 
-  case search_bfs:
-    
-    CreatePathBFS(); break;
+  case searchBfs:
 
-  case search_dijkstra:
+    createPathBfs(); break;
 
-    CreatePathDijkstra(); break;
+  case searchDijkstra:
 
-  case search_astar:
-    
-    CreatePathAStar(); break;
+    createPathDijkstra(); break;
+
+  case searchAstar:
+
+    createPathAStar(); break;
 
   default: break;
   }
 }
 
-//------------------------- CreatePathDFS --------------------------------
+//------------------------- createPathDfs --------------------------------
 //
-//  uses DFS to find a path between the start and target cells.
-//  Stores the path as a series of node indexes in m_Path.
+//  uses dfs to find a path between the start and target cells.
+//  Stores the path as a series of node indexes in mPath.
 //------------------------------------------------------------------------
-void Pathfinder::CreatePathDFS()
+void Pathfinder::createPathDfs()
 {
   //set current algorithm
-  m_CurrentAlgorithm = search_dfs;
+  mCurrentAlgorithm = searchDfs;
 
   //clear any existing path
-  m_Path.clear();
-  m_SubTree.clear();
+  mPath.clear();
+  mSubTree.clear();
 
   //create and start a timer
-  PrecisionTimer timer; timer.Start();
+  PrecisionTimer timer; timer.start();
 
   //do the search
-  Graph_SearchDFS<NavGraph> DFS(*m_pGraph, m_iSourceCell, m_iTargetCell);
+  GraphSearchDfs<NavGraph> dfs(*mGraph, mSourceCell, mTargetCell);
 
-  //record the time taken  
-  m_dTimeTaken = timer.TimeElapsed();
+  //record the time taken
+  mTimeTaken = timer.timeElapsed();
 
   //now grab the path (if one has been found)
-  if (DFS.Found())
+  if (dfs.found())
   {
-    m_Path = DFS.GetPathToTarget();
+    mPath = dfs.getPathToTarget();
   }
 
-  m_SubTree = DFS.GetSearchTree();
+  mSubTree = dfs.getSearchTree();
 
-  m_dCostToTarget = 0.0;
+  mCostToTarget = 0.0;
 }
 
 
-//------------------------- CreatePathBFS --------------------------------
+//------------------------- createPathBfs --------------------------------
 //
-//  uses BFS to find a path between the start and target cells.
-//  Stores the path as a series of node indexes in m_Path.
+//  uses bfs to find a path between the start and target cells.
+//  Stores the path as a series of node indexes in mPath.
 //------------------------------------------------------------------------
-void Pathfinder::CreatePathBFS()
+void Pathfinder::createPathBfs()
 {
   //set current algorithm
-  m_CurrentAlgorithm = search_bfs;
+  mCurrentAlgorithm = searchBfs;
 
   //clear any existing path
-  m_Path.clear();
-  m_SubTree.clear();
+  mPath.clear();
+  mSubTree.clear();
 
   //create and start a timer
-  PrecisionTimer timer; timer.Start();
+  PrecisionTimer timer; timer.start();
 
   //do the search
-  Graph_SearchBFS<NavGraph> BFS(*m_pGraph, m_iSourceCell, m_iTargetCell);
+  GraphSearchBfs<NavGraph> bfs(*mGraph, mSourceCell, mTargetCell);
 
-    //record the time taken  
-  m_dTimeTaken = timer.TimeElapsed();
+    //record the time taken
+  mTimeTaken = timer.timeElapsed();
 
   //now grab the path (if one has been found)
-  if (BFS.Found())
+  if (bfs.found())
   {
-    m_Path = BFS.GetPathToTarget();
+    mPath = bfs.getPathToTarget();
   }
 
-  m_SubTree = BFS.GetSearchTree();
+  mSubTree = bfs.getSearchTree();
 
-  m_dCostToTarget = 0.0;
+  mCostToTarget = 0.0;
 }
 
-//-------------------------- CreatePathDijkstra --------------------------
+//-------------------------- createPathDijkstra --------------------------
 //
-//  creates a path from m_iSourceCell to m_iTargetCell using Dijkstra's algorithm
+//  creates a path from mSourceCell to mTargetCell using Dijkstra's algorithm
 //------------------------------------------------------------------------
-void Pathfinder::CreatePathDijkstra()
+void Pathfinder::createPathDijkstra()
 {
   //set current algorithm
-  m_CurrentAlgorithm = search_dijkstra;
+  mCurrentAlgorithm = searchDijkstra;
 
   //create and start a timer
-  PrecisionTimer timer; timer.Start();
-    
-  Graph_SearchDijkstra<NavGraph> djk(*m_pGraph, m_iSourceCell, m_iTargetCell);
+  PrecisionTimer timer; timer.start();
 
-  //record the time taken  
-  m_dTimeTaken = timer.TimeElapsed();
+  GraphSearchDijkstra<NavGraph> djk(*mGraph, mSourceCell, mTargetCell);
 
-  m_Path = djk.GetPathToTarget();
+  //record the time taken
+  mTimeTaken = timer.timeElapsed();
 
-  m_SubTree = djk.GetSPT();
+  mPath = djk.getPathToTarget();
 
-  m_dCostToTarget = djk.GetCostToTarget();
+  mSubTree = djk.getSpt();
+
+  mCostToTarget = djk.getCostToTarget();
 }
 
-//--------------------------- CreatePathAStar ---------------------------
+//--------------------------- createPathAStar ---------------------------
 //------------------------------------------------------------------------
-void Pathfinder::CreatePathAStar()
+void Pathfinder::createPathAStar()
 {
   //set current algorithm
-  m_CurrentAlgorithm = search_astar;
-      
+  mCurrentAlgorithm = searchAstar;
+
   //create and start a timer
-  PrecisionTimer timer; timer.Start();
-  
-  //create a couple of typedefs so the code will sit comfortably on the page   
-  typedef Graph_SearchAStar<NavGraph, Heuristic_Euclid> AStarSearch;
+  PrecisionTimer timer; timer.start();
+
+  //create a couple of typedefs so the code will sit comfortably on the page
+  typedef GraphSearchAStar<NavGraph, HeuristicEuclid> AStarSearch;
 
   //create an instance of the A* search using the Euclidean heuristic
-  AStarSearch AStar(*m_pGraph, m_iSourceCell, m_iTargetCell);
-  
+  AStarSearch aStar(*mGraph, mSourceCell, mTargetCell);
 
-  //record the time taken  
-  m_dTimeTaken = timer.TimeElapsed();
 
-  m_Path = AStar.GetPathToTarget();
+  //record the time taken
+  mTimeTaken = timer.timeElapsed();
 
-  m_SubTree = AStar.GetSPT();
+  mPath = aStar.getPathToTarget();
 
-  m_dCostToTarget = AStar.GetCostToTarget();
+  mSubTree = aStar.getSpt();
+
+  mCostToTarget = aStar.getCostToTarget();
 
 }
 
-//---------------------------Load n save methods ------------------------------
+//---------------------------load n save methods ------------------------------
 //-----------------------------------------------------------------------------
-void Pathfinder::Save( char* FileName)
+void Pathfinder::save( char* fileName)
 {
-  ofstream save(FileName);
+  ofstream save(fileName);
   assert (save && "Pathfinder::Save< bad file >");
 
   //save the size of the grid
-  save << m_iCellsX << endl;
-  save << m_iCellsY << endl;
+  save << mCellsX << endl;
+  save << mCellsY << endl;
 
   //save the terrain
-  for (unsigned int t=0; t<m_TerrainType.size(); ++t)
+  for (unsigned int t=0; t<mTerrainType.size(); ++t)
   {
-    if (t==m_iSourceCell)
+    if (t==mSourceCell)
     {
       save << source << endl;
     }
-    else if (t==m_iTargetCell)
+    else if (t==mTargetCell)
     {
       save << target << endl;
     }
     else
     {
-      save << m_TerrainType[t] << endl;
+      save << mTerrainType[t] << endl;
     }
   }
 }
 
-//-------------------------------- Load ---------------------------------------
+//-------------------------------- load ---------------------------------------
 //-----------------------------------------------------------------------------
-void Pathfinder::Load( char* FileName)
+void Pathfinder::load( char* fileName)
 {
-  ifstream load(FileName);
+  ifstream load(fileName);
   assert (load && "Pathfinder::Save< bad file >");
 
   //load the size of the grid
-  load >> m_iCellsX;
-  load >> m_iCellsY;
+  load >> mCellsX;
+  load >> mCellsY;
 
   //create a graph of the correct size
-  CreateGraph(m_iCellsY, m_iCellsX);
+  createGraph(mCellsY, mCellsX);
 
   int terrain;
 
   //save the terrain
-  for (int t=0; t<m_iCellsX*m_iCellsY; ++t)
+  for (int t=0; t<mCellsX*mCellsY; ++t)
   {
     load >> terrain;
-    
+
     if (terrain == source)
     {
-      m_iSourceCell = t;
+      mSourceCell = t;
     }
 
     else if (terrain == target)
     {
-      m_iTargetCell = t;
+      mTargetCell = t;
     }
 
     else
     {
-      m_TerrainType[t] = terrain;
+      mTerrainType[t] = terrain;
 
-      UpdateGraphFromBrush(terrain, t);
+      updateGraphFromBrush(terrain, t);
     }
   }
 }
 
-//------------------------ GetNameOfCurrentSearchAlgorithm --------------------
+//------------------------ getNameOfCurrentSearchAlgorithm --------------------
 //-----------------------------------------------------------------------------
-std::string Pathfinder::GetNameOfCurrentSearchAlgorithm()const
+std::string Pathfinder::getNameOfCurrentSearchAlgorithm()const
 {
-  switch(m_CurrentAlgorithm)
+  switch(mCurrentAlgorithm)
   {
   case non: return "";
-  case search_astar: return "A Star";
-  case search_bfs: return "Breadth First";
-  case search_dfs: return "Depth First";
-  case search_dijkstra: return "Dijkstras";
+  case searchAstar: return "A Star";
+  case searchBfs: return "Breadth First";
+  case searchDfs: return "Depth First";
+  case searchDijkstra: return "Dijkstras";
   }
 }
 
-//---------------------------- Render ------------------------------------
+//---------------------------- render ------------------------------------
 //
 //------------------------------------------------------------------------
-void Pathfinder::Render()
+void Pathfinder::render()
 {
-  gdi->TransparentText();
-  
+  gdi->transparentText();
+
   //render all the cells
-  for (int nd=0; nd<m_pGraph->NumNodes(); ++nd)
+  for (int nd=0; nd<mGraph->numNodes(); ++nd)
   {
-    int left   = (int)(m_pGraph->GetNode(nd).Pos().x - m_dCellWidth/2.0);
-    int top    = (int)(m_pGraph->GetNode(nd).Pos().y - m_dCellHeight/2.0);
-    int right  = (int)(1+m_pGraph->GetNode(nd).Pos().x + m_dCellWidth/2.0);
-    int bottom = (int)(1+m_pGraph->GetNode(nd).Pos().y + m_dCellHeight/2.0);
+    int left   = (int)(mGraph->getNode(nd).pos().x - mCellWidth/2.0);
+    int top    = (int)(mGraph->getNode(nd).pos().y - mCellHeight/2.0);
+    int right  = (int)(1+mGraph->getNode(nd).pos().x + mCellWidth/2.0);
+    int bottom = (int)(1+mGraph->getNode(nd).pos().y + mCellHeight/2.0);
 
-    gdi->GreyPen();
+    gdi->greyPen();
 
-    switch (m_TerrainType[nd])
+    switch (mTerrainType[nd])
     {
     case 0:
-      gdi->WhiteBrush();
-      if (!m_bShowTiles)gdi->WhitePen();
+      gdi->whiteBrush();
+      if (!mShowTiles)gdi->whitePen();
       break;
 
     case 1:
-      gdi->BlackBrush();
-      if (!m_bShowTiles)gdi->BlackPen();
+      gdi->blackBrush();
+      if (!mShowTiles)gdi->blackPen();
       break;
-      
+
     case 2:
-      gdi->LightBlueBrush();
-      if (!m_bShowTiles)gdi->LightBluePen();
+      gdi->lightBlueBrush();
+      if (!mShowTiles)gdi->lightBluePen();
       break;
-      
+
     case 3:
-      gdi->BrownBrush();
-      if (!m_bShowTiles)gdi->BrownPen();
+      gdi->brownBrush();
+      if (!mShowTiles)gdi->brownPen();
       break;
 
     default:
-      gdi->WhiteBrush();
-      if (!m_bShowTiles)gdi->WhitePen();
+      gdi->whiteBrush();
+      if (!mShowTiles)gdi->whitePen();
       break;
-      
+
     }//end switch
 
 
-    if (nd == m_iTargetCell)
+    if (nd == mTargetCell)
     {
-      gdi->RedBrush();
-      if (!m_bShowTiles)gdi->RedPen();
+      gdi->redBrush();
+      if (!mShowTiles)gdi->redPen();
     }
 
-    if (nd == m_iSourceCell)
+    if (nd == mSourceCell)
     {
-      gdi->GreenBrush();
-      if (!m_bShowTiles)gdi->GreenPen();
-    }
-   
-    gdi->Rect(left, top, right, bottom);  
-
-    if (nd == m_iTargetCell)
-    {
-      gdi->ThickBlackPen();
-      gdi->Cross(Vector2D(m_pGraph->GetNode(nd).Pos().x-1, m_pGraph->GetNode(nd).Pos().y-1),
-                (int)((m_dCellWidth*0.6)/2.0));
+      gdi->greenBrush();
+      if (!mShowTiles)gdi->greenPen();
     }
 
-    if (nd == m_iSourceCell)
+    gdi->rect(left, top, right, bottom);
+
+    if (nd == mTargetCell)
     {
-      gdi->ThickBlackPen();
-      gdi->HollowBrush();
-      gdi->Rect(left+7,top+7,right-6,bottom-6);
+      gdi->thickBlackPen();
+      gdi->cross(Vector2D(mGraph->getNode(nd).pos().x-1, mGraph->getNode(nd).pos().y-1),
+                (int)((mCellWidth*0.6)/2.0));
+    }
+
+    if (nd == mSourceCell)
+    {
+      gdi->thickBlackPen();
+      gdi->hollowBrush();
+      gdi->rect(left+7,top+7,right-6,bottom-6);
     }
 
     //render dots at the corners of the cells
-    gdi->DrawDot(left, top, RGB(0,0,0));
-    gdi->DrawDot(right-1, top, RGB(0,0,0));
-    gdi->DrawDot(left, bottom-1, RGB(0,0,0));
-    gdi->DrawDot(right-1, bottom-1, RGB(0,0,0));
-  }  
+    gdi->drawDot(left, top, RGB(0,0,0));
+    gdi->drawDot(right-1, top, RGB(0,0,0));
+    gdi->drawDot(left, bottom-1, RGB(0,0,0));
+    gdi->drawDot(right-1, bottom-1, RGB(0,0,0));
+  }
   //draw the graph nodes and edges if rqd
-  if (m_bShowGraph)
+  if (mShowGraph)
   {
-    GraphHelper_DrawUsingGDI<NavGraph>(*m_pGraph, Cgdi::light_grey, false);  //false = don't draw node IDs
+    graphHelperDrawUsingGdi<NavGraph>(*mGraph, Cgdi::lightGrey, false);  //false = don't draw node IDs
   }
 
   //draw any tree retrieved from the algorithms
-  gdi->RedPen();
+  gdi->redPen();
 
-  for (unsigned int e=0; e<m_SubTree.size(); ++e)
-  {   
-    if (m_SubTree[e])
+  for (unsigned int e=0; e<mSubTree.size(); ++e)
+  {
+    if (mSubTree[e])
     {
-      Vector2D from = m_pGraph->GetNode(m_SubTree[e]->From()).Pos();
-      Vector2D to   = m_pGraph->GetNode(m_SubTree[e]->To()).Pos();
+      Vector2D from = mGraph->getNode(mSubTree[e]->from()).pos();
+      Vector2D to   = mGraph->getNode(mSubTree[e]->to()).pos();
 
-      gdi->Line(from, to);
+      gdi->line(from, to);
     }
   }
 
-  //draw the path (if any)  
-  if (m_Path.size() > 0)
+  //draw the path (if any)
+  if (mPath.size() > 0)
   {
-    gdi->ThickBluePen();
+    gdi->thickBluePen();
 
-    std::list<int>::iterator it = m_Path.begin();
+    std::list<int>::iterator it = mPath.begin();
     std::list<int>::iterator nxt = it; ++nxt;
 
-    for (it; nxt != m_Path.end(); ++it, ++nxt)
+    for (it; nxt != mPath.end(); ++it, ++nxt)
     {
-      gdi->Line(m_pGraph->GetNode(*it).Pos(), m_pGraph->GetNode(*nxt).Pos());
+      gdi->line(mGraph->getNode(*it).pos(), mGraph->getNode(*nxt).pos());
     }
   }
-  
-  if (m_dTimeTaken)
+
+  if (mTimeTaken)
   {
     //draw time taken to complete algorithm
-    string time = ttos(m_dTimeTaken, 8);
-    string s = "Time Elapsed for " + GetNameOfCurrentSearchAlgorithm() + " is " + time;
-    gdi->TextAtPos(1,m_icyClient + 3,s); 
+    string time = ttos(mTimeTaken, 8);
+    string s = "Time Elapsed for " + getNameOfCurrentSearchAlgorithm() + " is " + time;
+    gdi->textAtPos(1,mClientHeight + 3,s);
   }
 
   //display the total path cost if appropriate
-  if (m_CurrentAlgorithm == search_astar || m_CurrentAlgorithm == search_dijkstra)
+  if (mCurrentAlgorithm == searchAstar || mCurrentAlgorithm == searchDijkstra)
   {
-    gdi->TextAtPos(m_icxClient-110, m_icyClient + 3, "Cost is " + ttos(m_dCostToTarget));
+    gdi->textAtPos(mClientWidth-110, mClientHeight + 3, "Cost is " + ttos(mCostToTarget));
   }
 }

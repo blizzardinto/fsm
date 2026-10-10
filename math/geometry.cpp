@@ -1,59 +1,59 @@
 #include "geometry.h"
 
-//given a plane and a ray this function determins how far along the ray 
+//given a plane and a ray this function determins how far along the ray
 //an interestion occurs. Returns negative if the ray is parallel
-double DistanceToRayPlaneIntersection(Vector2D RayOrigin,
-                                     Vector2D RayHeading,
-                                     Vector2D PlanePoint,  //any point on the plane
-                                     Vector2D PlaneNormal)
+double distanceToRayPlaneIntersection(Vector2D rayOrigin,
+                                     Vector2D rayHeading,
+                                     Vector2D planePoint,  //any point on the plane
+                                     Vector2D planeNormal)
 {
-  
-  double d     = - PlaneNormal.Dot(PlanePoint);
-  double numer = PlaneNormal.Dot(RayOrigin) + d;
-  double denom = PlaneNormal.Dot(RayHeading);
-  
+
+  double d     = - planeNormal.dot(planePoint);
+  double numer = planeNormal.dot(rayOrigin) + d;
+  double denom = planeNormal.dot(rayHeading);
+
   // normal is parallel to vector
   if ((denom < 0.000001) && (denom > -0.000001))
   {
    return (-1.0);
   }
 
-  return -(numer / denom);	
+  return -(numer / denom);
 }
 
-//------------------------- WhereIsPoint --------------------------------------
-span_type WhereIsPoint(Vector2D point,
-                       Vector2D PointOnPlane, //any point on the plane
-                       Vector2D PlaneNormal) 
+//------------------------- whereIsPoint --------------------------------------
+SpanType whereIsPoint(Vector2D point,
+                       Vector2D pointOnPlane, //any point on the plane
+                       Vector2D planeNormal)
 {
- Vector2D dir = PointOnPlane - point;
+ Vector2D dir = pointOnPlane - point;
 
- double d = dir.Dot(PlaneNormal);
- 
+ double d = dir.dot(planeNormal);
+
  if (d<-0.000001)
  {
-  return plane_front;	
+  return planeFront;
  }
 
  else if (d>0.000001)
  {
-  return plane_backside;	
+  return planeBackside;
  }
 
-  return on_plane;	
+  return onPlane;
 }
 
 
 //-------------------------- GetRayCircleIntersec -----------------------------
-double GetRayCircleIntersect(Vector2D RayOrigin,
-                             Vector2D RayHeading,
-                             Vector2D CircleOrigin,
+double getRayCircleIntersect(Vector2D rayOrigin,
+                             Vector2D rayHeading,
+                             Vector2D circleOrigin,
                              double  radius)
 {
-	
-   Vector2D ToCircle = CircleOrigin-RayOrigin;
-   double length      = ToCircle.Length();
-   double v           = ToCircle.Dot(RayHeading);
+
+   Vector2D toCircle = circleOrigin-rayOrigin;
+   double length      = toCircle.length();
+   double v           = toCircle.dot(rayHeading);
    double d           = radius*radius - (length*length - v*v);
 
    // If there was no intersection, return -1
@@ -63,16 +63,16 @@ double GetRayCircleIntersect(Vector2D RayOrigin,
    return (v - sqrt(d));
 }
 
-//----------------------------- DoRayCircleIntersect --------------------------
-bool DoRayCircleIntersect(Vector2D RayOrigin,
-                          Vector2D RayHeading,
-                          Vector2D CircleOrigin,
+//----------------------------- doRayCircleIntersect --------------------------
+bool doRayCircleIntersect(Vector2D rayOrigin,
+                          Vector2D rayHeading,
+                          Vector2D circleOrigin,
                           double     radius)
 {
-	
-   Vector2D ToCircle = CircleOrigin-RayOrigin;
-   double length      = ToCircle.Length();
-   double v           = ToCircle.Dot(RayHeading);
+
+   Vector2D toCircle = circleOrigin-rayOrigin;
+   double length      = toCircle.length();
+   double v           = toCircle.dot(rayHeading);
    double d           = radius*radius - (length*length - v*v);
 
    // If there was no intersection, return -1
@@ -82,29 +82,29 @@ bool DoRayCircleIntersect(Vector2D RayOrigin,
 
 //------------------------------------------------------------------------
 //  Given a point P and a circle of radius R centered at C this function
-//  determines the two points on the circle that intersect with the 
+//  determines the two points on the circle that intersect with the
 //  tangents from P to the circle. Returns false if P is within the circle.
 //
 //  thanks to Dave Eberly for this one.
 //------------------------------------------------------------------------
-bool GetTangentPoints (Vector2D C, double R, Vector2D P, Vector2D& T1, Vector2D& T2)
+bool getTangentPoints (Vector2D c, double radiusValue, Vector2D pointP, Vector2D& t1, Vector2D& t2)
 {
-  Vector2D PmC = P - C;
-  double SqrLen = PmC.LengthSq();
-  double RSqr = R*R;
-  if ( SqrLen <= RSqr )
+  Vector2D pmC = pointP - c;
+  double sqrLen = pmC.lengthSq();
+  double rSqr = radiusValue*radiusValue;
+  if ( sqrLen <= rSqr )
   {
       // P is inside or on the circle
       return false;
   }
 
-  double InvSqrLen = 1/SqrLen;
-  double Root = sqrt(fabs(SqrLen - RSqr));
+  double invSqrLen = 1/sqrLen;
+  double root = sqrt(fabs(sqrLen - rSqr));
 
-  T1.x = C.x + R*(R*PmC.x - PmC.y*Root)*InvSqrLen;
-  T1.y = C.y + R*(R*PmC.y + PmC.x*Root)*InvSqrLen;
-  T2.x = C.x + R*(R*PmC.x + PmC.y*Root)*InvSqrLen;
-  T2.y = C.y + R*(R*PmC.y - PmC.x*Root)*InvSqrLen;
+  t1.x = c.x + radiusValue*(radiusValue*pmC.x - pmC.y*root)*invSqrLen;
+  t1.y = c.y + radiusValue*(radiusValue*pmC.y + pmC.x*root)*invSqrLen;
+  t2.x = c.x + radiusValue*(radiusValue*pmC.x + pmC.y*root)*invSqrLen;
+  t2.y = c.y + radiusValue*(radiusValue*pmC.y - pmC.x*root)*invSqrLen;
 
   return true;
 }
@@ -112,89 +112,89 @@ bool GetTangentPoints (Vector2D C, double R, Vector2D P, Vector2D& T1, Vector2D&
 
 
 
-//------------------------- DistToLineSegment ----------------------------
+//------------------------- distToLineSegment ----------------------------
 //
-//  given a line segment AB and a point P, this function calculates the 
+//  given a line segment AB and a point P, this function calculates the
 //  perpendicular distance between them
 //------------------------------------------------------------------------
-double DistToLineSegment(Vector2D A,
-                        Vector2D B,
-                        Vector2D P)
+double distToLineSegment(Vector2D pointA,
+                        Vector2D pointB,
+                        Vector2D pointP)
 {
   //if the angle is obtuse between PA and AB is obtuse then the closest
   //vertex must be A
-  double dotA = (P.x - A.x)*(B.x - A.x) + (P.y - A.y)*(B.y - A.y);
+  double dotA = (pointP.x - pointA.x)*(pointB.x - pointA.x) + (pointP.y - pointA.y)*(pointB.y - pointA.y);
 
-  if (dotA <= 0) return Vec2DDistance(A, P);
+  if (dotA <= 0) return vec2DDistance(pointA, pointP);
 
   //if the angle is obtuse between PB and AB is obtuse then the closest
   //vertex must be B
-  double dotB = (P.x - B.x)*(A.x - B.x) + (P.y - B.y)*(A.y - B.y);
- 
-  if (dotB <= 0) return Vec2DDistance(B, P);
-    
-  //calculate the point along AB that is the closest to P
-  Vector2D Point = A + ((B - A) * dotA)/(dotA + dotB);
+  double dotB = (pointP.x - pointB.x)*(pointA.x - pointB.x) + (pointP.y - pointB.y)*(pointA.y - pointB.y);
 
-  //calculate the distance P-Point
-  return Vec2DDistance(P,Point);
+  if (dotB <= 0) return vec2DDistance(pointB, pointP);
+
+  //calculate the point along AB that is the closest to P
+  Vector2D point = pointA + ((pointB - pointA) * dotA)/(dotA + dotB);
+
+  //calculate the distance P-point
+  return vec2DDistance(pointP,point);
 }
 
-//------------------------- DistToLineSegmentSq ----------------------------
+//------------------------- distToLineSegmentSq ----------------------------
 //
 //  as above, but avoiding sqrt
 //------------------------------------------------------------------------
-double DistToLineSegmentSq(Vector2D A,
-                          Vector2D B,
-                          Vector2D P)
+double distToLineSegmentSq(Vector2D pointA,
+                          Vector2D pointB,
+                          Vector2D pointP)
 {
   //if the angle is obtuse between PA and AB is obtuse then the closest
   //vertex must be A
-  double dotA = (P.x - A.x)*(B.x - A.x) + (P.y - A.y)*(B.y - A.y);
+  double dotA = (pointP.x - pointA.x)*(pointB.x - pointA.x) + (pointP.y - pointA.y)*(pointB.y - pointA.y);
 
-  if (dotA <= 0) return Vec2DDistanceSq(A, P);
+  if (dotA <= 0) return vec2DDistanceSq(pointA, pointP);
 
   //if the angle is obtuse between PB and AB is obtuse then the closest
   //vertex must be B
-  double dotB = (P.x - B.x)*(A.x - B.x) + (P.y - B.y)*(A.y - B.y);
- 
-  if (dotB <= 0) return Vec2DDistanceSq(B, P);
-    
-  //calculate the point along AB that is the closest to P
-  Vector2D Point = A + ((B - A) * dotA)/(dotA + dotB);
+  double dotB = (pointP.x - pointB.x)*(pointA.x - pointB.x) + (pointP.y - pointB.y)*(pointA.y - pointB.y);
 
-  //calculate the distance P-Point
-  return Vec2DDistanceSq(P,Point);
+  if (dotB <= 0) return vec2DDistanceSq(pointB, pointP);
+
+  //calculate the point along AB that is the closest to P
+  Vector2D point = pointA + ((pointB - pointA) * dotA)/(dotA + dotB);
+
+  //calculate the distance P-point
+  return vec2DDistanceSq(pointP,point);
 }
 
 
-//--------------------LineIntersection2D-------------------------
+//--------------------lineIntersection2D-------------------------
 //
-//	Given 2 lines in 2D space AB, CD this returns true if an 
+//	Given 2 lines in 2D space AB, CD this returns true if an
 //	intersection occurs.
 //
-//----------------------------------------------------------------- 
+//-----------------------------------------------------------------
 
-bool LineIntersection2D(Vector2D A,
-                        Vector2D B,
-                        Vector2D C, 
-                        Vector2D D)
+bool lineIntersection2D(Vector2D pointA,
+                        Vector2D pointB,
+                        Vector2D c,
+                        Vector2D pointD)
 {
-  double rTop = (A.y-C.y)*(D.x-C.x)-(A.x-C.x)*(D.y-C.y);
-  double sTop = (A.y-C.y)*(B.x-A.x)-(A.x-C.x)*(B.y-A.y);
+  double rTop = (pointA.y-c.y)*(pointD.x-c.x)-(pointA.x-c.x)*(pointD.y-c.y);
+  double sTop = (pointA.y-c.y)*(pointB.x-pointA.x)-(pointA.x-c.x)*(pointB.y-pointA.y);
 
-	double Bot = (B.x-A.x)*(D.y-C.y)-(B.y-A.y)*(D.x-C.x);
+  double bot = (pointB.x-pointA.x)*(pointD.y-c.y)-(pointB.y-pointA.y)*(pointD.x-c.x);
 
-  if (Bot == 0)//parallel
+  if (bot == 0)//parallel
   {
     return false;
   }
 
-  double invBot = 1.0/Bot;
-	double r = rTop * invBot;
-	double s = sTop * invBot;
+  double invBot = 1.0/bot;
+  double r = rTop * invBot;
+  double s = sTop * invBot;
 
-	if( (r > 0) && (r < 1) && (s > 0) && (s < 1) )
+  if( (r > 0) && (r < 1) && (s > 0) && (s < 1) )
   {
     //lines intersect
     return true;
@@ -204,28 +204,28 @@ bool LineIntersection2D(Vector2D A,
   return false;
 }
 
-//--------------------LineIntersection2D-------------------------
+//--------------------lineIntersection2D-------------------------
 //
-//	Given 2 lines in 2D space AB, CD this returns true if an 
+//	Given 2 lines in 2D space AB, CD this returns true if an
 //	intersection occurs and sets dist to the distance the intersection
 //  occurs along AB
 //
-//----------------------------------------------------------------- 
+//-----------------------------------------------------------------
 
-bool LineIntersection2D(Vector2D A,
-                        Vector2D B,
-                        Vector2D C, 
-                        Vector2D D,
+bool lineIntersection2D(Vector2D pointA,
+                        Vector2D pointB,
+                        Vector2D c,
+                        Vector2D pointD,
                         double &dist)
 {
 
-  double rTop = (A.y-C.y)*(D.x-C.x)-(A.x-C.x)*(D.y-C.y);
-  double sTop = (A.y-C.y)*(B.x-A.x)-(A.x-C.x)*(B.y-A.y);
+  double rTop = (pointA.y-c.y)*(pointD.x-c.x)-(pointA.x-c.x)*(pointD.y-c.y);
+  double sTop = (pointA.y-c.y)*(pointB.x-pointA.x)-(pointA.x-c.x)*(pointB.y-pointA.y);
 
-	double Bot = (B.x-A.x)*(D.y-C.y)-(B.y-A.y)*(D.x-C.x);
+  double bot = (pointB.x-pointA.x)*(pointD.y-c.y)-(pointB.y-pointA.y)*(pointD.x-c.x);
 
 
-  if (Bot == 0)//parallel
+  if (bot == 0)//parallel
   {
     if (isEqual(rTop, 0) && isEqual(sTop, 0))
     {
@@ -234,76 +234,76 @@ bool LineIntersection2D(Vector2D A,
     return false;
   }
 
-	double r = rTop/Bot;
-	double s = sTop/Bot;
+  double r = rTop/bot;
+  double s = sTop/bot;
 
-	if( (r > 0) && (r < 1) && (s > 0) && (s < 1) )
+  if( (r > 0) && (r < 1) && (s > 0) && (s < 1) )
   {
-  	dist = Vec2DDistance(A,B) * r;
+    dist = vec2DDistance(pointA,pointB) * r;
 
     return true;
   }
 
-	else
+  else
   {
-		dist = 0;
+    dist = 0;
 
     return false;
   }
 }
 
-//-------------------- LineIntersection2D-------------------------
+//-------------------- lineIntersection2D-------------------------
 //
-//	Given 2 lines in 2D space AB, CD this returns true if an 
+//	Given 2 lines in 2D space AB, CD this returns true if an
 //	intersection occurs and sets dist to the distance the intersection
 //  occurs along AB. Also sets the 2d vector point to the point of
 //  intersection
-//----------------------------------------------------------------- 
-bool LineIntersection2D(Vector2D   A,
-                        Vector2D   B,
-                        Vector2D   C, 
-                        Vector2D   D,
+//-----------------------------------------------------------------
+bool lineIntersection2D(Vector2D   pointA,
+                        Vector2D   pointB,
+                        Vector2D   c,
+                        Vector2D   pointD,
                         double&     dist,
                         Vector2D&  point)
 {
 
-  double rTop = (A.y-C.y)*(D.x-C.x)-(A.x-C.x)*(D.y-C.y);
-	double rBot = (B.x-A.x)*(D.y-C.y)-(B.y-A.y)*(D.x-C.x);
+  double rTop = (pointA.y-c.y)*(pointD.x-c.x)-(pointA.x-c.x)*(pointD.y-c.y);
+  double rBot = (pointB.x-pointA.x)*(pointD.y-c.y)-(pointB.y-pointA.y)*(pointD.x-c.x);
 
-	double sTop = (A.y-C.y)*(B.x-A.x)-(A.x-C.x)*(B.y-A.y);
-	double sBot = (B.x-A.x)*(D.y-C.y)-(B.y-A.y)*(D.x-C.x);
+  double sTop = (pointA.y-c.y)*(pointB.x-pointA.x)-(pointA.x-c.x)*(pointB.y-pointA.y);
+  double sBot = (pointB.x-pointA.x)*(pointD.y-c.y)-(pointB.y-pointA.y)*(pointD.x-c.x);
 
-	if ( (rBot == 0) || (sBot == 0))
-	{
-		//lines are parallel
-		return false;
-	}
-
-	double r = rTop/rBot;
-	double s = sTop/sBot;
-
-	if( (r > 0) && (r < 1) && (s > 0) && (s < 1) )
+  if ( (rBot == 0) || (sBot == 0))
   {
-  	dist = Vec2DDistance(A,B) * r;
+    //lines are parallel
+    return false;
+  }
 
-    point = A + r * (B - A);
+  double r = rTop/rBot;
+  double s = sTop/sBot;
+
+  if( (r > 0) && (r < 1) && (s > 0) && (s < 1) )
+  {
+    dist = vec2DDistance(pointA,pointB) * r;
+
+    point = pointA + r * (pointB - pointA);
 
     return true;
   }
 
-	else
+  else
   {
-		dist = 0;
+    dist = 0;
 
     return false;
   }
 }
 
-//----------------------- ObjectIntersection2D ---------------------------
+//----------------------- objectIntersection2D ---------------------------
 //
 //  tests two polygons for intersection. *Does not check for enclosure*
 //------------------------------------------------------------------------
-bool ObjectIntersection2D(const std::vector<Vector2D>& object1,
+bool objectIntersection2D(const std::vector<Vector2D>& object1,
                           const std::vector<Vector2D>& object2)
 {
   //test each line segment of object1 against each segment of object2
@@ -311,7 +311,7 @@ bool ObjectIntersection2D(const std::vector<Vector2D>& object1,
   {
     for (unsigned int t=0; t<object2.size()-1; ++t)
     {
-      if (LineIntersection2D(object2[t],
+      if (lineIntersection2D(object2[t],
                              object2[t+1],
                              object1[r],
                              object1[r+1]))
@@ -324,19 +324,19 @@ bool ObjectIntersection2D(const std::vector<Vector2D>& object1,
   return false;
 }
 
-//----------------------- SegmentObjectIntersection2D --------------------
+//----------------------- segmentObjectIntersection2D --------------------
 //
 //  tests a line segment against a polygon for intersection
 //  *Does not check for enclosure*
 //------------------------------------------------------------------------
-bool SegmentObjectIntersection2D(const Vector2D& A,
-                                 const Vector2D& B,
+bool segmentObjectIntersection2D(const Vector2D& pointA,
+                                 const Vector2D& pointB,
                                  const std::vector<Vector2D>& object)
 {
   //test AB against each segment of object
   for (unsigned int r=0; r<object.size()-1; ++r)
   {
-    if (LineIntersection2D(A, B, object[r], object[r+1]))
+    if (lineIntersection2D(pointA, pointB, object[r], object[r+1]))
     {
       return true;
     }
@@ -346,17 +346,17 @@ bool SegmentObjectIntersection2D(const Vector2D& A,
 }
 
 
-//----------------------------- TwoCirclesOverlapped ---------------------
+//----------------------------- twoCirclesOverlapped ---------------------
 //
 //  Returns true if the two circles overlap
 //------------------------------------------------------------------------
-bool TwoCirclesOverlapped(double x1, double y1, double r1,
+bool twoCirclesOverlapped(double x1, double y1, double r1,
                           double x2, double y2, double r2)
 {
-  double DistBetweenCenters = sqrt( (x1-x2) * (x1-x2) +
+  double distBetweenCenters = sqrt( (x1-x2) * (x1-x2) +
                                     (y1-y2) * (y1-y2));
 
-  if ((DistBetweenCenters < (r1+r2)) || (DistBetweenCenters < fabs(r1-r2)))
+  if ((distBetweenCenters < (r1+r2)) || (distBetweenCenters < fabs(r1-r2)))
   {
     return true;
   }
@@ -364,17 +364,17 @@ bool TwoCirclesOverlapped(double x1, double y1, double r1,
   return false;
 }
 
-//----------------------------- TwoCirclesOverlapped ---------------------
+//----------------------------- twoCirclesOverlapped ---------------------
 //
 //  Returns true if the two circles overlap
 //------------------------------------------------------------------------
-bool TwoCirclesOverlapped(Vector2D c1, double r1,
+bool twoCirclesOverlapped(Vector2D c1, double r1,
                           Vector2D c2, double r2)
 {
-  double DistBetweenCenters = sqrt( (c1.x-c2.x) * (c1.x-c2.x) +
+  double distBetweenCenters = sqrt( (c1.x-c2.x) * (c1.x-c2.x) +
                                     (c1.y-c2.y) * (c1.y-c2.y));
 
-  if ((DistBetweenCenters < (r1+r2)) || (DistBetweenCenters < fabs(r1-r2)))
+  if ((distBetweenCenters < (r1+r2)) || (distBetweenCenters < fabs(r1-r2)))
   {
     return true;
   }
@@ -382,17 +382,17 @@ bool TwoCirclesOverlapped(Vector2D c1, double r1,
   return false;
 }
 
-//--------------------------- TwoCirclesEnclosed ---------------------------
+//--------------------------- twoCirclesEnclosed ---------------------------
 //
 //  returns true if one circle encloses the other
 //-------------------------------------------------------------------------
-bool TwoCirclesEnclosed(double x1, double y1, double r1,
+bool twoCirclesEnclosed(double x1, double y1, double r1,
                         double x2, double y2, double r2)
 {
-  double DistBetweenCenters = sqrt( (x1-x2) * (x1-x2) +
+  double distBetweenCenters = sqrt( (x1-x2) * (x1-x2) +
                                     (y1-y2) * (y1-y2));
 
-  if (DistBetweenCenters < fabs(r1-r2))
+  if (distBetweenCenters < fabs(r1-r2))
   {
     return true;
   }
@@ -400,7 +400,7 @@ bool TwoCirclesEnclosed(double x1, double y1, double r1,
   return false;
 }
 
-//------------------------ TwoCirclesIntersectionPoints ------------------
+//------------------------ twoCirclesIntersectionPoints ------------------
 //
 //  Given two circles this function calculates the intersection points
 //  of any overlap.
@@ -408,30 +408,30 @@ bool TwoCirclesEnclosed(double x1, double y1, double r1,
 //  returns false if no overlap found
 //
 // see http://astronomy.swin.edu.au/~pbourke/geometry/2circle/
-//------------------------------------------------------------------------ 
-bool TwoCirclesIntersectionPoints(double x1, double y1, double r1,
+//------------------------------------------------------------------------
+bool twoCirclesIntersectionPoints(double x1, double y1, double r1,
                                   double x2, double y2, double r2,
                                   double &p3X, double &p3Y,
                                   double &p4X, double &p4Y)
 {
   //first check to see if they overlap
-  if (!TwoCirclesOverlapped(x1,y1,r1,x2,y2,r2))
+  if (!twoCirclesOverlapped(x1,y1,r1,x2,y2,r2))
   {
     return false;
   }
 
   //calculate the distance between the circle centers
   double d = sqrt( (x1-x2) * (x1-x2) + (y1-y2) * (y1-y2));
-  
+
   //Now calculate the distance from the center of each circle to the center
   //of the line which connects the intersection points.
   double a = (r1 - r2 + (d * d)) / (2 * d);
   double b = (r2 - r1 + (d * d)) / (2 * d);
-  
 
-  //MAYBE A TEST FOR EXACT OVERLAP? 
 
-  //calculate the point P2 which is the center of the line which 
+  //MAYBE A TEST FOR EXACT OVERLAP?
+
+  //calculate the point P2 which is the center of the line which
   //connects the intersection points
   double p2X, p2Y;
 
@@ -455,20 +455,20 @@ bool TwoCirclesIntersectionPoints(double x1, double y1, double r1,
 
 }
 
-//------------------------ TwoCirclesIntersectionArea --------------------
+//------------------------ twoCirclesIntersectionArea --------------------
 //
 //  Tests to see if two circles overlap and if so calculates the area
 //  defined by the union
 //
 // see http://mathforum.org/library/drmath/view/54785.html
 //-----------------------------------------------------------------------
-double TwoCirclesIntersectionArea(double x1, double y1, double r1,
+double twoCirclesIntersectionArea(double x1, double y1, double r1,
                                   double x2, double y2, double r2)
 {
   //first calculate the intersection points
   double iX1, iY1, iX2, iY2;
 
-  if(!TwoCirclesIntersectionPoints(x1,y1,r1,x2,y2,r2,iX1,iY1,iX2,iY2))
+  if(!twoCirclesIntersectionPoints(x1,y1,r1,x2,y2,r2,iX1,iY1,iX2,iY2))
   {
     return 0.0; //no overlap
   }
@@ -478,43 +478,43 @@ double TwoCirclesIntersectionArea(double x1, double y1, double r1,
 
   //find the angles given that A and B are the two circle centers
   //and C and D are the intersection points
-  double CBD = 2 * acos((r2*r2 + d*d - r1*r1) / (r2 * d * 2)); 
+  double cbd = 2 * acos((r2*r2 + d*d - r1*r1) / (r2 * d * 2));
 
-  double CAD = 2 * acos((r1*r1 + d*d - r2*r2) / (r1 * d * 2));
+  double cad = 2 * acos((r1*r1 + d*d - r2*r2) / (r1 * d * 2));
 
 
-  //Then we find the segment of each of the circles cut off by the 
+  //Then we find the segment of each of the circles cut off by the
   //chord CD, by taking the area of the sector of the circle BCD and
   //subtracting the area of triangle BCD. Similarly we find the area
   //of the sector ACD and subtract the area of triangle ACD.
 
-  double area = 0.5f*CBD*r2*r2 - 0.5f*r2*r2*sin(CBD) +
-                0.5f*CAD*r1*r1 - 0.5f*r1*r1*sin(CAD);
+  double area = 0.5f*cbd*r2*r2 - 0.5f*r2*r2*sin(cbd) +
+                0.5f*cad*r1*r1 - 0.5f*r1*r1*sin(cad);
 
   return area;
 }
 
-//-------------------------------- CircleArea ---------------------------
+//-------------------------------- circleArea ---------------------------
 //
 //  given the radius, calculates the area of a circle
 //-----------------------------------------------------------------------
-double CircleArea(double radius)
+double circleArea(double radius)
 {
-  return pi * radius * radius;
+  return geometryPi * radius * radius;
 }
 
 
-//----------------------- PointInCircle ----------------------------------
+//----------------------- pointInCircle ----------------------------------
 //
 //  returns true if the point p is within the radius of the given circle
 //------------------------------------------------------------------------
-bool PointInCircle(Vector2D Pos,
+bool pointInCircle(Vector2D pos,
                    double    radius,
                    Vector2D p)
 {
-  double DistFromCenterSquared = (p-Pos).LengthSq();
+  double distFromCenterSquared = (p-pos).lengthSq();
 
-  if (DistFromCenterSquared < (radius*radius))
+  if (distFromCenterSquared < (radius*radius))
   {
     return true;
   }
@@ -522,21 +522,21 @@ bool PointInCircle(Vector2D Pos,
   return false;
 }
 
-//--------------------- LineSegmentCircleIntersection ---------------------------
+//--------------------- lineSegmentCircleIntersection ---------------------------
 //
 //  returns true if the line segemnt AB intersects with a circle at
 //  position P with radius radius
 //------------------------------------------------------------------------
-bool LineSegmentCircleIntersection(Vector2D A,
-                                   Vector2D B,
-                                   Vector2D P,
+bool lineSegmentCircleIntersection(Vector2D pointA,
+                                   Vector2D pointB,
+                                   Vector2D pointP,
                                    double    radius)
 {
   //first determine the distance from the center of the circle to
   //the line segment (working in distance squared space)
-  double DistToLineSq = DistToLineSegmentSq(A, B, P);
+  double distToLineSq = distToLineSegmentSq(pointA, pointB, pointP);
 
-  if (DistToLineSq < radius*radius)
+  if (distToLineSq < radius*radius)
   {
     return true;
   }
@@ -548,45 +548,45 @@ bool LineSegmentCircleIntersection(Vector2D A,
 
 }
 
-//------------------- GetLineSegmentCircleClosestIntersectionPoint ------------
+//------------------- getLineSegmentCircleClosestIntersectionPoint ------------
 //
 //  given a line segment AB and a circle position and radius, this function
-//  determines if there is an intersection and stores the position of the 
-//  closest intersection in the reference IntersectionPoint
+//  determines if there is an intersection and stores the position of the
+//  closest intersection in the reference intersectionPoint
 //
 //  returns false if no intersection point is found
 //-----------------------------------------------------------------------------
-bool GetLineSegmentCircleClosestIntersectionPoint(Vector2D A,
-                                                  Vector2D B,
+bool getLineSegmentCircleClosestIntersectionPoint(Vector2D pointA,
+                                                  Vector2D pointB,
                                                   Vector2D pos,
                                                   double    radius,
-                                                  Vector2D& IntersectionPoint)
+                                                  Vector2D& intersectionPoint)
 {
-  Vector2D toBNorm = Vec2DNormalize(B-A);
+  Vector2D toBNorm = vec2DNormalize(pointB-pointA);
 
   //move the circle into the local space defined by the vector B-A with origin
   //at A
-  Vector2D LocalPos = PointToLocalSpace(pos, toBNorm, toBNorm.Perp(), A);
+  Vector2D localPos = pointToLocalSpace(pos, toBNorm, toBNorm.perp(), pointA);
 
   bool ipFound = false;
 
   //if the local position + the radius is negative then the circle lays behind
-  //point A so there is no intersection possible. If the local x pos minus the 
-  //radius is greater than length A-B then the circle cannot intersect the 
+  //point A so there is no intersection possible. If the local x pos minus the
+  //radius is greater than length A-B then the circle cannot intersect the
   //line segment
-  if ( (LocalPos.x+radius >= 0) &&
-     ( (LocalPos.x-radius)*(LocalPos.x-radius) <= Vec2DDistanceSq(B, A)) )
+  if ( (localPos.x+radius >= 0) &&
+     ( (localPos.x-radius)*(localPos.x-radius) <= vec2DDistanceSq(pointB, pointA)) )
   {
      //if the distance from the x axis to the object's position is less
      //than its radius then there is a potential intersection.
-     if (fabs(LocalPos.y) < radius)
+     if (fabs(localPos.y) < radius)
      {
-        //now to do a line/circle intersection test. The center of the 
-        //circle is represented by A, B. The intersection points are 
-        //given by the formulae x = A +/-sqrt(r^2-B^2), y=0. We only 
+        //now to do a line/circle intersection test. The center of the
+        //circle is represented by A, B. The intersection points are
+        //given by the formulae x = A +/-sqrt(r^2-B^2), y=0. We only
         //need to look at the smallest positive value of x.
-        double a = LocalPos.x;
-        double b = LocalPos.y;       
+        double a = localPos.x;
+        double b = localPos.y;
 
         double ip = a - sqrt(radius*radius - b*b);
 
@@ -597,7 +597,7 @@ bool GetLineSegmentCircleClosestIntersectionPoint(Vector2D A,
 
         ipFound = true;
 
-        IntersectionPoint = A+ toBNorm*ip;
+        intersectionPoint = pointA+ toBNorm*ip;
      }
    }
 

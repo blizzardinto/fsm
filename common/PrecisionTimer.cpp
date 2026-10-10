@@ -1,76 +1,76 @@
 #include "PrecisionTimer.h"
 
 
-//---------------------- default constructor ------------------------------
+//---------------------- default function Object() { [native code] } ------------------------------
 //
 //-------------------------------------------------------------------------
-PrecisionTimer::PrecisionTimer(): m_NormalFPS(0.0),
-                  m_SlowFPS(1.0),
-                  m_TimeElapsed(0.0),
-                  m_FrameTime(0),
-                  m_LastTime(0),
-                  m_LastTimeInTimeElapsed(0),
-                  m_PerfCountFreq(0),
-                  m_bStarted(false),
-                  m_StartTime(0),
-                  m_LastTimeElapsed(0.0),
-                  m_bSmoothUpdates(false)
+PrecisionTimer::PrecisionTimer(): mNormalFps(0.0),
+                  mSlowFps(1.0),
+                  mTimeElapsed(0.0),
+                  mFrameTime(0),
+                  mLastTime(0),
+                  mLastTimeInTimeElapsed(0),
+                  mPerfCountFreq(0),
+                  mStarted(false),
+                  mStartTime(0),
+                  mLastTimeElapsed(0.0),
+                  mSmoothUpdates(false)
 {
   //how many ticks per sec do we get
-  QueryPerformanceFrequency( (LARGE_INTEGER*) &m_PerfCountFreq);
-  
-  m_TimeScale = 1.0/m_PerfCountFreq;
+  QueryPerformanceFrequency( (LARGE_INTEGER*) &mPerfCountFreq);
+
+  mTimeScale = 1.0/mPerfCountFreq;
 }
 
-//---------------------- constructor -------------------------------------
+//---------------------- function Object() { [native code] } -------------------------------------
 //
 //  use to specify FPS
 //
 //-------------------------------------------------------------------------
-PrecisionTimer::PrecisionTimer(double fps): m_NormalFPS(fps),
-                  m_SlowFPS(1.0),
-                  m_TimeElapsed(0.0),
-                  m_FrameTime(0),
-                  m_LastTime(0),
-                  m_LastTimeInTimeElapsed(0),
-                  m_PerfCountFreq(0),
-                  m_bStarted(false),
-                  m_StartTime(0),
-                  m_LastTimeElapsed(0.0),
-                  m_bSmoothUpdates(false)
+PrecisionTimer::PrecisionTimer(double fps): mNormalFps(fps),
+                  mSlowFps(1.0),
+                  mTimeElapsed(0.0),
+                  mFrameTime(0),
+                  mLastTime(0),
+                  mLastTimeInTimeElapsed(0),
+                  mPerfCountFreq(0),
+                  mStarted(false),
+                  mStartTime(0),
+                  mLastTimeElapsed(0.0),
+                  mSmoothUpdates(false)
 {
 
   //how many ticks per sec do we get
-  QueryPerformanceFrequency( (LARGE_INTEGER*) &m_PerfCountFreq);
+  QueryPerformanceFrequency( (LARGE_INTEGER*) &mPerfCountFreq);
 
-  m_TimeScale = 1.0/m_PerfCountFreq;
+  mTimeScale = 1.0/mPerfCountFreq;
 
   //calculate ticks per frame
-  m_FrameTime = (LONGLONG)(m_PerfCountFreq / m_NormalFPS);
+  mFrameTime = (LONGLONG)(mPerfCountFreq / mNormalFps);
 }
 
 
 
 
-//------------------------Start()-----------------------------------------
+//------------------------start()-----------------------------------------
 //
 //  call this immediately prior to game loop. Starts the timer (obviously!)
 //
 //--------------------------------------------------------------------------
-void PrecisionTimer::Start()
+void PrecisionTimer::start()
 {
-  m_bStarted = true;
-  
-  m_TimeElapsed = 0.0;
+  mStarted = true;
+
+  mTimeElapsed = 0.0;
 
   //get the time
-  QueryPerformanceCounter( (LARGE_INTEGER*) &m_LastTime);
+  QueryPerformanceCounter( (LARGE_INTEGER*) &mLastTime);
 
   //keep a record of when the timer was started
-  m_StartTime = m_LastTimeInTimeElapsed = m_LastTime;
+  mStartTime = mLastTimeInTimeElapsed = mLastTime;
 
   //update time to render next frame
-  m_NextTime = m_LastTime + m_FrameTime;
+  mNextTime = mLastTime + mFrameTime;
 
   return;
 }

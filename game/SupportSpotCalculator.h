@@ -21,55 +21,55 @@ class Regulator;
 class SupportSpotCalculator
 {
 private:
-  
+
   //a data structure to hold the values and positions of each spot
   struct SupportSpot
   {
-    
-    Vector2D  m_vPos;
 
-    double    m_dScore;
+    Vector2D  mPos;
 
-    SupportSpot(Vector2D pos, double value):m_vPos(pos),
-                                            m_dScore(value)
+    double    mScore;
+
+    SupportSpot(Vector2D pos, double value):mPos(pos),
+                                            mScore(value)
     {}
   };
 
 private:
 
 
-  SoccerTeam*               m_pTeam;
+  SoccerTeam*               mTeam;
 
-  std::vector<SupportSpot>  m_Spots;
+  std::vector<SupportSpot>  mSpots;
 
   //a pointer to the highest valued spot from the last update
-  SupportSpot*              m_pBestSupportingSpot;
+  SupportSpot*              mBestSupportingSpot;
 
   //this will regulate how often the spots are calculated (default is
   //one update per second)
-  Regulator*                m_pRegulator;
+  Regulator*                mRegulator;
 
 public:
-  
+
   SupportSpotCalculator(int numX,
                         int numY,
                         SoccerTeam* team);
 
   ~SupportSpotCalculator();
 
-  //draws the spots to the screen as a hollow circles. The higher the 
+  //draws the spots to the screen as a hollow circles. The higher the
   //score, the bigger the circle. The best supporting spot is drawn in
   //bright green.
-  void       Render()const;
+  void       render()const;
 
   //this method iterates through each possible spot and calculates its
   //score.
-  Vector2D  DetermineBestSupportingPosition();
+  Vector2D  determineBestSupportingPosition();
 
   //returns the best supporting spot if there is one. If one hasn't been
-  //calculated yet, this method calls DetermineBestSupportingPosition and
+  //calculated yet, this method calls determineBestSupportingPosition and
   //returns the result.
-  Vector2D  GetBestSupportingSpot();
+  Vector2D  getBestSupportingSpot();
 };
 
 

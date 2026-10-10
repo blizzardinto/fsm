@@ -3,7 +3,7 @@
 #pragma warning (disable:4786)
 //------------------------------------------------------------------------
 //
-//  Name:   MessageDispatcher.h
+//  name:   MessageDispatcher.h
 //
 //  Desc:   A message dispatcher. Manages messages of the type Telegram.
 //          Instantiated as a singleton.
@@ -22,27 +22,27 @@ class EntityBase;
 
 
 //to make life easier...
-#define Dispatcher MessageDispatcher::Instance()
+#define dispatcher MessageDispatcher::instance()
 
 //to make code easier to read
-const double SEND_MSG_IMMEDIATELY = 0.0;
-const int    NO_ADDITIONAL_INFO   = 0;
-const int    SENDER_ID_IRRELEVANT = -1;
+const double sendMsgImmediately = 0.0;
+const int    noAdditionalInfo   = 0;
+const int    senderIdIrrelevant = -1;
 
 
 class MessageDispatcher
 {
-private:  
-  
+private:
+
   //a std::set is used as the container for the delayed messages
   //because of the benefit of automatic sorting and avoidance
   //of duplicates. Messages are sorted by their dispatch time.
-  std::set<Telegram> PriorityQ;
+  std::set<Telegram> mDelayedMessages;
 
-  //this method is utilized by DispatchMsg or DispatchDelayedMessages.
+  //this method is utilized by dispatchMsg or dispatchDelayedMessages.
   //This method calls the message handling member function of the receiving
   //entity, pReceiver, with the newly created telegram
-  void Discharge(EntityBase* pReceiver, const Telegram& msg);
+  void discharge(EntityBase* pReceiver, const Telegram& msg);
 
   MessageDispatcher(){}
 
@@ -52,18 +52,18 @@ private:
 
 public:
 
-  static MessageDispatcher* Instance();
+  static MessageDispatcher* instance();
 
-  //send a message to another agent. Receiving agent is referenced by ID.
-  void DispatchMsg(double      delay,
+  //send a message to another agent. Receiving agent is referenced by id.
+  void dispatchMsg(double      delay,
                    int         sender,
                    int         receiver,
                    int         msg,
-                   void*       ExtraInfo);
+                   void*       extraInfo);
 
-  //send out any delayed messages. This method is called each time through   
+  //send out any delayed messages. This method is called each time through
   //the main game loop.
-  void DispatchDelayedMessages();
+  void dispatchDelayedMessages();
 };
 
 

@@ -2,7 +2,7 @@
 #define GOALY_H
 //------------------------------------------------------------------------
 //
-//  Name:   EntityPlayerGoalKeeper.h
+//  name:   EntityPlayerGoalKeeper.h
 //
 //  Desc:   class to implement a goalkeeper agent
 //
@@ -19,57 +19,57 @@ class EntityPlayer;
 class EntityPlayerGoalKeeper : public EntityPlayer
 {
 private:
-  
+
    //an instance of the state machine class
-  StateMachine<EntityPlayerGoalKeeper>*  m_pStateMachine;
-  
+  StateMachine<EntityPlayerGoalKeeper>*  mStateMachine;
+
   //this vector is updated to point towards the ball and is used when
   //rendering the goalkeeper (instead of the underlaying vehicle's heading)
   //to ensure he always appears to be watching the ball
-  Vector2D   m_vLookAt;
+  Vector2D   mLookAt;
 
 public:
-  
-   EntityPlayerGoalKeeper(SoccerTeam*        home_team,
-              int                home_region,
-              State<EntityPlayerGoalKeeper>* start_state,
+
+   EntityPlayerGoalKeeper(SoccerTeam*        homeTeam,
+              int                homeRegion,
+              State<EntityPlayerGoalKeeper>* startState,
               Vector2D           heading,
               Vector2D           velocity,
               double              mass,
-              double              max_force,
-              double              max_speed,
-              double              max_turn_rate,
+              double              maxForce,
+              double              maxSpeed,
+              double              maxTurnRate,
               double              scale);
 
-   ~EntityPlayerGoalKeeper(){delete m_pStateMachine;}
+   ~EntityPlayerGoalKeeper(){delete mStateMachine;}
 
    //these must be implemented
-   void        Update();
-   void        Render();
-   bool        HandleMessage(const Telegram& msg);
+   void        update();
+   void        render();
+   bool        handleMessage(const Telegram& msg);
 
 
-   //returns true if the ball comes close enough for the keeper to 
+   //returns true if the ball comes close enough for the keeper to
    //consider intercepting
-   bool        BallWithinRangeForIntercept()const;
+   bool        ballWithinRangeForIntercept()const;
 
    //returns true if the keeper has ventured too far away from the goalmouth
-   bool        TooFarFromGoalMouth()const;
+   bool        tooFarFromGoalMouth()const;
 
    //this method is called by the Intercept state to determine the spot
-   //along the goalmouth which will act as one of the interpose targets
+   //along the goalmouth which will act as one of the interposeBehavior targets
    //(the other is the ball).
    //the specific point at the goal line that the keeper is trying to cover
    //is flexible and can move depending on where the ball is on the field.
-   //To achieve this we just scale the ball's y value by the ratio of the
+   //to achieve this we just scale the ball's y value by the ratio of the
    //goal width to playingfield width
-   Vector2D    GetRearInterposeTarget()const;
+   Vector2D    getRearInterposeTarget()const;
 
-   StateMachine<EntityPlayerGoalKeeper>* GetFSM()const{return m_pStateMachine;}
+   StateMachine<EntityPlayerGoalKeeper>* getFsm()const{return mStateMachine;}
 
-   
-   Vector2D    LookAt()const{return m_vLookAt;}
-   void        SetLookAt(Vector2D v){m_vLookAt=v;}
+
+   Vector2D    lookAt()const{return mLookAt;}
+   void        setLookAt(Vector2D v){mLookAt=v;}
 };
 
 

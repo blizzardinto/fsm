@@ -14,7 +14,7 @@
 //-----------------------------------------------------------------------------
 SupportSpotCalculator::~SupportSpotCalculator()
 {
-  delete m_pRegulator;
+  delete mRegulator;
 }
 
 
@@ -22,156 +22,156 @@ SupportSpotCalculator::~SupportSpotCalculator()
 //-----------------------------------------------------------------------------
 SupportSpotCalculator::SupportSpotCalculator(int           numX,
                                              int           numY,
-                                             SoccerTeam*   team):m_pBestSupportingSpot(NULL),
-                                                                  m_pTeam(team)
+                                             SoccerTeam*   team):mBestSupportingSpot(NULL),
+                                                                  mTeam(team)
 {
-  const Region* PlayingField = team->Pitch()->PlayingArea();
+  const Region* playingField = team->pitch()->playingArea();
 
-  //calculate the positions of each sweet spot, create them and 
-  //store them in m_Spots
-  double HeightOfSSRegion = PlayingField->Height() * 0.8;
-  double WidthOfSSRegion  = PlayingField->Width() * 0.9;
-  double SliceX = WidthOfSSRegion / numX ;
-  double SliceY = HeightOfSSRegion / numY;
+  //calculate the positions of each sweet spot, create them and
+  //store them in mSpots
+  double heightOfSupportSpotRegion = playingField->height() * 0.8;
+  double widthOfSupportSpotRegion  = playingField->width() * 0.9;
+  double sliceX = widthOfSupportSpotRegion / numX ;
+  double sliceY = heightOfSupportSpotRegion / numY;
 
-  double left  = PlayingField->Left() + (PlayingField->Width()-WidthOfSSRegion)/2.0 + SliceX/2.0;
-  double right = PlayingField->Right() - (PlayingField->Width()-WidthOfSSRegion)/2.0 - SliceX/2.0;
-  double top   = PlayingField->Top() + (PlayingField->Height()-HeightOfSSRegion)/2.0 + SliceY/2.0;
+  double left  = playingField->left() + (playingField->width()-widthOfSupportSpotRegion)/2.0 + sliceX/2.0;
+  double right = playingField->right() - (playingField->width()-widthOfSupportSpotRegion)/2.0 - sliceX/2.0;
+  double top   = playingField->top() + (playingField->height()-heightOfSupportSpotRegion)/2.0 + sliceY/2.0;
 
   for (int x=0; x<(numX/2)-1; ++x)
   {
     for (int y=0; y<numY; ++y)
-    {      
-      if (m_pTeam->Color() == SoccerTeam::blue)
+    {
+      if (mTeam->color() == SoccerTeam::blue)
       {
-        m_Spots.push_back(SupportSpot(Vector2D(left+x*SliceX, top+y*SliceY), 0.0));
+        mSpots.push_back(SupportSpot(Vector2D(left+x*sliceX, top+y*sliceY), 0.0));
       }
 
       else
       {
-        m_Spots.push_back(SupportSpot(Vector2D(right-x*SliceX, top+y*SliceY), 0.0));
+        mSpots.push_back(SupportSpot(Vector2D(right-x*sliceX, top+y*sliceY), 0.0));
       }
     }
   }
-  
+
   //create the regulator
-  m_pRegulator = new Regulator(Prm.SupportSpotUpdateFreq);
+  mRegulator = new Regulator(prm.supportSpotUpdateFreq);
 }
 
 
-//--------------------------- DetermineBestSupportingPosition -----------------
+//--------------------------- determineBestSupportingPosition -----------------
 //
 //  see header or book for description
 //-----------------------------------------------------------------------------
-Vector2D SupportSpotCalculator::DetermineBestSupportingPosition()
+Vector2D SupportSpotCalculator::determineBestSupportingPosition()
 {
-  //only update the spots every few frames                              
-  if (!m_pRegulator->isReady() && m_pBestSupportingSpot)
+  //only update the spots every few frames
+  if (!mRegulator->isReady() && mBestSupportingSpot)
   {
-    return m_pBestSupportingSpot->m_vPos;
+    return mBestSupportingSpot->mPos;
   }
 
   //reset the best supporting spot
-  m_pBestSupportingSpot = NULL;
- 
-  double BestScoreSoFar = 0.0;
+  mBestSupportingSpot = NULL;
+
+  double bestScoreSoFar = 0.0;
 
   std::vector<SupportSpot>::iterator curSpot;
 
-  for (curSpot = m_Spots.begin(); curSpot != m_Spots.end(); ++curSpot)
+  for (curSpot = mSpots.begin(); curSpot != mSpots.end(); ++curSpot)
   {
     //first remove any previous score. (the score is set to one so that
-    //the viewer can see the positions of all the spots if he has the 
+    //the viewer can see the positions of all the spots if he has the
     //aids turned on)
-    curSpot->m_dScore = 1.0;
+    curSpot->mScore = 1.0;
 
-    //Test 1. is it possible to make a safe pass from the ball's position 
+    //Test 1. is it possible to make a safe pass from the ball's position
     //to this position?
-    if(m_pTeam->isPassSafeFromAllOpponents(m_pTeam->ControllingPlayer()->Pos(),
-                                           curSpot->m_vPos,
+    if(mTeam->isPassSafeFromAllOpponents(mTeam->controllingPlayer()->pos(),
+                                           curSpot->mPos,
                                            NULL,
-                                           Prm.MaxPassingForce))
+                                           prm.maxPassingForce))
     {
-      curSpot->m_dScore += Prm.Spot_PassSafeScore;
+      curSpot->mScore += prm.spotPassSafeScore;
     }
-      
-   
-    //Test 2. Determine if a goal can be scored from this position.  
-    if( m_pTeam->CanShoot(curSpot->m_vPos,            
-                          Prm.MaxShootingForce))
-    {
-      curSpot->m_dScore += Prm.Spot_CanScoreFromPositionScore;
-    }   
 
-    
+
+    //Test 2. Determine if a goal can be scored from this position.
+    if( mTeam->canShoot(curSpot->mPos,
+                          prm.maxShootingForce))
+    {
+      curSpot->mScore += prm.spotCanScoreFromPositionScore;
+    }
+
+
     //Test 3. calculate how far this spot is away from the controlling
     //player. The further away, the higher the score. Any distances further
-    //away than OptimalDistance pixels do not receive a score.
-    if (m_pTeam->SupportingPlayer())
+    //away than optimalDistance pixels do not receive a score.
+    if (mTeam->supportingPlayer())
     {
-      const double OptimalDistance = 200.0;
-        
-      double dist = Vec2DDistance(m_pTeam->ControllingPlayer()->Pos(),
-                                 curSpot->m_vPos);
-      
-      double temp = fabs(OptimalDistance - dist);
+      const double optimalDistance = 200.0;
 
-      if (temp < OptimalDistance)
+      double dist = vec2DDistance(mTeam->controllingPlayer()->pos(),
+                                 curSpot->mPos);
+
+      double temp = fabs(optimalDistance - dist);
+
+      if (temp < optimalDistance)
       {
 
         //normalize the distance and add it to the score
-        curSpot->m_dScore += Prm.Spot_DistFromControllingPlayerScore *
-                             (OptimalDistance-temp)/OptimalDistance;  
+        curSpot->mScore += prm.spotDistFromControllingPlayerScore *
+                             (optimalDistance-temp)/optimalDistance;
       }
     }
-    
+
     //check to see if this spot has the highest score so far
-    if (curSpot->m_dScore > BestScoreSoFar)
+    if (curSpot->mScore > bestScoreSoFar)
     {
-      BestScoreSoFar = curSpot->m_dScore;
+      bestScoreSoFar = curSpot->mScore;
 
-      m_pBestSupportingSpot = &(*curSpot);
-    }    
-    
-  }
-
-  return m_pBestSupportingSpot->m_vPos;
-}
-
-
-
-
-
-//------------------------------- GetBestSupportingSpot -----------------------
-//-----------------------------------------------------------------------------
-Vector2D SupportSpotCalculator::GetBestSupportingSpot()
-{
-  if (m_pBestSupportingSpot)
-  {
-    return m_pBestSupportingSpot->m_vPos;
-  }
-    
-  else
-  { 
-    return DetermineBestSupportingPosition();
-  }
-}
-
-//----------------------------------- Render ----------------------------------
-//-----------------------------------------------------------------------------
-void SupportSpotCalculator::Render()const
-{
-    gdi->HollowBrush();
-    gdi->GreyPen();
-
-    for (unsigned int spt=0; spt<m_Spots.size(); ++spt)
-    {
-      gdi->Circle(m_Spots[spt].m_vPos, m_Spots[spt].m_dScore);
+      mBestSupportingSpot = &(*curSpot);
     }
 
-    if (m_pBestSupportingSpot)
+  }
+
+  return mBestSupportingSpot->mPos;
+}
+
+
+
+
+
+//------------------------------- getBestSupportingSpot -----------------------
+//-----------------------------------------------------------------------------
+Vector2D SupportSpotCalculator::getBestSupportingSpot()
+{
+  if (mBestSupportingSpot)
+  {
+    return mBestSupportingSpot->mPos;
+  }
+
+  else
+  {
+    return determineBestSupportingPosition();
+  }
+}
+
+//----------------------------------- render ----------------------------------
+//-----------------------------------------------------------------------------
+void SupportSpotCalculator::render()const
+{
+    gdi->hollowBrush();
+    gdi->greyPen();
+
+    for (unsigned int spt=0; spt<mSpots.size(); ++spt)
     {
-      gdi->GreenPen();
-      gdi->Circle(m_pBestSupportingSpot->m_vPos, m_pBestSupportingSpot->m_dScore);
+      gdi->circle(mSpots[spt].mPos, mSpots[spt].mScore);
+    }
+
+    if (mBestSupportingSpot)
+    {
+      gdi->greenPen();
+      gdi->circle(mBestSupportingSpot->mPos, mBestSupportingSpot->mScore);
     }
 }

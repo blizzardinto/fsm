@@ -2,12 +2,12 @@
 #define GRAPH_FUNCS
 //-----------------------------------------------------------------------------
 //
-//  Name:   HandyGraphFunctions.h
+//  name:   HandyGraphFunctions.h
 //
 //  Author: Mat Buckland (www.ai-junkie.com)
 //
 //  Desc:   As the name implies, some useful functions you can use with your
-//          graphs. 
+//          graphs.
 
 //          For the function templates, make sure your graph interface complies
 //          with the SparseGraph class
@@ -24,27 +24,27 @@
 
 
 
-//--------------------------- ValidNeighbour -----------------------------
+//--------------------------- validNeighbour -----------------------------
 //
 //  returns true if x,y is a valid position in the map
 //------------------------------------------------------------------------
-bool ValidNeighbour(int x, int y, int NumCellsX, int NumCellsY)
+bool validNeighbour(int x, int y, int numCellsX, int numCellsY)
 {
-  return !((x < 0) || (x >= NumCellsX) || (y < 0) || (y >= NumCellsY));
+  return !((x < 0) || (x >= numCellsX) || (y < 0) || (y >= numCellsY));
 }
-  
-//------------ GraphHelper_AddAllNeighboursToGridNode ------------------
+
+//------------ graphHelperAddAllNeighboursToGridNode ------------------
 //
-//  use to add he eight neighboring edges of a graph node that 
+//  use to add he eight neighboring edges of a graph node that
 //  is positioned in a grid layout
 //------------------------------------------------------------------------
-template <class graph_type>
-void GraphHelper_AddAllNeighboursToGridNode(graph_type& graph,
+template <class graphType>
+void graphHelperAddAllNeighboursToGridNode(graphType& graph,
                                             int         row,
                                             int         col,
-                                            int         NumCellsX,
-                                            int         NumCellsY)
-{   
+                                            int         numCellsX,
+                                            int         numCellsY)
+{
   for (int i=-1; i<2; ++i)
   {
     for (int j=-1; j<2; ++j)
@@ -56,28 +56,28 @@ void GraphHelper_AddAllNeighboursToGridNode(graph_type& graph,
       if ( (i == 0) && (j==0) ) continue;
 
       //check to see if this is a valid neighbour
-      if (ValidNeighbour(nodeX, nodeY, NumCellsX, NumCellsY))
+      if (validNeighbour(nodeX, nodeY, numCellsX, numCellsY))
       {
         //calculate the distance to this node
-        Vector2D PosNode      = graph.GetNode(row*NumCellsX+col).Pos();
-        Vector2D PosNeighbour = graph.GetNode(nodeY*NumCellsX+nodeX).Pos();
+        Vector2D posNode      = graph.getNode(row*numCellsX+col).pos();
+        Vector2D posNeighbour = graph.getNode(nodeY*numCellsX+nodeX).pos();
 
-        double dist = PosNode.Distance(PosNeighbour);
+        double dist = posNode.distance(posNeighbour);
 
         //this neighbour is okay so it can be added
-        typename graph_type::EdgeType NewEdge(row*NumCellsX+col,
-                                     nodeY*NumCellsX+nodeX,
+        typename graphType::EdgeType newEdge(row*numCellsX+col,
+                                     nodeY*numCellsX+nodeX,
                                      dist);
-        graph.AddEdge(NewEdge);
+        graph.addEdge(newEdge);
 
         //if graph is not a diagraph then an edge needs to be added going
         //in the other direction
         if (!graph.isDigraph())
         {
-          typename graph_type::EdgeType NewEdge(nodeY*NumCellsX+nodeX,
-                                       row*NumCellsX+col,
+          typename graphType::EdgeType newEdge(nodeY*numCellsX+nodeX,
+                                       row*numCellsX+col,
                                        dist);
-          graph.AddEdge(NewEdge);
+          graph.addEdge(newEdge);
         }
       }
     }
@@ -85,152 +85,152 @@ void GraphHelper_AddAllNeighboursToGridNode(graph_type& graph,
 }
 
 
-//--------------------------- GraphHelper_CreateGrid --------------------------
+//--------------------------- graphHelperCreateGrid --------------------------
 //
-//  creates a graph based on a grid layout. This function requires the 
+//  creates a graph based on a grid layout. This function requires the
 //  dimensions of the environment and the number of cells required horizontally
-//  and vertically 
+//  and vertically
 //-----------------------------------------------------------------------------
-template <class graph_type>
-void GraphHelper_CreateGrid(graph_type& graph,
+template <class graphType>
+void graphHelperCreateGrid(graphType& graph,
                              int cySize,
                              int cxSize,
-                             int NumCellsY,
-                             int NumCellsX)
-{ 
+                             int numCellsY,
+                             int numCellsX)
+{
   //need some temporaries to help calculate each node center
-  double CellWidth  = (double)cySize / (double)NumCellsX;
-  double CellHeight = (double)cxSize / (double)NumCellsY;
+  double cellWidth  = (double)cySize / (double)numCellsX;
+  double cellHeight = (double)cxSize / (double)numCellsY;
 
-  double midX = CellWidth/2;
-  double midY = CellHeight/2;
+  double midX = cellWidth/2;
+  double midY = cellHeight/2;
 
-  
+
   //first create all the nodes
-  for (int row=0; row<NumCellsY; ++row)
+  for (int row=0; row<numCellsY; ++row)
   {
-    for (int col=0; col<NumCellsX; ++col)
+    for (int col=0; col<numCellsX; ++col)
     {
-      graph.AddNode(NavGraphNode<>(graph.GetNextFreeNodeIndex(),
-                                   Vector2D(midX + (col*CellWidth),
-                                   midY + (row*CellHeight))));
+      graph.addNode(NavGraphNode<>(graph.getNextFreeNodeIndex(),
+                                   Vector2D(midX + (col*cellWidth),
+                                   midY + (row*cellHeight))));
 
     }
   }
   //now to calculate the edges. (A position in a 2d array [x][y] is the
-  //same as [y*NumCellsX + x] in a 1d array). Each cell has up to eight
+  //same as [y*numCellsX + x] in a 1d array). Each cell has up to eight
   //neighbours.
-  for (int row=0; row<NumCellsY; ++row)
+  for (int row=0; row<numCellsY; ++row)
   {
-    for (int col=0; col<NumCellsX; ++col)
+    for (int col=0; col<numCellsX; ++col)
     {
-      GraphHelper_AddAllNeighboursToGridNode(graph, row, col, NumCellsX, NumCellsY);
+      graphHelperAddAllNeighboursToGridNode(graph, row, col, numCellsX, numCellsY);
     }
   }
-}  
+}
 
 
-//--------------------------- GraphHelper_DrawUsingGDI ------------------------
+//--------------------------- graphHelperDrawUsingGdi ------------------------
 //
 //  draws a graph using the GDI
 //-----------------------------------------------------------------------------
-template <class graph_type>
-void GraphHelper_DrawUsingGDI(const graph_type& graph, int color, bool DrawNodeIDs = false)
-{	
+template <class graphType>
+void graphHelperDrawUsingGdi(const graphType& graph, int color, bool drawNodeIds = false)
+{
 
   //just return if the graph has no nodes
-  if (graph.NumNodes() == 0) return;
-  
-  gdi->SetPenColor(color);
+  if (graph.numNodes() == 0) return;
 
-  //draw the nodes 
-  typename graph_type::ConstNodeIterator NodeItr(graph);
-  for (const typename graph_type::NodeType* pN=NodeItr.begin();
-      !NodeItr.end();
-       pN=NodeItr.next())
+  gdi->setPenColor(color);
+
+  //draw the nodes
+  typename graphType::ConstNodeIterator nodeItr(graph);
+  for (const typename graphType::NodeType* pN=nodeItr.begin();
+      !nodeItr.end();
+       pN=nodeItr.next())
   {
-    gdi->Circle(pN->Pos(), 2);
+    gdi->circle(pN->pos(), 2);
 
-    if (DrawNodeIDs)
+    if (drawNodeIds)
     {
-      gdi->TextColor(200,200,200);
-      gdi->TextAtPos((int)pN->Pos().x+5, (int)pN->Pos().y-5, ttos(pN->Index()));
+      gdi->textColor(200,200,200);
+      gdi->textAtPos((int)pN->pos().x+5, (int)pN->pos().y-5, ttos(pN->index()));
     }
 
-    typename graph_type::ConstEdgeIterator EdgeItr(graph, pN->Index());
-    for (const typename graph_type::EdgeType* pE=EdgeItr.begin();
-        !EdgeItr.end();
-        pE=EdgeItr.next())
+    typename graphType::ConstEdgeIterator edgeItr(graph, pN->index());
+    for (const typename graphType::EdgeType* pE=edgeItr.begin();
+        !edgeItr.end();
+        pE=edgeItr.next())
     {
-      gdi->Line(pN->Pos(), graph.GetNode(pE->To()).Pos());
+      gdi->line(pN->pos(), graph.getNode(pE->to()).pos());
     }
   }
 }
 
 
-//--------------------------- WeightNavGraphNodeEdges -------------------------
+//--------------------------- weightNavGraphNodeEdges -------------------------
 //
-//  Given a cost value and an index to a valid node this function examines 
+//  Given a cost value and an index to a valid node this function examines
 //  all a node's edges, calculates their length, and multiplies
 //  the value with the weight. Useful for setting terrain costs.
 //------------------------------------------------------------------------
-template <class graph_type>
-void WeightNavGraphNodeEdges(graph_type& graph, int node, double weight)
+template <class graphType>
+void weightNavGraphNodeEdges(graphType& graph, int node, double weight)
 {
   //make sure the node is present
-  assert(node < graph.NumNodes());
+  assert(node < graph.numNodes());
 
   //set the cost for each edge
-  typename graph_type::ConstEdgeIterator ConstEdgeItr(graph, node);
-  for (const typename graph_type::EdgeType* pE=ConstEdgeItr.begin();
-       !ConstEdgeItr.end();
-       pE=ConstEdgeItr.next())
+  typename graphType::ConstEdgeIterator constEdgeItr(graph, node);
+  for (const typename graphType::EdgeType* pE=constEdgeItr.begin();
+       !constEdgeItr.end();
+       pE=constEdgeItr.next())
   {
     //calculate the distance between nodes
-    double dist = Vec2DDistance(graph.GetNode(pE->From()).Pos(),
-                               graph.GetNode(pE->To()).Pos());
+    double dist = vec2DDistance(graph.getNode(pE->from()).pos(),
+                               graph.getNode(pE->to()).pos());
 
     //set the cost of this edge
-    graph.SetEdgeCost(pE->From(), pE->To(), dist * weight);
+    graph.setEdgeCost(pE->from(), pE->to(), dist * weight);
 
     //if not a digraph, set the cost of the parallel edge to be the same
     if (!graph.isDigraph())
-    {      
-      graph.SetEdgeCost(pE->To(), pE->From(), dist * weight);
+    {
+      graph.setEdgeCost(pE->to(), pE->from(), dist * weight);
     }
   }
 }
 
 
-//----------------------- CreateAllPairsTable ---------------------------------
+//----------------------- createAllPairsTable ---------------------------------
 //
 // creates a lookup table encoding the shortest path info between each node
 // in a graph to every other
 //-----------------------------------------------------------------------------
-template <class graph_type>
-std::vector<std::vector<int> > CreateAllPairsTable(const graph_type& G)
+template <class graphType>
+std::vector<std::vector<int> > createAllPairsTable(const graphType& g)
 {
-  enum {no_path = -1};
-  
-  std::vector<int> row(G.NumNodes(), no_path);
-  
-  std::vector<std::vector<int> > ShortestPaths(G.NumNodes(), row);
+  enum {noPath = -1};
 
-  for (int source=0; source<G.NumNodes(); ++source)
+  std::vector<int> row(g.numNodes(), noPath);
+
+  std::vector<std::vector<int> > shortestPaths(g.numNodes(), row);
+
+  for (int source=0; source<g.numNodes(); ++source)
   {
     //calculate the SPT for this node
-    Graph_SearchDijkstra<graph_type> search(G, source);
+    GraphSearchDijkstra<graphType> search(g, source);
 
-    std::vector<const typename graph_type::EdgeType*> spt = search.GetSPT();
+    std::vector<const typename graphType::EdgeType*> spt = search.getSpt();
 
     //now we have the SPT it's easy to work backwards through it to find
     //the shortest paths from each node to this source node
-    for (int target = 0; target<G.NumNodes(); ++target)
+    for (int target = 0; target<g.numNodes(); ++target)
     {
       //if the source node is the same as the target just set to target
       if (source == target)
       {
-        ShortestPaths[source][target] = target;
+        shortestPaths[source][target] = target;
       }
 
       else
@@ -239,98 +239,98 @@ std::vector<std::vector<int> > CreateAllPairsTable(const graph_type& G)
 
         while ((nd != source) && (spt[nd] != 0))
         {
-          ShortestPaths[spt[nd]->From()][target]= nd;
+          shortestPaths[spt[nd]->from()][target]= nd;
 
-          nd = spt[nd]->From();
+          nd = spt[nd]->from();
         }
       }
     }//next target node
   }//next source node
 
-  return ShortestPaths;
+  return shortestPaths;
 }
 
 
-//----------------------- CreateAllPairsCostsTable -------------------------------
+//----------------------- createAllPairsCostsTable -------------------------------
 //
 //  creates a lookup table of the cost associated from traveling from one
 //  node to every other
 //-----------------------------------------------------------------------------
-template <class graph_type>
-std::vector<std::vector<double> > CreateAllPairsCostsTable(const graph_type& G)
+template <class graphType>
+std::vector<std::vector<double> > createAllPairsCostsTable(const graphType& g)
 {
   //create a two dimensional vector
-  std::vector<double> row(G.NumNodes(), 0.0);
-  std::vector<std::vector<double> > PathCosts(G.NumNodes(), row);
+  std::vector<double> row(g.numNodes(), 0.0);
+  std::vector<std::vector<double> > pathCosts(g.numNodes(), row);
 
-  for (int source=0; source<G.NumNodes(); ++source)
+  for (int source=0; source<g.numNodes(); ++source)
   {
     //do the search
-    Graph_SearchDijkstra<graph_type> search(G, source);
+    GraphSearchDijkstra<graphType> search(g, source);
 
     //iterate through every node in the graph and grab the cost to travel to
     //that node
-    for (int target = 0; target<G.NumNodes(); ++target)
+    for (int target = 0; target<g.numNodes(); ++target)
     {
       if (source != target)
       {
-        PathCosts[source][target]= search.GetCostToNode(target);
+        pathCosts[source][target]= search.getCostToNode(target);
       }
     }//next target node
-    
+
   }//next source node
 
-  return PathCosts;
+  return pathCosts;
 }
 
-//---------------------- CalculateAverageGraphEdgeLength ----------------------
+//---------------------- calculateAverageGraphEdgeLength ----------------------
 //
-//  determines the average length of the edges in a navgraph (using the 
-//  distance between the source & target node positions (not the cost of the 
-//  edge as represented in the graph, which may account for all sorts of 
+//  determines the average length of the edges in a navgraph (using the
+//  distance between the source & target node positions (not the cost of the
+//  edge as represented in the graph, which may account for all sorts of
 //  other factors such as terrain type, gradients etc)
 //------------------------------------------------------------------------------
-template <class graph_type>
-double CalculateAverageGraphEdgeLength(const graph_type& G)
+template <class graphType>
+double calculateAverageGraphEdgeLength(const graphType& g)
 {
-  double TotalLength = 0;
-  int NumEdgesCounted = 0;
+  double totalLength = 0;
+  int numEdgesCounted = 0;
 
-  typename graph_type::ConstNodeIterator NodeItr(G);
-  const typename graph_type::NodeType* pN;
-  for (pN = NodeItr.begin(); !NodeItr.end(); pN=NodeItr.next())
+  typename graphType::ConstNodeIterator nodeItr(g);
+  const typename graphType::NodeType* pN;
+  for (pN = nodeItr.begin(); !nodeItr.end(); pN=nodeItr.next())
   {
-    typename graph_type::ConstEdgeIterator EdgeItr(G, pN->Index());
-    for (const typename graph_type::EdgeType* pE = EdgeItr.begin(); !EdgeItr.end(); pE=EdgeItr.next())
+    typename graphType::ConstEdgeIterator edgeItr(g, pN->index());
+    for (const typename graphType::EdgeType* pE = edgeItr.begin(); !edgeItr.end(); pE=edgeItr.next())
     {
       //increment edge counter
-      ++NumEdgesCounted;
+      ++numEdgesCounted;
 
       //add length of edge to total length
-      TotalLength += Vec2DDistance(G.GetNode(pE->From()).Pos(), G.GetNode(pE->To()).Pos());
+      totalLength += vec2DDistance(g.getNode(pE->from()).pos(), g.getNode(pE->to()).pos());
     }
   }
 
-  return TotalLength / (double)NumEdgesCounted;
+  return totalLength / (double)numEdgesCounted;
 }
 
-//----------------------------- GetCostliestGraphEdge -------------------
+//----------------------------- getCostliestGraphEdge -------------------
 //
 //  returns the cost of the costliest edge in the graph
 //-----------------------------------------------------------------------------
-template <class graph_type>
-double GetCostliestGraphEdge(const graph_type& G)
+template <class graphType>
+double getCostliestGraphEdge(const graphType& g)
 {
-  double greatest = MinDouble;
+  double greatest = minDouble;
 
-  typename graph_type::ConstNodeIterator NodeItr(G);
-  const typename graph_type::NodeType* pN;
-  for (pN = NodeItr.begin(); !NodeItr.end(); pN=NodeItr.next())
+  typename graphType::ConstNodeIterator nodeItr(g);
+  const typename graphType::NodeType* pN;
+  for (pN = nodeItr.begin(); !nodeItr.end(); pN=nodeItr.next())
   {
-    typename graph_type::ConstEdgeIterator EdgeItr(G, pN->Index());
-    for (const typename graph_type::EdgeType* pE = EdgeItr.begin(); !EdgeItr.end(); pE=EdgeItr.next())
+    typename graphType::ConstEdgeIterator edgeItr(g, pN->index());
+    for (const typename graphType::EdgeType* pE = edgeItr.begin(); !edgeItr.end(); pE=edgeItr.next())
     {
-      if (pE->Cost() > greatest)greatest = pE->Cost();
+      if (pE->cost() > greatest)greatest = pE->cost();
     }
   }
 

@@ -13,153 +13,153 @@
 
 //----------------------------- ctor ------------------------------------
 //-----------------------------------------------------------------------
-EntityPlayerGoalKeeper::EntityPlayerGoalKeeper(SoccerTeam*        home_team,
-                       int                home_region,
-                       State<EntityPlayerGoalKeeper>* start_state,
+EntityPlayerGoalKeeper::EntityPlayerGoalKeeper(SoccerTeam*        homeTeam,
+                       int                homeRegion,
+                       State<EntityPlayerGoalKeeper>* startState,
                        Vector2D           heading,
                        Vector2D           velocity,
                        double              mass,
-                       double              max_force,
-                       double              max_speed,
-                       double              max_turn_rate,
-                       double              scale): EntityPlayer(home_team,
-                                                             home_region,
+                       double              maxForce,
+                       double              maxSpeed,
+                       double              maxTurnRate,
+                       double              scale): EntityPlayer(homeTeam,
+                                                             homeRegion,
                                                              heading,
                                                              velocity,
                                                              mass,
-                                                             max_force,
-                                                             max_speed,
-                                                             max_turn_rate,
+                                                             maxForce,
+                                                             maxSpeed,
+                                                             maxTurnRate,
                                                              scale,
-                                                             EntityPlayer::goal_keeper)
-                                         
-                                        
-{   
+                                                             EntityPlayer::goalKeeper)
+
+
+{
    //set up the state machine
-  m_pStateMachine = new StateMachine<EntityPlayerGoalKeeper>(this);
+  mStateMachine = new StateMachine<EntityPlayerGoalKeeper>(this);
 
-  m_pStateMachine->SetCurrentState(start_state);
-  m_pStateMachine->SetPreviousState(start_state);
-  m_pStateMachine->SetGlobalState(GlobalKeeperState::Instance());
+  mStateMachine->setCurrentState(startState);
+  mStateMachine->setPreviousState(startState);
+  mStateMachine->setGlobalState(GlobalKeeperState::instance());
 
-  m_pStateMachine->CurrentState()->Enter(this);        
+  mStateMachine->currentState()->enter(this);
 }
 
 
 
-//-------------------------- Update --------------------------------------
+//-------------------------- update --------------------------------------
 
-void EntityPlayerGoalKeeper::Update()
-{ 
+void EntityPlayerGoalKeeper::update()
+{
   //run the logic for the current state
-  m_pStateMachine->Update();
+  mStateMachine->update();
 
-  //calculate the combined force from each steering behavior 
-  Vector2D SteeringForce = m_pSteering->Calculate();
+  //calculate the combined force from each steering behavior
+  Vector2D steeringForce = mSteering->calculate();
 
 
 
-  //Acceleration = Force/Mass
-  Vector2D Acceleration = SteeringForce / m_dMass;
+  //acceleration = force/mass
+  Vector2D acceleration = steeringForce / mMass;
 
   //update velocity
-  m_vVelocity += Acceleration;
+  mVelocity += acceleration;
 
   //make sure player does not exceed maximum velocity
-  m_vVelocity.Truncate(m_dMaxSpeed);
+  mVelocity.truncate(mMaxSpeed);
 
   //update the position
-  m_vPosition += m_vVelocity;
+  mPosition += mVelocity;
 
 
   //enforce a non-penetration constraint if desired
-  if(Prm.bNonPenetrationConstraint)
+  if(prm.bNonPenetrationConstraint)
   {
-    EnforceNonPenetrationContraint(this, AutoList<EntityPlayer>::GetAllMembers());
+    enforceNonPenetrationContraint(this, AutoList<EntityPlayer>::getAllMembers());
   }
 
   //update the heading if the player has a non zero velocity
-  if ( !m_vVelocity.isZero())
-  {    
-    m_vHeading = Vec2DNormalize(m_vVelocity);
+  if ( !mVelocity.isZero())
+  {
+    mHeading = vec2DNormalize(mVelocity);
 
-    m_vSide = m_vHeading.Perp();
+    mSide = mHeading.perp();
   }
 
   //look-at vector always points toward the ball
-  if (!Pitch()->EntityPlayerGoalKeeperHasBall())
+  if (!pitch()->entityPlayerGoalKeeperHasBall())
   {
-   m_vLookAt = Vec2DNormalize(Ball()->Pos() - Pos());
+   mLookAt = vec2DNormalize(ball()->pos() - pos());
   }
 }
 
 
-bool EntityPlayerGoalKeeper::BallWithinRangeForIntercept()const
+bool EntityPlayerGoalKeeper::ballWithinRangeForIntercept()const
 {
-  return (Vec2DDistanceSq(Team()->HomeGoal()->Center(), Ball()->Pos()) <=
-          Prm.EntityPlayerGoalKeeperInterceptRangeSq);
+  return (vec2DDistanceSq(team()->homeGoal()->center(), ball()->pos()) <=
+          prm.entityPlayerGoalKeeperInterceptRangeSq);
 }
 
-bool EntityPlayerGoalKeeper::TooFarFromGoalMouth()const
+bool EntityPlayerGoalKeeper::tooFarFromGoalMouth()const
 {
-  return (Vec2DDistanceSq(Pos(), GetRearInterposeTarget()) >
-          Prm.EntityPlayerGoalKeeperInterceptRangeSq);
+  return (vec2DDistanceSq(pos(), getRearInterposeTarget()) >
+          prm.entityPlayerGoalKeeperInterceptRangeSq);
 }
 
-Vector2D EntityPlayerGoalKeeper::GetRearInterposeTarget()const
+Vector2D EntityPlayerGoalKeeper::getRearInterposeTarget()const
 {
-  double xPosTarget = Team()->HomeGoal()->Center().x;
+  double xPosTarget = team()->homeGoal()->center().x;
 
-  double yPosTarget = Pitch()->PlayingArea()->Center().y - 
-                     Prm.GoalWidth*0.5 + (Ball()->Pos().y*Prm.GoalWidth) /
-                     Pitch()->PlayingArea()->Height();
+  double yPosTarget = pitch()->playingArea()->center().y -
+                     prm.goalWidth*0.5 + (ball()->pos().y*prm.goalWidth) /
+                     pitch()->playingArea()->height();
 
-  return Vector2D(xPosTarget, yPosTarget); 
+  return Vector2D(xPosTarget, yPosTarget);
 }
 
-//-------------------- HandleMessage -------------------------------------
+//-------------------- handleMessage -------------------------------------
 //
 //  routes any messages appropriately
 //------------------------------------------------------------------------
-bool EntityPlayerGoalKeeper::HandleMessage(const Telegram& msg)
+bool EntityPlayerGoalKeeper::handleMessage(const Telegram& msg)
 {
-  return m_pStateMachine->HandleMessage(msg);
+  return mStateMachine->handleMessage(msg);
 }
 
-//--------------------------- Render -------------------------------------
+//--------------------------- render -------------------------------------
 //
 //------------------------------------------------------------------------
-void EntityPlayerGoalKeeper::Render()                                         
+void EntityPlayerGoalKeeper::render()
 {
-  if (Team()->Color() == SoccerTeam::blue) 
-    gdi->BluePen();
-  else 
-    gdi->RedPen();
-  
-  m_vecPlayerVBTrans = WorldTransform(m_vecPlayerVB,
-                                       Pos(),
-                                       m_vLookAt,
-                                       m_vLookAt.Perp(),
-                                       Scale());
+  if (team()->color() == SoccerTeam::blue)
+    gdi->bluePen();
+  else
+    gdi->redPen();
 
-  gdi->ClosedShape(m_vecPlayerVBTrans);
-  
+  mTransformedPlayerVertices = worldTransform(mPlayerVertices,
+                                       pos(),
+                                       mLookAt,
+                                       mLookAt.perp(),
+                                       scale());
+
+  gdi->closedShape(mTransformedPlayerVertices);
+
   //draw the head
-  gdi->BrownBrush();
-  gdi->Circle(Pos(), 6);
+  gdi->brownBrush();
+  gdi->circle(pos(), 6);
 
-  //draw the ID
-  if (Prm.bIDs)
+  //draw the id
+  if (prm.bIds)
   {
-    gdi->TextColor(0, 170, 0);;
-    gdi->TextAtPos(Pos().x-20, Pos().y-20, ttos(ID()));
+    gdi->textColor(0, 170, 0);;
+    gdi->textAtPos(pos().x-20, pos().y-20, ttos(id()));
   }
 
   //draw the state
-  if (Prm.bStates)
-  { 
-    gdi->TextColor(0, 170, 0); 
-    gdi->TransparentText(); 
-    gdi->TextAtPos(m_vPosition.x, m_vPosition.y -20, std::string(m_pStateMachine->GetNameOfCurrentState()));
+  if (prm.bStates)
+  {
+    gdi->textColor(0, 170, 0);
+    gdi->transparentText();
+    gdi->textAtPos(mPosition.x, mPosition.y -20, std::string(mStateMachine->getNameOfCurrentState()));
   }
 }

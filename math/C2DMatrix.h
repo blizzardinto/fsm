@@ -12,27 +12,27 @@
 class C2DMatrix
 {
 private:
-  
+
   struct Matrix
   {
 
-    double _11, _12, _13;
-    double _21, _22, _23;
-    double _31, _32, _33;
+    double element11, element12, element13;
+    double element21, element22, element23;
+    double element31, element32, element33;
 
     Matrix()
     {
-      _11=0.0; _12=0.0; _13=0.0;
-      _21=0.0; _22=0.0; _23=0.0;
-      _31=0.0; _32=0.0; _33=0.0;
+      element11=0.0; element12=0.0; element13=0.0;
+      element21=0.0; element22=0.0; element23=0.0;
+      element31=0.0; element32=0.0; element33=0.0;
     }
 
   };
 
-  Matrix m_Matrix;
+  Matrix mMatrix;
 
-  //multiplies m_Matrix with mIn
-  void  MatrixMultiply(Matrix &mIn);
+  //multiplies mMatrix with mIn
+  void  matrixMultiply(Matrix &mIn);
 
 
 public:
@@ -40,42 +40,42 @@ public:
   C2DMatrix()
   {
     //initialize the matrix to an identity matrix
-    Identity();
+    identity();
   }
 
   //create an identity matrix
-  void Identity();
-  
+  void identity();
+
   //create a transformation matrix
-  void Translate(double x, double y);
+  void translate(double x, double y);
 
   //create a scale matrix
-  void Scale(double xScale, double yScale);
+  void scale(double xScale, double yScale);
 
   //create a rotation matrix
-  void  Rotate(double rotation);
+  void  rotate(double rotation);
 
   //create a rotation matrix from a fwd and side 2D vector
-  void  Rotate(const Vector2D &fwd, const Vector2D &side);
+  void  rotate(const Vector2D &fwd, const Vector2D &side);
 
    //applys a transformation matrix to a std::vector of points
-  void TransformVector2Ds(std::vector<Vector2D> &vPoints);
+  void transformVector2Ds(std::vector<Vector2D> &vPoints);
 
   //applys a transformation matrix to a point
-  void TransformVector2Ds(Vector2D &vPoint);
+  void transformVector2Ds(Vector2D &vPoint);
 
   //accessors to the matrix elements
-  void _11(double val){m_Matrix._11 = val;}
-  void _12(double val){m_Matrix._12 = val;}
-  void _13(double val){m_Matrix._13 = val;}
+  void element11(double val){mMatrix.element11 = val;}
+  void element12(double val){mMatrix.element12 = val;}
+  void element13(double val){mMatrix.element13 = val;}
 
-  void _21(double val){m_Matrix._21 = val;}
-  void _22(double val){m_Matrix._22 = val;}
-  void _23(double val){m_Matrix._23 = val;}
+  void element21(double val){mMatrix.element21 = val;}
+  void element22(double val){mMatrix.element22 = val;}
+  void element23(double val){mMatrix.element23 = val;}
 
-  void _31(double val){m_Matrix._31 = val;}
-  void _32(double val){m_Matrix._32 = val;}
-  void _33(double val){m_Matrix._33 = val;}
+  void element31(double val){mMatrix.element31 = val;}
+  void element32(double val){mMatrix.element32 = val;}
+  void element33(double val){mMatrix.element33 = val;}
 
 };
 

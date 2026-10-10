@@ -18,44 +18,44 @@ class EntityPlayer;
 
 
 class SoccerPitch
-{ 
+{
 public:
 
-  SoccerBall*          m_pBall;
+  SoccerBall*          mBall;
 
-  SoccerTeam*          m_pRedTeam;
-  SoccerTeam*          m_pBlueTeam;
+  SoccerTeam*          mRedTeam;
+  SoccerTeam*          mBlueTeam;
 
-  Goal*                m_pRedGoal;
-  Goal*                m_pBlueGoal;
-   
+  Goal*                mRedGoal;
+  Goal*                mBlueGoal;
+
   //container for the boundary walls
-  std::vector<Wall2D>  m_vecWalls;
+  std::vector<Wall2D>  mWalls;
 
   //defines the dimensions of the playing area
-  Region*              m_pPlayingArea;
+  Region*              mPlayingArea;
 
   //the playing field is broken up into regions that the team
   //can make use of to implement strategies.
-  std::vector<Region*> m_Regions;
+  std::vector<Region*> mRegions;
 
   //true if a goal keeper has possession
-  bool                 m_bEntityPlayerGoalKeeperHasBall;
+  bool                 mEntityPlayerGoalKeeperHasBall;
 
   //true if the game is in play. Set to false whenever the players
   //are getting ready for kickoff
-  bool                 m_bGameOn;
+  bool                 mGameOn;
 
   //set true to pause the motion
-  bool                 m_bPaused;
+  bool                 mPaused;
 
   //local copy of client window dimensions
-  int                  m_cxClient,
-                       m_cyClient;  
-  
+  int                  mClientWidth,
+                       mClientHeight;
+
   //this instantiates the regions the players utilize to  position
   //themselves
-  void CreateRegions(double width, double height);
+  void createRegions(double width, double height);
 
 
 public:
@@ -64,33 +64,33 @@ public:
 
   ~SoccerPitch();
 
-  void  Update();
+  void  update();
 
-  bool  Render();
+  bool  render();
 
-  void  TogglePause(){m_bPaused = !m_bPaused;}
-  bool  Paused()const{return m_bPaused;}
+  void  togglePause(){mPaused = !mPaused;}
+  bool  paused()const{return mPaused;}
 
-  int   cxClient()const{return m_cxClient;}
-  int   cyClient()const{return m_cyClient;}
+  int   cxClient()const{return mClientWidth;}
+  int   cyClient()const{return mClientHeight;}
 
-  bool  EntityPlayerGoalKeeperHasBall()const{return m_bEntityPlayerGoalKeeperHasBall;}
-  void  SetEntityPlayerGoalKeeperHasBall(bool b){m_bEntityPlayerGoalKeeperHasBall = b;}
+  bool  entityPlayerGoalKeeperHasBall()const{return mEntityPlayerGoalKeeperHasBall;}
+  void  setEntityPlayerGoalKeeperHasBall(bool b){mEntityPlayerGoalKeeperHasBall = b;}
 
-  const Region*const         PlayingArea()const{return m_pPlayingArea;}
-  const std::vector<Wall2D>& Walls(){return m_vecWalls;}                      
-  SoccerBall*const           Ball()const{return m_pBall;}
+  const Region*const         playingArea()const{return mPlayingArea;}
+  const std::vector<Wall2D>& walls(){return mWalls;}
+  SoccerBall*const           ball()const{return mBall;}
 
-  const Region* const GetRegionFromIndex(int idx)                                
+  const Region* const getRegionFromIndex(int idx)
   {
-    assert ( (idx > 0) && (idx < m_Regions.size()) );
+    assert ( (idx > 0) && (idx < mRegions.size()) );
 
-    return m_Regions[idx];
+    return mRegions[idx];
   }
 
-  bool  GameOn()const{return m_bGameOn;}
-  void  SetGameOn(){m_bGameOn = true;}
-  void  SetGameOff(){m_bGameOn = false;}
+  bool  gameOn()const{return mGameOn;}
+  void  setGameOn(){mGameOn = true;}
+  void  setGameOff(){mGameOn = false;}
 
 };
 

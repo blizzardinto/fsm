@@ -9,9 +9,9 @@
 
 
 //------------------------------- define some colors
-const int NumColors = 15;
+const int numColors = 15;
 
-const COLORREF colors[NumColors] =
+const COLORREF colors[numColors] =
 {
   RGB(255,0,0),
   RGB(0,0,255),
@@ -23,7 +23,7 @@ const COLORREF colors[NumColors] =
   RGB(255,170,0),
   RGB(255,0,170),
   RGB(133,90,0),
-  RGB(255,255,255),  
+  RGB(255,255,255),
   RGB(0, 100, 0),        //dark green
   RGB(0, 255, 255),       //light blue
   RGB(200, 200, 200),     //light grey
@@ -32,19 +32,19 @@ const COLORREF colors[NumColors] =
 
 
 //make life easier on the fingers
-#define gdi Cgdi::Instance()
+#define gdi Cgdi::instance()
 
 class Cgdi
 {
 public:
-  
-  int NumPenColors()const{return NumColors;}
+
+  int numPenColors()const{return numColors;}
 
   //enumerate some colors
   enum
   {
     red,
-    blue, 
+    blue,
     green,
     black,
     pink,
@@ -52,60 +52,60 @@ public:
     yellow,
     orange,
     purple,
-    brown,   
+    brown,
     white,
-    dark_green,
-    light_blue,
-    light_grey,
-    light_pink,
+    darkGreen,
+    lightBlue,
+    lightGrey,
+    lightPink,
     hollow
   };
 
 private:
 
-  HPEN m_OldPen;
+  HPEN mOldPen;
 
   //all the pens
-  HPEN   m_BlackPen;
-  HPEN   m_WhitePen;
-  HPEN   m_RedPen;
-  HPEN   m_GreenPen;
-  HPEN   m_BluePen;
-  HPEN   m_GreyPen;
-  HPEN   m_PinkPen;
-  HPEN   m_OrangePen;
-  HPEN   m_YellowPen;
-  HPEN   m_PurplePen;
-  HPEN   m_BrownPen;
-  
-  HPEN   m_DarkGreenPen;
-  HPEN   m_LightBluePen;
-  HPEN   m_LightGreyPen;
-  HPEN   m_LightPinkPen;
+  HPEN   mBlackPen;
+  HPEN   mWhitePen;
+  HPEN   mRedPen;
+  HPEN   mGreenPen;
+  HPEN   mBluePen;
+  HPEN   mGreyPen;
+  HPEN   mPinkPen;
+  HPEN   mOrangePen;
+  HPEN   mYellowPen;
+  HPEN   mPurplePen;
+  HPEN   mBrownPen;
 
-  HPEN   m_ThickBlackPen;
-  HPEN   m_ThickWhitePen;
-  HPEN   m_ThickRedPen;
-  HPEN   m_ThickGreenPen;
-  HPEN   m_ThickBluePen;
-  
-  HBRUSH m_OldBrush;
+  HPEN   mDarkGreenPen;
+  HPEN   mLightBluePen;
+  HPEN   mLightGreyPen;
+  HPEN   mLightPinkPen;
+
+  HPEN   mThickBlackPen;
+  HPEN   mThickWhitePen;
+  HPEN   mThickRedPen;
+  HPEN   mThickGreenPen;
+  HPEN   mThickBluePen;
+
+  HBRUSH mOldBrush;
 
   //all the brushes
-  HBRUSH  m_RedBrush;
-  HBRUSH  m_GreenBrush;
-  HBRUSH  m_BlueBrush;
-  HBRUSH  m_GreyBrush;
-  HBRUSH  m_BrownBrush;
-  HBRUSH  m_YellowBrush;
-  HBRUSH  m_OrangeBrush;
+  HBRUSH  mRedBrush;
+  HBRUSH  mGreenBrush;
+  HBRUSH  mBlueBrush;
+  HBRUSH  mGreyBrush;
+  HBRUSH  mBrownBrush;
+  HBRUSH  mYellowBrush;
+  HBRUSH  mOrangeBrush;
 
-  HBRUSH  m_LightBlueBrush;
-  HBRUSH  m_DarkGreenBrush;
+  HBRUSH  mLightBlueBrush;
+  HBRUSH  mDarkGreenBrush;
 
-  HDC    m_hdc;
+  HDC    mHdc;
 
-  //constructor is private
+  //function Object() { [native code] } is private
   Cgdi();
 
   //copy ctor and assignment should be private
@@ -115,86 +115,86 @@ private:
 public:
 
   ~Cgdi();
-  
-  static Cgdi* Instance();
 
-  void BlackPen();
-  void WhitePen();
-  void RedPen();
-  void GreenPen();
-  void BluePen();
-  void GreyPen();
-  void PinkPen();
-  void YellowPen();
-  void OrangePen();
-  void PurplePen();
-  void BrownPen();
-  
-  void DarkGreenPen();
-  void LightBluePen();
-  void LightGreyPen();
-  void LightPinkPen();
+  static Cgdi* instance();
 
-  void ThickBlackPen();
-  void ThickWhitePen();
-  void ThickRedPen();
-  void ThickGreenPen();
-  void ThickBluePen();
+  void blackPen();
+  void whitePen();
+  void redPen();
+  void greenPen();
+  void bluePen();
+  void greyPen();
+  void pinkPen();
+  void yellowPen();
+  void orangePen();
+  void purplePen();
+  void brownPen();
 
-  void BlackBrush();
-  void WhiteBrush(); 
-  void HollowBrush();
-  void GreenBrush();
-  void RedBrush();
-  void BlueBrush();
-  void GreyBrush();
-  void BrownBrush();
-  void YellowBrush();
-  void LightBlueBrush();
-  void DarkGreenBrush();
-  void OrangeBrush();
+  void darkGreenPen();
+  void lightBluePen();
+  void lightGreyPen();
+  void lightPinkPen();
+
+  void thickBlackPen();
+  void thickWhitePen();
+  void thickRedPen();
+  void thickGreenPen();
+  void thickBluePen();
+
+  void blackBrush();
+  void whiteBrush();
+  void hollowBrush();
+  void greenBrush();
+  void redBrush();
+  void blueBrush();
+  void greyBrush();
+  void brownBrush();
+  void yellowBrush();
+  void lightBlueBrush();
+  void darkGreenBrush();
+  void orangeBrush();
 
   //ALWAYS call this before drawing
-  void StartDrawing(HDC hdc);
+  void startDrawing(HDC hdc);
 
   //ALWAYS call this after drawing
-  void StopDrawing(HDC hdc);
+  void stopDrawing(HDC hdc);
 
   //---------------------------Text
-  void TextAtPos(int x, int y, const std::string &s);
-  void TextAtPos(double x, double y, const std::string &s);
-  void TextAtPos(Vector2D pos, const std::string &s);
+  void textAtPos(int x, int y, const std::string &s);
+  void textAtPos(double x, double y, const std::string &s);
+  void textAtPos(Vector2D pos, const std::string &s);
 
-  void TransparentText();
-  void OpaqueText();
+  void transparentText();
+  void opaqueText();
 
-  void TextColor(int color);
-  void TextColor(int r, int g, int b);
+  void textColor(int color);
+  void textColor(int r, int g, int b);
 
   //----------------------------pixels
-  void DrawDot(Vector2D pos, COLORREF color);
-  void DrawDot(int x, int y, COLORREF color);
-  
-  //-------------------------Line Drawing
-  void Line(Vector2D from, Vector2D to);
-  void Line(int a, int b, int x, int y);
-  void Line(double a, double b, double x, double y);
+  void drawDot(Vector2D pos, COLORREF color);
+  void drawDot(int x, int y, COLORREF color);
 
-  void PolyLine(const std::vector<Vector2D>& points);
-  void LineWithArrow(Vector2D from, Vector2D to, double size);
-  void Cross(Vector2D pos, int diameter);
+  //-------------------------line Drawing
+  void line(Vector2D from, Vector2D to);
+  void line(int a, int b, int x, int y);
+  void line(double a, double b, double x, double y);
+
+  void polyLine(const std::vector<Vector2D>& points);
+  void lineWithArrow(Vector2D from, Vector2D to, double size);
+  void cross(Vector2D pos, int diameter);
 
   //---------------------Geometry drawing methods
-  void Rect(int left, int top, int right, int bot);
-  void Rect(double left, double top, double right, double bot);
+  void rect(int left, int top, int right, int bot);
+  void rect(double left, double top, double right, double bot);
 
-  void ClosedShape(const std::vector<Vector2D> &points);
+  void closedShape(const std::vector<Vector2D> &points);
 
-  void Circle(Vector2D pos, double radius);
-  void Circle(double x, double y, double radius);
-  void Circle(int x, int y, double radius);
+  void circle(Vector2D pos, double radius);
+  void circle(double x, double y, double radius);
+  void circle(int x, int y, double radius);
 
-  void SetPenColor(int color);
+  void setPenColor(int color);
 };
 
 #endif

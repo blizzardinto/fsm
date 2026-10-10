@@ -10,196 +10,196 @@
 #include "iniFileLoaderBase.h"
 
 
-#define Prm (*ParamLoader::Instance())
+#define prm (*ParamLoader::instance())
 
-class ParamLoader : public iniFileLoaderBase
+class ParamLoader : public IniFileLoaderBase
 {
 private:
 
-  ParamLoader():iniFileLoaderBase("Params.ini")
-  {    
-       
-    GoalWidth                   = GetNextParameterDouble(); 
-    
-    NumSupportSpotsX            = GetNextParameterInt();    
-    NumSupportSpotsY            = GetNextParameterInt();  
-    
-    Spot_PassSafeScore                     = GetNextParameterDouble();
-    Spot_CanScoreFromPositionScore         = GetNextParameterDouble();
-    Spot_DistFromControllingPlayerScore     = GetNextParameterDouble();
-    Spot_ClosenessToSupportingPlayerScore  = GetNextParameterDouble();
-    Spot_AheadOfAttackerScore              = GetNextParameterDouble();
+  ParamLoader():IniFileLoaderBase("Params.ini")
+  {
 
-    SupportSpotUpdateFreq       = GetNextParameterDouble(); 
-    
-    ChancePlayerAttemptsPotShot = GetNextParameterDouble();
-    ChanceOfUsingArriveTypeReceiveBehavior = GetNextParameterDouble();
-    
-    BallSize                    = GetNextParameterDouble();    
-    BallMass                    = GetNextParameterDouble();    
-    Friction                    = GetNextParameterDouble(); 
-    
-    KeeperInBallRange           = GetNextParameterDouble();    
-    PlayerInTargetRange         = GetNextParameterDouble(); 
-    PlayerKickingDistance       = GetNextParameterDouble(); 
-    PlayerKickFrequency         = GetNextParameterDouble();
+    goalWidth                   = getNextParameterDouble();
 
+    numSupportSpotsX            = getNextParameterInt();
+    numSupportSpotsY            = getNextParameterInt();
 
-    PlayerMass                  = GetNextParameterDouble(); 
-    PlayerMaxForce              = GetNextParameterDouble();    
-    PlayerMaxSpeedWithBall      = GetNextParameterDouble();   
-    PlayerMaxSpeedWithoutBall   = GetNextParameterDouble();   
-    PlayerMaxTurnRate           = GetNextParameterDouble();   
-    PlayerScale                 = GetNextParameterDouble();      
-    PlayerComfortZone           = GetNextParameterDouble();  
-    PlayerKickingAccuracy       = GetNextParameterDouble();
+    spotPassSafeScore                     = getNextParameterDouble();
+    spotCanScoreFromPositionScore         = getNextParameterDouble();
+    spotDistFromControllingPlayerScore     = getNextParameterDouble();
+    spotClosenessToSupportingPlayerScore  = getNextParameterDouble();
+    spotAheadOfAttackerScore              = getNextParameterDouble();
 
-    NumAttemptsToFindValidStrike = GetNextParameterInt();
+    supportSpotUpdateFreq       = getNextParameterDouble();
+
+    chancePlayerAttemptsPotShot = getNextParameterDouble();
+    chanceOfUsingArriveTypeReceiveBehavior = getNextParameterDouble();
+
+    ballSize                    = getNextParameterDouble();
+    ballMass                    = getNextParameterDouble();
+    friction                    = getNextParameterDouble();
+
+    keeperInBallRange           = getNextParameterDouble();
+    playerInTargetRange         = getNextParameterDouble();
+    playerKickingDistance       = getNextParameterDouble();
+    playerKickFrequency         = getNextParameterDouble();
 
 
-    
-    MaxDribbleForce             = GetNextParameterDouble();    
-    MaxShootingForce            = GetNextParameterDouble();    
-    MaxPassingForce             = GetNextParameterDouble();  
-    
-    WithinRangeOfHome           = GetNextParameterDouble();    
-    WithinRangeOfSupportSpot    = GetNextParameterDouble();    
-    
-    MinPassDist                 = GetNextParameterDouble();
-    GoalkeeperMinPassDist       = GetNextParameterDouble();
-    
-    EntityPlayerGoalKeeperTendingDistance   = GetNextParameterDouble();    
-    EntityPlayerGoalKeeperInterceptRange    = GetNextParameterDouble();
-    BallWithinReceivingRange    = GetNextParameterDouble();
-    
-    bStates                     = GetNextParameterBool();    
-    bIDs                        = GetNextParameterBool(); 
-    bSupportSpots               = GetNextParameterBool();     
-    bRegions                    = GetNextParameterBool();
-    bShowControllingTeam        = GetNextParameterBool();
-    bViewTargets                = GetNextParameterBool();
-    bHighlightIfThreatened      = GetNextParameterBool();
+    playerMass                  = getNextParameterDouble();
+    playerMaxForce              = getNextParameterDouble();
+    playerMaxSpeedWithBall      = getNextParameterDouble();
+    playerMaxSpeedWithoutBall   = getNextParameterDouble();
+    playerMaxTurnRate           = getNextParameterDouble();
+    playerScale                 = getNextParameterDouble();
+    playerComfortZone           = getNextParameterDouble();
+    playerKickingAccuracy       = getNextParameterDouble();
 
-    FrameRate                   = GetNextParameterInt();
-
-    SeparationCoefficient       = GetNextParameterDouble(); 
-    ViewDistance                = GetNextParameterDouble(); 
-    bNonPenetrationConstraint   = GetNextParameterBool(); 
+    numAttemptsToFindValidStrike = getNextParameterInt();
 
 
-    BallWithinReceivingRangeSq = BallWithinReceivingRange * BallWithinReceivingRange;
-    KeeperInBallRangeSq      = KeeperInBallRange * KeeperInBallRange;
-    PlayerInTargetRangeSq    = PlayerInTargetRange * PlayerInTargetRange;   
-    PlayerKickingDistance   += BallSize;
-    PlayerKickingDistanceSq  = PlayerKickingDistance * PlayerKickingDistance;
-    PlayerComfortZoneSq      = PlayerComfortZone * PlayerComfortZone;
-    EntityPlayerGoalKeeperInterceptRangeSq     = EntityPlayerGoalKeeperInterceptRange * EntityPlayerGoalKeeperInterceptRange;
-    WithinRangeOfSupportSpotSq = WithinRangeOfSupportSpot * WithinRangeOfSupportSpot;
+
+    maxDribbleForce             = getNextParameterDouble();
+    maxShootingForce            = getNextParameterDouble();
+    maxPassingForce             = getNextParameterDouble();
+
+    withinRangeOfHome           = getNextParameterDouble();
+    withinRangeOfSupportSpot    = getNextParameterDouble();
+
+    minPassDist                 = getNextParameterDouble();
+    goalkeeperMinPassDist       = getNextParameterDouble();
+
+    entityPlayerGoalKeeperTendingDistance   = getNextParameterDouble();
+    entityPlayerGoalKeeperInterceptRange    = getNextParameterDouble();
+    ballWithinReceivingRange    = getNextParameterDouble();
+
+    bStates                     = getNextParameterBool();
+    bIds                        = getNextParameterBool();
+    bSupportSpots               = getNextParameterBool();
+    bRegions                    = getNextParameterBool();
+    bShowControllingTeam        = getNextParameterBool();
+    bViewTargets                = getNextParameterBool();
+    bHighlightIfThreatened      = getNextParameterBool();
+
+    frameRate                   = getNextParameterInt();
+
+    separationCoefficient       = getNextParameterDouble();
+    viewDistance                = getNextParameterDouble();
+    bNonPenetrationConstraint   = getNextParameterBool();
+
+
+    ballWithinReceivingRangeSq = ballWithinReceivingRange * ballWithinReceivingRange;
+    keeperInBallRangeSq      = keeperInBallRange * keeperInBallRange;
+    playerInTargetRangeSq    = playerInTargetRange * playerInTargetRange;
+    playerKickingDistance   += ballSize;
+    playerKickingDistanceSq  = playerKickingDistance * playerKickingDistance;
+    playerComfortZoneSq      = playerComfortZone * playerComfortZone;
+    entityPlayerGoalKeeperInterceptRangeSq     = entityPlayerGoalKeeperInterceptRange * entityPlayerGoalKeeperInterceptRange;
+    withinRangeOfSupportSpotSq = withinRangeOfSupportSpot * withinRangeOfSupportSpot;
   }
-  
+
 public:
 
-  static ParamLoader* Instance();
+  static ParamLoader* instance();
 
-  double GoalWidth;
+  double goalWidth;
 
-  int   NumSupportSpotsX;
-  int   NumSupportSpotsY;
+  int   numSupportSpotsX;
+  int   numSupportSpotsY;
 
   //these values tweak the various rules used to calculate the support spots
-  double Spot_PassSafeScore;
-  double Spot_CanScoreFromPositionScore;
-  double Spot_DistFromControllingPlayerScore;
-  double Spot_ClosenessToSupportingPlayerScore;
-  double Spot_AheadOfAttackerScore;  
-  
-  double SupportSpotUpdateFreq ;
+  double spotPassSafeScore;
+  double spotCanScoreFromPositionScore;
+  double spotDistFromControllingPlayerScore;
+  double spotClosenessToSupportingPlayerScore;
+  double spotAheadOfAttackerScore;
 
-  double ChancePlayerAttemptsPotShot; 
-  double ChanceOfUsingArriveTypeReceiveBehavior;
+  double supportSpotUpdateFreq ;
 
-  double BallSize;
-  double BallMass;
-  double Friction;
+  double chancePlayerAttemptsPotShot;
+  double chanceOfUsingArriveTypeReceiveBehavior;
 
-  double KeeperInBallRange;
-  double KeeperInBallRangeSq;
+  double ballSize;
+  double ballMass;
+  double friction;
 
-  double PlayerInTargetRange;
-  double PlayerInTargetRangeSq;
-  
-  double PlayerMass;
-  
+  double keeperInBallRange;
+  double keeperInBallRangeSq;
+
+  double playerInTargetRange;
+  double playerInTargetRangeSq;
+
+  double playerMass;
+
   //max steering force
-  double PlayerMaxForce; 
-  double PlayerMaxSpeedWithBall;
-  double PlayerMaxSpeedWithoutBall;
-  double PlayerMaxTurnRate;
-  double PlayerScale;
-  double PlayerComfortZone;
+  double playerMaxForce;
+  double playerMaxSpeedWithBall;
+  double playerMaxSpeedWithoutBall;
+  double playerMaxTurnRate;
+  double playerScale;
+  double playerComfortZone;
 
-  double PlayerKickingDistance;
-  double PlayerKickingDistanceSq;
+  double playerKickingDistance;
+  double playerKickingDistanceSq;
 
-  double PlayerKickFrequency; 
+  double playerKickFrequency;
 
-  double  MaxDribbleForce;
-  double  MaxShootingForce;
-  double  MaxPassingForce;
+  double  maxDribbleForce;
+  double  maxShootingForce;
+  double  maxPassingForce;
 
-  double  PlayerComfortZoneSq;
+  double  playerComfortZoneSq;
 
   //in the range zero to 1.0. adjusts the amount of noise added to a kick,
   //the lower the value the worse the players get
-  double  PlayerKickingAccuracy;
+  double  playerKickingAccuracy;
 
-  //the number of times the SoccerTeam::CanShoot method attempts to find
+  //the number of times the SoccerTeam::canShoot method attempts to find
   //a valid shot
-  int    NumAttemptsToFindValidStrike;
+  int    numAttemptsToFindValidStrike;
 
   //the distance away from the center of its home region a player
   //must be to be considered at home
-  double WithinRangeOfHome;
+  double withinRangeOfHome;
 
   //how close a player must get to a sweet spot before he can change state
-  double WithinRangeOfSupportSpot;
-  double WithinRangeOfSupportSpotSq;
- 
-  
+  double withinRangeOfSupportSpot;
+  double withinRangeOfSupportSpotSq;
+
+
   //the minimum distance a receiving player must be from the passing player
-  double   MinPassDist;
-  double   GoalkeeperMinPassDist;
+  double   minPassDist;
+  double   goalkeeperMinPassDist;
 
   //this is the distance the keeper puts between the back of the net
-  //and the ball when using the interpose steering behavior
-  double  EntityPlayerGoalKeeperTendingDistance;
+  //and the ball when using the interposeBehavior steering behavior
+  double  entityPlayerGoalKeeperTendingDistance;
 
   //when the ball becomes within this distance of the goalkeeper he
   //changes state to intercept the ball
-  double  EntityPlayerGoalKeeperInterceptRange;
-  double  EntityPlayerGoalKeeperInterceptRangeSq;
+  double  entityPlayerGoalKeeperInterceptRange;
+  double  entityPlayerGoalKeeperInterceptRangeSq;
 
   //how close the ball must be to a receiver before he starts chasing it
-  double  BallWithinReceivingRange;
-  double  BallWithinReceivingRangeSq;
+  double  ballWithinReceivingRange;
+  double  ballWithinReceivingRangeSq;
 
 
   //these values control what debug info you can see
   bool  bStates;
-  bool  bIDs;
+  bool  bIds;
   bool  bSupportSpots;
   bool  bRegions;
   bool  bShowControllingTeam;
   bool  bViewTargets;
   bool  bHighlightIfThreatened;
 
-  int FrameRate;
+  int frameRate;
 
-  
-  double SeparationCoefficient;
+
+  double separationCoefficient;
 
   //how close a neighbour must be before an agent perceives it
-  double ViewDistance;
+  double viewDistance;
 
   //zero this to turn the constraint off
   bool bNonPenetrationConstraint;

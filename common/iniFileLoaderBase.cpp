@@ -3,7 +3,7 @@ using std::string;
 
 
 //removes any commenting from a line of text
-void RemoveCommentingFromLine(string& line)
+void removeCommentingFromLine(string& line)
 {
    //search for any comment and remove
    string::size_type idx = line.find('//');
@@ -14,40 +14,40 @@ void RemoveCommentingFromLine(string& line)
      line = line.substr(0, idx);
    }
 }
-//----------------------- GetNextParameter ------------------------------------
+//----------------------- getNextParameter ------------------------------------
 //
 //  searches the text file for the next valid parameter. Discards any comments
 //  and returns the value as a string
 //-----------------------------------------------------------------------------
-string iniFileLoaderBase::GetNextParameter()
+string IniFileLoaderBase::getNextParameter()
 {
- 
+
   //this will be the string that holds the bext parameter
   std::string line;
-  
+
   std::getline(file, line);
-   
-  RemoveCommentingFromLine(line);
+
+  removeCommentingFromLine(line);
 
   //if the line is of zero length, get the next line from
   //the file
   if (line.length() == 0)
   {
-    return GetNextParameter();
+    return getNextParameter();
   }
 
-  GetParameterValueAsString(line);  
-    
+  getParameterValueAsString(line);
+
   return line;
 }
 
 
-//-------------------------- GetParameterValueAsString ------------------------
+//-------------------------- getParameterValueAsString ------------------------
 //
 // given a line of text this function removes the parameter description
 // and returns just the parameter as a std::string
 //-----------------------------------------------------------------------------
-void iniFileLoaderBase::GetParameterValueAsString(string& line)
+void IniFileLoaderBase::getParameterValueAsString(string& line)
 {
   //find beginning of parameter description
   string::size_type begIdx;
@@ -68,7 +68,7 @@ void iniFileLoaderBase::GetParameterValueAsString(string& line)
     {
       endIdx = line.length();
     }
-  }   
+  }
 
   //find the beginning of the parameter value
   begIdx = line.find_first_not_of(delims, endIdx);
@@ -83,56 +83,56 @@ void iniFileLoaderBase::GetParameterValueAsString(string& line)
       endIdx = line.length();
     }
   }
-    
+
   line = line.substr(begIdx, endIdx);
 }
 
-//--------------------------- GetNextToken ------------------------------------
+//--------------------------- getNextToken ------------------------------------
 //
 //  ignores any commenting and gets the next string
 //-----------------------------------------------------------------------------
-std::string iniFileLoaderBase::GetNextToken()
-{ 
+std::string IniFileLoaderBase::getNextToken()
+{
   //strip the line of any commenting
-  while (CurrentLine.length() == 0)
+  while (currentLine.length() == 0)
   {
-    std::getline(file, CurrentLine);
-   
-    RemoveCommentingFromLine(CurrentLine);
+    std::getline(file, currentLine);
+
+    removeCommentingFromLine(currentLine);
   }
 
    //find beginning of parameter description
-  string::size_type begIdx; 
+  string::size_type begIdx;
   string::size_type endIdx;
 
   //define some delimiters
   const string delims(" \;=,");
 
-  begIdx = CurrentLine.find_first_not_of(delims);
+  begIdx = currentLine.find_first_not_of(delims);
 
   //find the end of the parameter description
   if (begIdx != string::npos)
   {
-    endIdx = CurrentLine.find_first_of(delims, begIdx);
+    endIdx = currentLine.find_first_of(delims, begIdx);
 
     //end of word is the end of the line
     if (endIdx == string::npos)
     {
-      endIdx = CurrentLine.length();
+      endIdx = currentLine.length();
     }
   }
-    
-  string s = CurrentLine.substr(begIdx, endIdx);
 
-  if (endIdx != CurrentLine.length())
+  string s = currentLine.substr(begIdx, endIdx);
+
+  if (endIdx != currentLine.length())
   {
     //strip the token from the line
-    CurrentLine = CurrentLine.substr(endIdx+1, CurrentLine.length());
+    currentLine = currentLine.substr(endIdx+1, currentLine.length());
   }
 
-  else { CurrentLine = "";}
+  else { currentLine = "";}
 
   return s;
-  
+
 }
 

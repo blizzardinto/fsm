@@ -14,6 +14,7 @@
 - [系统架构简述](#系统架构简述)
 - [架构设计文档](#架构设计文档)
 - [当前实现边界与维护事项](#当前实现边界与维护事项)
+- [命名约定](#命名约定)
 
 ---
 
@@ -24,9 +25,9 @@
    - **场上球员层级**：独立管理球员个体行为（等待 `Wait`、追球 `ChaseBall`、盘带 `Dribble`、踢球 `KickBall`、接球 `ReceiveBall`、跑位支援 `SupportAttacker`、回位 `ReturnToHomeRegion` 等）。
    - **门将层级**：专注于守门员专有战术（守门 `TendGoal`、出击拦截 `InterceptBall`、门前重置 `ReturnHome`、开球门球 `PutBallBackInPlay`）。
 2. **自主智能体操纵行为 (Steering Behaviors)**
-   - 采用 Reynolds 操纵行为模型，提供精准平滑的运动模拟：寻找 (`Seek`)、到达 (`Arrive`)、拦截追击 (`Pursuit`)、队员分离防挤压 (`Separation`)、插足卡位 (`Interpose`)。
+   - 采用 Reynolds 操纵行为模型，提供精准平滑的运动模拟：寻找 (`seek`)、到达 (`arrive`)、拦截追击 (`pursuit`)、队员分离防挤压 (`separation`)、插足卡位 (`interpose`)。
 3. **消息驱动通信体系 (Message-Driven Architecture)**
-   - 实体间通过轻量级 `Telegram` 通信，当前比赛使用同步即时发送；延迟队列代码尚未接入更新循环，用于集中管理智能体间的消息投递（如传球呼叫 `Msg_PassToMe`、支援通知 `Msg_SupportAttacker`、回防指令 `Msg_GoHome`）。
+   - 实体间通过轻量级 `Telegram` 通信，当前比赛使用同步即时发送；延迟队列代码尚未接入更新循环，用于集中管理智能体间的消息投递（如传球呼叫 `msgPassToMe`、支援通知 `msgSupportAttacker`、回防指令 `msgGoHome`）。
 4. **战术决策与几何计算**
    - **支援点计算器 (`SupportSpotCalculator`)**：在球场网格内实时评估无球跑动支援点得分（结合传球安全度与射门开阔度）。
    - **传球安全检测**：通过切线和线段相交几何算法，智能计算对手拦截风险并选出最佳传球目标。
@@ -73,12 +74,12 @@
 │   ├── Goal.h / Goal.cpp               # 球门实体与进球判定
 │   ├── SteeringBehaviors.h / .cpp      # Reynolds 操纵行为力学计算类（移动、拦截、分离等）
 │   ├── SupportSpotCalculator.h / .cpp  # 进攻跑位支援点评估计算器（评分网格）
-│   └── ParamLoader.h / ParamLoader.cpp # 参数配置加载器（单例 Prm，解析 Params.ini）
+│   └── ParamLoader.h / ParamLoader.cpp # 参数配置加载器（单例 prm，解析 Params.ini）
 ├── graph/                              # 导航图与路径搜索算法
 │   ├── SparseGraph.h                   # 2D/3D 稀疏图数据结构
 │   ├── Pathfinder.h / Pathfinder.cpp   # 独立寻路演示类（未接入足球比赛）
 │   ├── PriorityQueue.h                 # 优先队列模板（支持索引优先队列）
-│   ├── GraphAlgorithms.h               # 图搜索算法库（A*、Dijkstra、BFS、DFS）
+│   ├── GraphAlgorithms.h               # 图搜索算法库（A*、Dijkstra、bfs、dfs）
 │   ├── GraphEdgeTypes.h / GraphNodeTypes.h # 图节点与图边数据结构
 │   ├── HandyGraphFunctions.h           # 图构建与辅助函数
 │   ├── NodeTypeEnumerations.h          # 节点类型枚举
@@ -126,7 +127,7 @@ make run
 make clean
 ```
 
-> **注意**：Makefile 默认探测 C 盘或 D 盘的标准 MSYS2 UCRT64 安装目录。若安装在其他位置，可通过 `make MINGW_BIN=相对于项目目录的工具链路径 all` 覆盖默认值，或修改 Makefile。仅修改 PATH 不会覆盖 Makefile 中的编译器路径。
+> **注意**：Makefile 默认探测 c 盘或 D 盘的标准 MSYS2 UCRT64 安装目录。若安装在其他位置，可通过 `make MINGW_BIN=相对于项目目录的工具链路径 all` 覆盖默认值，或修改 Makefile。仅修改 PATH 不会覆盖 Makefile 中的编译器路径。
 
 ---
 
@@ -137,15 +138,15 @@ make clean
 | 按键 / 菜单项 | 功能描述 |
 | :--- | :--- |
 | <kbd>P</kbd> | **暂停 / 继续** (Toggle Pause) 模拟运行 |
-| <kbd>R</kbd> | **重置比赛** (Reset Pitch)，重新生成赛场和球员初始位置 |
+| <kbd>R</kbd> | **重置比赛** (reset pitch)，重新生成赛场和球员初始位置 |
 | <kbd>Esc</kbd> | **退出程序** |
-| **Menu -> AI Aids -> Show IDs** | 开启 / 关闭球员实体 ID 显示 |
+| **Menu -> AI Aids -> Show IDs** | 开启 / 关闭球员实体 id 显示 |
 | **Menu -> AI Aids -> Show States** | 开启 / 关闭球员头上当前 FSM 状态名称文本显示 |
 | **Menu -> AI Aids -> Show Regions** | 开启 / 关闭球场网格分区（Regions）边框显示 |
 | **Menu -> AI Aids -> Show Support Spots** | 开启 / 关闭最佳支援跑位点及所有候选点评分圆圈显示 |
 | **Menu -> AI Aids -> Show Targets** | 开启 / 关闭球员操纵行为目标位路线指引线 |
 | **Menu -> AI Aids -> Highlight If Threatened** | 开启 / 关闭当球员处于对方防守威胁半径内时的红色高亮 |
-| **Menu -> AI Aids -> Clear All** | 一键关闭所有调试可视化辅助图元 |
+| **Menu -> AI Aids -> clear All** | 一键关闭所有调试可视化辅助图元 |
 
 ---
 
@@ -154,29 +155,29 @@ make clean
 主要 AI、物理和调试参数来自 [Params.ini](./Params.ini)，无需重新编译，但修改文件后需要重启程序。`ParamLoader` 单例只在首次访问时读取配置；按 `R` 重置比赛不会重新加载。文件按固定顺序读取数值，而非按参数名查找，请保留条目顺序，并从包含 `Params.ini` 的项目根目录启动程序。
 
 ### 1. 核心物理与动作参数
-- `BallSize` / `BallMass` / `Friction`: 足球尺寸、质量与草地摩擦系数（`-0.015`）。
-- `PlayerKickingDistance`: 球员可以起脚踢球的最大判定距离（数值越大抢断越容易）。
-- `PlayerKickFrequency`: 球员每秒最大射门/传球频次（通过 `Regulator` 控制）。
-- `PlayerMaxSpeedWithBall`: 球员带球时的最大移动速度（通常低于无球速度）。
-- `PlayerMaxSpeedWithoutBall`: 球员无球跑动与冲刺最大速度。
-- `PlayerComfortZone`: 球员舒适区半径（若对手进入此区域，持球球员将倾向于寻找传球路线）。
+- `ballSize` / `ballMass` / `friction`: 足球尺寸、质量与草地摩擦系数（`-0.015`）。
+- `playerKickingDistance`: 球员可以起脚踢球的最大判定距离（数值越大抢断越容易）。
+- `playerKickFrequency`: 球员每秒最大射门/传球频次（通过 `Regulator` 控制）。
+- `playerMaxSpeedWithBall`: 球员带球时的最大移动速度（通常低于无球速度）。
+- `playerMaxSpeedWithoutBall`: 球员无球跑动与冲刺最大速度。
+- `playerComfortZone`: 球员舒适区半径（若对手进入此区域，持球球员将倾向于寻找传球路线）。
 
 ### 2. 射门与传球参数
-- `MaxShootingForce` / `MaxPassingForce` / `MaxDribbleForce`: 射门、长短传球和盘带时的最大踢球冲量。
-- `MinPassDist`: 传球接收者的最小安全距离判定阈值。
-- `NumAttemptsToFindValidStrike`: 每次判断射门时随机尝试的目标角度次数。
-- `PlayerKickingAccuracy`: 踢球精度控制（`0.0 ~ 1.0`，越小踢出的球偏角散布越大）。
+- `maxShootingForce` / `maxPassingForce` / `maxDribbleForce`: 射门、长短传球和盘带时的最大踢球冲量。
+- `minPassDist`: 传球接收者的最小安全距离判定阈值。
+- `numAttemptsToFindValidStrike`: 每次判断射门时随机尝试的目标角度次数。
+- `playerKickingAccuracy`: 踢球精度控制（`0.0 ~ 1.0`，越小踢出的球偏角散布越大）。
 
 ### 3. 门将参数
-- `KeeperInBallRange`: 守门员可以拾起/控制皮球的距离。
-- `EntityPlayerGoalKeeperInterceptRange`: 守门员决定出击扑球/拦截的球距警戒线。
-- `EntityPlayerGoalKeeperTendingDistance`: 守门员门前站位距离球门底线的间距。
+- `keeperInBallRange`: 守门员可以拾起/控制皮球的距离。
+- `entityPlayerGoalKeeperInterceptRange`: 守门员决定出击扑球/拦截的球距警戒线。
+- `entityPlayerGoalKeeperTendingDistance`: 守门员门前站位距离球门底线的间距。
 
 ### 4. 战术支援点权重
-- `NumSweetSpotsX` / `NumSweetSpotsY`: 赛场划分计算支援点的网格分辨率。
-- `Spot_CanPassScore`: 能够形成安全传球的评分权重。
-- `Spot_CanScoreFromPositionScore`: 该支援点具备直接起脚打门角度时的加分权重。
-- `Spot_DistFromControllingPlayerScore`: 与持球人保持适中距离的评分权重。
+- `numSweetSpotsX` / `numSweetSpotsY`: 赛场划分计算支援点的网格分辨率。
+- `spotCanPassScore`: 能够形成安全传球的评分权重。
+- `spotCanScoreFromPositionScore`: 该支援点具备直接起脚打门角度时的加分权重。
+- `spotDistFromControllingPlayerScore`: 与持球人保持适中距离的评分权重。
 
 ---
 
@@ -186,13 +187,13 @@ make clean
 - **`SoccerPitch`** 作为世界主控，维持比赛推进、物理碰撞更新和渲染驱动。
 - **`SoccerTeam`** 统一指挥红队与蓝队，管理传球路由策略与战术状态。
 - **`StateMachine<T>`** 作为通用的 FSM 调度核心，由 `EntityPlayerGoalKeeper`、`EntityPlayerOnField` 及 `SoccerTeam` 各自持有。
-- **`MessageDispatcher`** 集中投递即时消息，通过实体 ID 查找接收者。延迟调度和实体销毁后的清理仍需完善。
+- **`MessageDispatcher`** 集中投递即时消息，通过实体 id 查找接收者。延迟调度和实体销毁后的清理仍需完善。
 
 关于详细的架构设计与 UML 图解，请参阅 [`DESIGN.md`](./DESIGN.md)。
 ## 当前实现边界与维护事项
 
 - 球队、场上球员和门将各自持有 FSM；没有嵌套状态或父子状态的层次状态机语义。
-- `graph/` 是独立的图搜索与寻路演示代码。目前 Makefile 将其编入程序，但比赛不调用它；球员移动使用 Steering。
+- `graph/` 是独立的图搜索与寻路演示代码。目前 Makefile 将其编入程序，但比赛不调用它；球员移动使用 steering。
 - 领域对象同时负责更新和 GDI 绘图，`math/` 中部分类型也依赖 Win32 或绘图工具；当前实现面向 Windows。
 - 球员注册到 `EntityManager` 后，析构时没有注销。按 `R` 重建比赛会在注册表中留下旧对象指针，需要补全生命周期清理。
 - 延迟消息没有接入主循环，依赖的帧计数也没有推进；队列比较规则还可能丢弃同一派发时间的不同消息。
@@ -200,3 +201,11 @@ make clean
 - 仓库目前没有自动化测试或 CI 配置。上述结构说明来自静态代码核对，不代表已完成运行验证。
 
 具体依赖、对象所有权和改进顺序见 [DESIGN.md](./DESIGN.md#9-实际依赖对象生命周期与维护建议)。
+
+## 命名约定
+
+- 函数、变量、参数、常量和枚举值使用 camelCase，例如 `update()`、`dispatchMsg()`、`frameRate`、`msgReceiveBall`。
+- 成员变量使用 `m` 前缀，例如 `mPosition`、`mCurrentState`；全局变量使用 `g` 前缀，例如 `gSoccerPitch`。不再使用下划线或匈牙利类型前缀。
+- 类、结构、枚举类型与类型别名使用 PascalCase，例如 `StateMachine`、`PlayerRole`、`IniFileLoaderBase`。模板参数可使用 camelCase；可能与成员名称冲突时使用明确的类型名，如 `ExtraInfoType`。
+- 预处理宏、头文件保护宏和 Windows 资源 ID 保留现有约定；Win32 API、系统结构字段和 `WinMain` 入口保留系统规定的名称。
+- 配置标签也使用 camelCase，读取顺序和值保持不变。源码文件名保持现有名称，文档中的链接使用相对路径。

@@ -2,17 +2,17 @@
 #define FRAMECOUNTER_H
 
 
-#define TickCounter FrameCounter::Instance()
+#define tickCounter FrameCounter::instance()
 
 class FrameCounter
 {
 private:
 
-  long m_lCount;
+  long mCount;
 
-  int  m_iFramesElapsed;
+  int  mFramesElapsed;
 
-  FrameCounter():m_lCount(0), m_iFramesElapsed(0){}
+  FrameCounter():mCount(0), mFramesElapsed(0){}
 
   //copy ctor and assignment should be private
   FrameCounter(const FrameCounter&);
@@ -20,16 +20,16 @@ private:
 
 public:
 
-  static FrameCounter* Instance();
+  static FrameCounter* instance();
 
-  void Update(){++m_lCount; ++m_iFramesElapsed;}
+  void update(){++mCount; ++mFramesElapsed;}
 
-  long GetCurrentFrame(){return m_lCount;}
+  long getCurrentFrame(){return mCount;}
 
-  void Reset(){m_lCount = 0;}
+  void reset(){mCount = 0;}
 
-  void Start(){m_iFramesElapsed = 0;}
-  int  FramesElapsedSinceStartCalled()const{return m_iFramesElapsed;}
+  void start(){mFramesElapsed = 0;}
+  int  framesElapsedSinceStartCalled()const{return mFramesElapsed;}
 
 };
 

@@ -3,7 +3,7 @@
 
 //------------------------------------------------------------------------
 //
-//Name:   Autolist.h
+//name:   Autolist.h
 //
 //Desc:   Inherit from this class to automatically create lists of
 //        similar objects. Whenever an object is created it will
@@ -22,33 +22,33 @@ class AutoList
 public:
 
   typedef std::list<T*> ObjectList;
-  
+
 private:
 
-  static ObjectList m_Members;
+  static ObjectList mMembers;
 
 protected:
 
   AutoList()
   {
     //cast this object to type T* and add it to the list
-    m_Members.push_back(static_cast<T*>(this));
+    mMembers.push_back(static_cast<T*>(this));
   }
 
   ~AutoList()
   {
-    m_Members.remove(static_cast<T*>(this));    
+    mMembers.remove(static_cast<T*>(this));
   }
 
 public:
 
 
-  static ObjectList& GetAllMembers(){return m_Members;}
+  static ObjectList& getAllMembers(){return mMembers;}
 };
 
 
 template <class T>
-std::list<T*> AutoList<T>::m_Members;
+std::list<T*> AutoList<T>::mMembers;
 
 
 
