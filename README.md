@@ -1,6 +1,6 @@
 # SimpleSoccer - 基于有限状态机 (FSM) 的足球 AI 仿真系统
 
-本项目是基于 C++ 实现的二维自主智能体足球比赛模拟系统（源自 Mat Buckland 经典著作《Programming Game AI by Example》）。系统融合了**分层有限状态机 (Hierarchical FSM)**、**自主智能体操纵行为 (Steering Behaviors)**、**事件驱动的消息通信体系 (Telegram & MessageDispatcher)** 以及**战术支援点计算算法**，完整模拟了足球比赛中的带球、传球、射门、守门、防守盯人与无球跑动支援等群体协作行为。
+本项目是基于 C++ 实现的二维自主智能体足球比赛模拟系统（源自 Mat Buckland 经典著作《Programming Game AI by Example》）。系统融合了**球队与球员协作的有限状态机 (FSM)**、**自主智能体操纵行为 (Steering Behaviors)**、**事件驱动的消息通信体系 (Telegram & MessageDispatcher)** 以及**战术支援点计算算法**，完整模拟了足球比赛中的带球、传球、射门、守门、防守盯人与无球跑动支援等群体协作行为。
 
 ---
 
@@ -13,19 +13,20 @@
 - [配置参数说明 (`Params.ini`)](#配置参数说明-paramsini)
 - [系统架构简述](#系统架构简述)
 - [架构设计文档](#架构设计文档)
+- [当前实现边界与维护事项](#当前实现边界与维护事项)
 
 ---
 
 ## 核心特性
 
-1. **分层有限状态机 (Hierarchical FSM)**
+1. **球队与球员协作的有限状态机 (FSM)**
    - **球队层级**：负责红蓝两队宏观战术状态切换（开球准备 `PrepareForKickOff`、防守 `Defending`、进攻 `Attacking`）。
    - **场上球员层级**：独立管理球员个体行为（等待 `Wait`、追球 `ChaseBall`、盘带 `Dribble`、踢球 `KickBall`、接球 `ReceiveBall`、跑位支援 `SupportAttacker`、回位 `ReturnToHomeRegion` 等）。
    - **门将层级**：专注于守门员专有战术（守门 `TendGoal`、出击拦截 `InterceptBall`、门前重置 `ReturnHome`、开球门球 `PutBallBackInPlay`）。
 2. **自主智能体操纵行为 (Steering Behaviors)**
    - 采用 Reynolds 操纵行为模型，提供精准平滑的运动模拟：寻找 (`Seek`)、到达 (`Arrive`)、拦截追击 (`Pursuit`)、队员分离防挤压 (`Separation`)、插足卡位 (`Interpose`)。
 3. **消息驱动通信体系 (Message-Driven Architecture)**
-   - 实体间通过轻量级 `Telegram` 通信，支持即时发送与延迟优先队列调度，解耦智能体之间的交互逻辑（如传球呼叫 `Msg_PassToMe`、支援通知 `Msg_SupportAttacker`、回防指令 `Msg_GoHome`）。
+   - 实体间通过轻量级 `Telegram` 通信，当前比赛使用同步即时发送；延迟队列代码尚未接入更新循环，用于集中管理智能体间的消息投递（如传球呼叫 `Msg_PassToMe`、支援通知 `Msg_SupportAttacker`、回防指令 `Msg_GoHome`）。
 4. **战术决策与几何计算**
    - **支援点计算器 (`SupportSpotCalculator`)**：在球场网格内实时评估无球跑动支援点得分（结合传球安全度与射门开阔度）。
    - **传球安全检测**：通过切线和线段相交几何算法，智能计算对手拦截风险并选出最佳传球目标。
@@ -35,10 +36,10 @@
 
 ## 目录与文件结构
 
-项目代码已按照职责驱动的架构规范划分为清晰的子模块目录，实现接口（`.h`）与实现（`.cpp`）的解耦：
+项目按主要职责划分目录，头文件声明接口，源文件实现行为。目录划分不代表严格的依赖分层，业务、状态与渲染之间仍有直接依赖：
 
 ```text
-d:\Code\fsm\
+./
 ├── common/                             # 基础工具与运行时支持
 │   ├── Cgdi.h / Cgdi.cpp               # Windows GDI 绘图封装与画笔/画刷渲染工具
 │   ├── DebugConsole.h / .cpp           # 调试控制台输出窗口
@@ -70,12 +71,12 @@ d:\Code\fsm\
 │   ├── SoccerBall.h / SoccerBall.cpp   # 足球实体、物理运动与反弹碰撞检测
 │   ├── SoccerTeam.h / SoccerTeam.cpp   # 球队协同管理、传球路由判定与射门策略
 │   ├── Goal.h / Goal.cpp               # 球门实体与进球判定
-│   ├── SteeringBehaviors.h / .cpp      # Reynolds 操纵行为力学计算类（寻路、拦截、避让等）
+│   ├── SteeringBehaviors.h / .cpp      # Reynolds 操纵行为力学计算类（移动、拦截、分离等）
 │   ├── SupportSpotCalculator.h / .cpp  # 进攻跑位支援点评估计算器（评分网格）
 │   └── ParamLoader.h / ParamLoader.cpp # 参数配置加载器（单例 Prm，解析 Params.ini）
 ├── graph/                              # 导航图与路径搜索算法
 │   ├── SparseGraph.h                   # 2D/3D 稀疏图数据结构
-│   ├── Pathfinder.h / Pathfinder.cpp   # 路径搜索寻路器（A* 等算法封装）
+│   ├── Pathfinder.h / Pathfinder.cpp   # 独立寻路演示类（未接入足球比赛）
 │   ├── PriorityQueue.h                 # 优先队列模板（支持索引优先队列）
 │   ├── GraphAlgorithms.h               # 图搜索算法库（A*、Dijkstra、BFS、DFS）
 │   ├── GraphEdgeTypes.h / GraphNodeTypes.h # 图节点与图边数据结构
@@ -95,7 +96,7 @@ d:\Code\fsm\
 │   └── SoccerMessages.h / .cpp         # 智能体间传递的消息枚举与转换函数
 ├── main.cpp                            # Windows 程序入口、消息循环与窗口过程
 ├── Makefile                            # MinGW/GCC 项目自动化构建规则
-├── Params.ini                          # 游戏模拟与 AI 参数动态配置文件
+├── Params.ini                          # 游戏模拟与 AI 启动配置文件
 ├── resource.h / Script1.rc / icon1.ico # Windows 窗口菜单资源与程序图标
 ├── DESIGN.md                           # 系统架构与详细设计文档
 └── README.md                           # 项目说明文档
@@ -112,7 +113,7 @@ d:\Code\fsm\
 
 ### 编译步骤
 
-打开支持 MinGW 工具链的终端（如 MSYS2 UCRT64 终端或配置好 PATH 的 PowerShell），进入项目根目录：
+在项目根目录使用 GNU Make 和 MinGW UCRT64 工具链执行以下命令。当前 Makefile 的建目录与清理命令使用 Windows cmd 语法；从 MSYS2 shell 执行时需指定兼容的命令解释器，或调整相关规则：
 
 ```bash
 # 1. 编译生成 SimpleSoccer.exe
@@ -125,7 +126,7 @@ make run
 make clean
 ```
 
-> **注意**：Makefile 中默认自动探测 `D:/msys64/ucrt64/bin` 与 `C:/msys64/ucrt64/bin`。若安装在其他路径，可直接修改 Makefile 开头的 `MINGW_BIN` 或配置系统环境变量。
+> **注意**：Makefile 默认探测 C 盘或 D 盘的标准 MSYS2 UCRT64 安装目录。若安装在其他位置，可通过 `make MINGW_BIN=相对于项目目录的工具链路径 all` 覆盖默认值，或修改 Makefile。仅修改 PATH 不会覆盖 Makefile 中的编译器路径。
 
 ---
 
@@ -150,7 +151,7 @@ make clean
 
 ## 配置参数说明 (`Params.ini`)
 
-所有 AI 逻辑、物理运动属性与画面调试项均可在 `Params.ini` 中动态调参，无需重新编译即可生效：
+主要 AI、物理和调试参数来自 [Params.ini](./Params.ini)，无需重新编译，但修改文件后需要重启程序。`ParamLoader` 单例只在首次访问时读取配置；按 `R` 重置比赛不会重新加载。文件按固定顺序读取数值，而非按参数名查找，请保留条目顺序，并从包含 `Params.ini` 的项目根目录启动程序。
 
 ### 1. 核心物理与动作参数
 - `BallSize` / `BallMass` / `Friction`: 足球尺寸、质量与草地摩擦系数（`-0.015`）。
@@ -162,7 +163,7 @@ make clean
 
 ### 2. 射门与传球参数
 - `MaxShootingForce` / `MaxPassingForce` / `MaxDribbleForce`: 射门、长短传球和盘带时的最大踢球冲量。
-- `MinPassDistance`: 传球接收者的最小安全距离判定阈值。
+- `MinPassDist`: 传球接收者的最小安全距离判定阈值。
 - `NumAttemptsToFindValidStrike`: 每次判断射门时随机尝试的目标角度次数。
 - `PlayerKickingAccuracy`: 踢球精度控制（`0.0 ~ 1.0`，越小踢出的球偏角散布越大）。
 
@@ -181,10 +182,21 @@ make clean
 
 ## 系统架构简述
 
-项目架构遵循高度解耦的经典游戏 AI 模式：
+项目采用经典面向对象游戏 AI 结构：
 - **`SoccerPitch`** 作为世界主控，维持比赛推进、物理碰撞更新和渲染驱动。
 - **`SoccerTeam`** 统一指挥红队与蓝队，管理传球路由策略与战术状态。
 - **`StateMachine<T>`** 作为通用的 FSM 调度核心，由 `EntityPlayerGoalKeeper`、`EntityPlayerOnField` 及 `SoccerTeam` 各自持有。
-- **`MessageDispatcher`** 充当中介者调度器，负责可靠的消息投递。
+- **`MessageDispatcher`** 集中投递即时消息，通过实体 ID 查找接收者。延迟调度和实体销毁后的清理仍需完善。
 
 关于详细的架构设计与 UML 图解，请参阅 [`DESIGN.md`](./DESIGN.md)。
+## 当前实现边界与维护事项
+
+- 球队、场上球员和门将各自持有 FSM；没有嵌套状态或父子状态的层次状态机语义。
+- `graph/` 是独立的图搜索与寻路演示代码。目前 Makefile 将其编入程序，但比赛不调用它；球员移动使用 Steering。
+- 领域对象同时负责更新和 GDI 绘图，`math/` 中部分类型也依赖 Win32 或绘图工具；当前实现面向 Windows。
+- 球员注册到 `EntityManager` 后，析构时没有注销。按 `R` 重建比赛会在注册表中留下旧对象指针，需要补全生命周期清理。
+- 延迟消息没有接入主循环，依赖的帧计数也没有推进；队列比较规则还可能丢弃同一派发时间的不同消息。
+- Makefile 未跟踪头文件依赖。修改头文件后应完整重建；对象文件按文件名展平，不支持不同目录中的同名源文件。
+- 仓库目前没有自动化测试或 CI 配置。上述结构说明来自静态代码核对，不代表已完成运行验证。
+
+具体依赖、对象所有权和改进顺序见 [DESIGN.md](./DESIGN.md#9-实际依赖对象生命周期与维护建议)。
