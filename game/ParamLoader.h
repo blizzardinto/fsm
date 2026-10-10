@@ -16,7 +16,7 @@ class ParamLoader : public IniFileLoaderBase
 {
 private:
 
-  ParamLoader():IniFileLoaderBase("Params.ini")
+  ParamLoader():IniFileLoaderBase("res/Params.ini")
   {
 
     goalWidth                   = getNextParameterDouble();

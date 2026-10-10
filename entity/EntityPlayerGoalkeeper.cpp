@@ -6,6 +6,7 @@
 #include "transformations.h"
 #include "StatesPlayerGoalKeeper.h"
 #include "Goal.h"
+#include "SoccerBall.h"
 #include "EntityFunctionTemplates.h"
 #include "ParamLoader.h"
 

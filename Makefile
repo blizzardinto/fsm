@@ -14,11 +14,11 @@ export PATH := $(MINGW_BIN);$(PATH)
 
 CXX      := $(MINGW_BIN)/g++
 WINDRES  := $(MINGW_BIN)/windres
-INCLUDES := -I. -Icommon -Ientity -Ifsm -Igame -Igraph -Imath -Imessaging
+INCLUDES := -I. -Icommon -Ientity -Ifsm -Igame -Imath -Imessaging
 CXXFLAGS := -std=c++17 -O2 -Wall -Wno-sign-compare -Wno-unused-variable -fexec-charset=GBK $(INCLUDES)
 LDFLAGS  := -mwindows -lgdi32 -luser32 -lwinmm -static
 
-# Intermediate build objects directory (.o, .res)
+# Build output directory (.o, .res, .exe)
 OBJ_DIR  := obj
 
 SRC := \
@@ -43,7 +43,6 @@ SRC := \
   game/SoccerTeam.cpp \
   game/SteeringBehaviors.cpp \
   game/SupportSpotCalculator.cpp \
-  graph/Pathfinder.cpp \
   math/C2DMatrix.cpp \
   math/geometry.cpp \
   math/Transformations.cpp \
@@ -55,9 +54,9 @@ SRC := \
 OBJ := $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.cpp=.o)))
 RES := $(OBJ_DIR)/Script1.res
 
-TARGET := SimpleSoccer.exe
+TARGET := $(OBJ_DIR)/SimpleSoccer.exe
 
-vpath %.cpp common entity fsm game graph math messaging .
+vpath %.cpp common entity fsm game math messaging .
 
 .PHONY: all clean run
 
@@ -69,15 +68,14 @@ $(TARGET): $(OBJ) $(RES)
 $(OBJ_DIR)/%.o: %.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(RES): Script1.rc resource.h icon1.ico | $(OBJ_DIR)
-	$(WINDRES) -i Script1.rc -o $@ -O coff
+$(RES): res/Script1.rc res/resource.h res/icon1.ico | $(OBJ_DIR)
+	$(WINDRES) -Ires -i res/Script1.rc -o $@ -O coff
 
 $(OBJ_DIR):
 	@if not exist "$(OBJ_DIR)" mkdir "$(OBJ_DIR)"
 
 clean:
 	-if exist "$(OBJ_DIR)" rmdir /s /q "$(OBJ_DIR)"
-	-if exist "$(TARGET)" del /q "$(TARGET)" 2>nul
 
 run: $(TARGET)
-	$(TARGET)
+	"$(subst /,\,$(TARGET))"

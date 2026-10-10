@@ -635,7 +635,7 @@ $$\text{Score}(S_i) = 1 + w_1 \cdot C_{pass}(S_i) + w_2 \cdot C_{score}(S_i) + w
 
 ### 6.3 射门路线与进球判定
 
-- **进球判定**：[`Goal::scored`](./game/Goal.h) 使用二维线段相交算法：
+- **进球判定**：[`Goal::scored`](./game/Goal.cpp) 使用二维线段相交算法：
   $$\text{lineIntersection2D}(\mathbf{x}_{ball}^{now},\, \mathbf{x}_{ball}^{old},\, \mathbf{P}_{left}^{post},\, \mathbf{P}_{right}^{post})$$
   若球在上一帧与当前帧的位移线段与两门柱之间的线段相交，计入进球。当前 `Goal::scored()` 没有额外检查运动方向。
 
@@ -679,7 +679,6 @@ $$\mathbf{x}(t) = \mathbf{x}_0 + \mathbf{v}_0 \cdot t + \frac{1}{2} \mathbf{a} \
 | `game/` | 世界、球队、战术、物理与渲染共存；`SoccerTeam` 还负责球员创建及注册。 |
 | `messaging/` | 调度器依赖全局实体注册表与帧计数器；接收者通过虚函数处理消息。 |
 | `math/`、`common/` | `Vector2D` 使用 Win32 类型，`Region`、`Wall2D` 内置 GDI 绘图；基础层尚不能独立于窗口环境使用。 |
-| `graph/` | 包含通用搜索模板及依赖窗口、工具栏的 Pathfinder 演示类。足球逻辑没有引用 Pathfinder，但 Makefile 编译它，main.cpp 为它保留工具栏全局变量。 |
 
 每次定时更新依次调用 `SoccerPitch::update()` → 足球更新 → 红队更新 → 蓝队更新 → 进球检测。球队先计算最近球员，再更新球队 FSM，最后依次更新各球员；球员先执行 FSM，再计算移动。暂停时场地更新直接返回。绘图由 Win32 的 `WM_PAINT` 驱动，与更新入口分开，但各业务对象内部仍实现 `render()`。
 
@@ -702,7 +701,13 @@ Makefile 没有生成和包含头文件依赖文件，修改头文件后可能�
 
 ### 9.4 配置与文档使用约定
 
-[Params.ini](./Params.ini) 从进程工作目录读取，由 `ParamLoader` 单例首次初始化时加载。解析器按条目顺序提取数值，不按键名查找；新增或重排配置项必须同步修改读取顺序。文件标签 `numSweetSpotsX/Y` 对应成员 `numSupportSpotsX/Y`，`spotCanPassScore` 对应 `spotPassSafeScore`。修改文件后需要重启程序，比赛重置不会重新读取。
+[res/Params.ini](./res/Params.ini) 相对于进程工作目录读取，程序应从项目根目录启动；由 `ParamLoader` 单例首次初始化时加载。解析器按条目顺序提取数值，不按键名查找；新增或重排配置项必须同步修改读取顺序。文件标签 `numSweetSpotsX/Y` 对应成员 `numSupportSpotsX/Y`，`spotCanPassScore` 对应 `spotPassSafeScore`。修改文件后需要重启程序，比赛重置不会重新读取。
+
+`res/` 集中保存配置、图标和 Windows 资源定义代码：`resource.h` 定义资源 ID，`Script1.rc` 定义菜单与图标，并通过资源目录包含头文件和图标。Makefile 使用 `windres -Ires` 编译资源，生成文件仍放在 `obj/`；`main.cpp` 通过 `res/resource.h` 引用资源 ID。菜单与图标嵌入可执行文件，配置作为外部文件随程序分发。
+
+未接入比赛的图搜索演示及历史重命名脚本已移除。球门接口位于 [Goal.h](./game/Goal.h)，构造、进球判定及访问器实现位于 [Goal.cpp](./game/Goal.cpp)；头文件通过前置声明引用 `SoccerBall`，无需包含足球和几何算法的实现依赖。`main.cpp` 不再保留寻路演示使用的工具栏全局变量。
+
+所有构建产物均位于 `obj/`，包括对象文件、编译后的资源和最终程序 `obj/SimpleSoccer.exe`。`make run` 与 VS Code 调试从项目根目录启动该程序，保持 `res/Params.ini` 的相对路径有效；`make clean` 清理整个输出目录。
 
 本文的类图和状态图用于说明设计，运行行为以源码为准。所有源码链接采用仓库相对路径，避免依赖机器上的绝对目录。
 
@@ -710,7 +715,7 @@ Makefile 没有生成和包含头文件依赖文件，修改头文件后可能�
 
 1. 补全实体注册与注销，验证比赛重复重置后的查找和消息投递。
 2. 修正消息队列排序、载荷所有权及无效接收者处理，再接入延迟调度和帧计数。
-3. 完善头文件依赖与对象路径，隔离未使用的寻路演示代码。
+3. 完善头文件依赖与对象路径。
 4. 将通用 FSM 与足球状态分开，将 GDI 绘图移到独立渲染模块；逐步用 RAII 表达对象所有权。
 5. 对实体生命周期、消息排序、FSM 切换和几何判定建立自动验证，再按需要引入 CI。
 

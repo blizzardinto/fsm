@@ -1,6 +1,7 @@
 #include "SoccerTeam.h"
 #include "SoccerPitch.h"
 #include "Goal.h"
+#include "SoccerBall.h"
 #include "EntityPlayer.h"
 #include "EntityPlayerGoalKeeper.h"
 #include "EntityPlayerOnField.h"

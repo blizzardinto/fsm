@@ -5,7 +5,7 @@
       "name": "SimpleSoccer (Run & Debug)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}\\SimpleSoccer.exe",
+      "program": "${workspaceFolder}\\obj\\SimpleSoccer.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",

@@ -41,6 +41,7 @@
 
 ```text
 ./
+├── .vscode/                            # 可共享的构建与调试配置
 ├── common/                             # 基础工具与运行时支持
 │   ├── Cgdi.h / Cgdi.cpp               # Windows GDI 绘图封装与画笔/画刷渲染工具
 │   ├── DebugConsole.h / .cpp           # 调试控制台输出窗口
@@ -71,19 +72,10 @@
 │   ├── SoccerPitch.h / SoccerPitch.cpp # 足球场地主控类（驱动各系统运转、渲染赛场）
 │   ├── SoccerBall.h / SoccerBall.cpp   # 足球实体、物理运动与反弹碰撞检测
 │   ├── SoccerTeam.h / SoccerTeam.cpp   # 球队协同管理、传球路由判定与射门策略
-│   ├── Goal.h / Goal.cpp               # 球门实体与进球判定
+│   ├── Goal.h / Goal.cpp               # 球门接口与实现、进球判定
 │   ├── SteeringBehaviors.h / .cpp      # Reynolds 操纵行为力学计算类（移动、拦截、分离等）
 │   ├── SupportSpotCalculator.h / .cpp  # 进攻跑位支援点评估计算器（评分网格）
 │   └── ParamLoader.h / ParamLoader.cpp # 参数配置加载器（单例 prm，解析 Params.ini）
-├── graph/                              # 导航图与路径搜索算法
-│   ├── SparseGraph.h                   # 2D/3D 稀疏图数据结构
-│   ├── Pathfinder.h / Pathfinder.cpp   # 独立寻路演示类（未接入足球比赛）
-│   ├── PriorityQueue.h                 # 优先队列模板（支持索引优先队列）
-│   ├── GraphAlgorithms.h               # 图搜索算法库（A*、Dijkstra、bfs、dfs）
-│   ├── GraphEdgeTypes.h / GraphNodeTypes.h # 图节点与图边数据结构
-│   ├── HandyGraphFunctions.h           # 图构建与辅助函数
-│   ├── NodeTypeEnumerations.h          # 节点类型枚举
-│   └── AStarHeuristicPolicies.h        # A* 启发式估价策略
 ├── math/                               # 2D 几何与数学基础库
 │   ├── Vector2D.h / Vector2d.cpp       # 2D 向量计算类（点积、求模、归一化、操作符重载）
 │   ├── geometry.h / geometry.cpp       # 2D 几何相交算法、距离与切线计算
@@ -97,8 +89,12 @@
 │   └── SoccerMessages.h / .cpp         # 智能体间传递的消息枚举与转换函数
 ├── main.cpp                            # Windows 程序入口、消息循环与窗口过程
 ├── Makefile                            # MinGW/GCC 项目自动化构建规则
-├── Params.ini                          # 游戏模拟与 AI 启动配置文件
-├── resource.h / Script1.rc / icon1.ico # Windows 窗口菜单资源与程序图标
+├── res/                                # 资源文件、资源定义与启动配置
+│   ├── Params.ini                      # 游戏模拟与 AI 启动配置文件
+│   ├── resource.h                      # 菜单与图标资源 ID 定义
+│   ├── Script1.rc                      # Windows 菜单与图标资源脚本
+│   └── icon1.ico                       # 程序图标
+├── obj/                                # 构建输出（对象、编译资源和可执行文件，Git 忽略）
 ├── DESIGN.md                           # 系统架构与详细设计文档
 └── README.md                           # 项目说明文档
 ```
@@ -117,7 +113,7 @@
 在项目根目录使用 GNU Make 和 MinGW UCRT64 工具链执行以下命令。当前 Makefile 的建目录与清理命令使用 Windows cmd 语法；从 MSYS2 shell 执行时需指定兼容的命令解释器，或调整相关规则：
 
 ```bash
-# 1. 编译生成 SimpleSoccer.exe
+# 1. 编译生成 obj/SimpleSoccer.exe
 make all
 
 # 2. 编译并直接启动运行
@@ -127,7 +123,9 @@ make run
 make clean
 ```
 
-> **注意**：Makefile 默认探测 c 盘或 D 盘的标准 MSYS2 UCRT64 安装目录。若安装在其他位置，可通过 `make MINGW_BIN=相对于项目目录的工具链路径 all` 覆盖默认值，或修改 Makefile。仅修改 PATH 不会覆盖 Makefile 中的编译器路径。
+所有编译产物均放在 `obj/`。在项目根目录执行 `make run` 或 `./obj/SimpleSoccer.exe`；VS Code 调试配置也指向该可执行文件，并将工作目录保留在项目根目录，以读取 `res/Params.ini`。
+
+> **注意**：Makefile 默认探测 C 盘或 D 盘的标准 MSYS2 UCRT64 安装目录。若安装在其他位置，可通过 `make MINGW_BIN=相对于项目目录的工具链路径 all` 覆盖默认值，或修改 Makefile。仅修改 PATH 不会覆盖 Makefile 中的编译器路径。
 
 ---
 
@@ -152,7 +150,7 @@ make clean
 
 ## 配置参数说明 (`Params.ini`)
 
-主要 AI、物理和调试参数来自 [Params.ini](./Params.ini)，无需重新编译，但修改文件后需要重启程序。`ParamLoader` 单例只在首次访问时读取配置；按 `R` 重置比赛不会重新加载。文件按固定顺序读取数值，而非按参数名查找，请保留条目顺序，并从包含 `Params.ini` 的项目根目录启动程序。
+主要 AI、物理和调试参数来自 [res/Params.ini](./res/Params.ini)，无需重新编译，但修改文件后需要重启程序。`ParamLoader` 单例只在首次访问时读取配置；按 `R` 重置比赛不会重新加载。文件按固定顺序读取数值，而非按参数名查找，请保留条目顺序，并从包含 `res/` 的项目根目录启动程序。分发程序时需要同时附带 `res/Params.ini`；菜单和图标由资源编译器嵌入可执行文件。
 
 ### 1. 核心物理与动作参数
 - `ballSize` / `ballMass` / `friction`: 足球尺寸、质量与草地摩擦系数（`-0.015`）。
@@ -193,12 +191,13 @@ make clean
 ## 当前实现边界与维护事项
 
 - 球队、场上球员和门将各自持有 FSM；没有嵌套状态或父子状态的层次状态机语义。
-- `graph/` 是独立的图搜索与寻路演示代码。目前 Makefile 将其编入程序，但比赛不调用它；球员移动使用 steering。
 - 领域对象同时负责更新和 GDI 绘图，`math/` 中部分类型也依赖 Win32 或绘图工具；当前实现面向 Windows。
 - 球员注册到 `EntityManager` 后，析构时没有注销。按 `R` 重建比赛会在注册表中留下旧对象指针，需要补全生命周期清理。
 - 延迟消息没有接入主循环，依赖的帧计数也没有推进；队列比较规则还可能丢弃同一派发时间的不同消息。
 - Makefile 未跟踪头文件依赖。修改头文件后应完整重建；对象文件按文件名展平，不支持不同目录中的同名源文件。
 - 仓库目前没有自动化测试或 CI 配置。上述结构说明来自静态代码核对，不代表已完成运行验证。
+
+目录只保留足球仿真所需的模块；未使用的图搜索演示、历史重命名脚本和临时验证文件已移除。构建输出位于 Git 忽略的 `obj/`，源码与资源文件不混放。
 
 具体依赖、对象所有权和改进顺序见 [DESIGN.md](./DESIGN.md#9-实际依赖对象生命周期与维护建议)。
 
@@ -206,6 +205,6 @@ make clean
 
 - 函数、变量、参数、常量和枚举值使用 camelCase，例如 `update()`、`dispatchMsg()`、`frameRate`、`msgReceiveBall`。
 - 成员变量使用 `m` 前缀，例如 `mPosition`、`mCurrentState`；全局变量使用 `g` 前缀，例如 `gSoccerPitch`。不再使用下划线或匈牙利类型前缀。
-- 类、结构、枚举类型与类型别名使用 PascalCase，例如 `StateMachine`、`PlayerRole`、`IniFileLoaderBase`。模板参数可使用 camelCase；可能与成员名称冲突时使用明确的类型名，如 `ExtraInfoType`。
+- 类、结构、枚举类型与类型别名使用 PascalCase，例如 `StateMachine`、`PlayerRole`、`IniFileLoaderBase`。模板参数使用明确的名称，避免与成员名称冲突。
 - 预处理宏、头文件保护宏和 Windows 资源 ID 保留现有约定；Win32 API、系统结构字段和 `WinMain` 入口保留系统规定的名称。
 - 配置标签也使用 camelCase，读取顺序和值保持不变。源码文件名保持现有名称，文档中的链接使用相对路径。

@@ -6,6 +6,7 @@
 #include "SteeringBehaviors.h"
 #include "SoccerTeam.h"
 #include "Goal.h"
+#include "SoccerBall.h"
 #include "geometry.h"
 #include "EntityPlayerOnField.h"
 #include "ParamLoader.h"

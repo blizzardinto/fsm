@@ -5,6 +5,8 @@ build/
 *.res
 *.exe
 *.dll
+*.log
+debug_log.txt
 
 # VS Code
 .vscode/*

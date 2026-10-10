@@ -8,7 +8,7 @@
 #include "SoccerPitch.h"
 #include "Cgdi.h"
 #include "ParamLoader.h"
-#include "Resource.h"
+#include "res/resource.h"
 #include "WindowUtils.h"
 #include "DebugConsole.h"
 
@@ -21,9 +21,6 @@ const wchar_t* gApplicationName = L"基于有限状态机的足球人";
 const wchar_t* gWindowClassName = L"MyWindowClass";
 
 SoccerPitch* gSoccerPitch;
-
-//toolbar handle (unused in SimpleSoccer; referenced by Pathfinder.cpp)
-HWND gToolbar;
 
 //create a timer
 PrecisionTimer timer(prm.frameRate);

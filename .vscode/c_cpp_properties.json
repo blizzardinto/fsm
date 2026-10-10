@@ -3,14 +3,14 @@
     {
       "name": "Win32",
       "includePath": [
-        "${workspaceFolder}/**",
+        "${workspaceFolder}",
         "${workspaceFolder}/common",
         "${workspaceFolder}/entity",
         "${workspaceFolder}/fsm",
         "${workspaceFolder}/game",
-        "${workspaceFolder}/graph",
         "${workspaceFolder}/math",
-        "${workspaceFolder}/messaging"
+        "${workspaceFolder}/messaging",
+        "${workspaceFolder}/res"
       ],
       "defines": [
         "_WIN32",
