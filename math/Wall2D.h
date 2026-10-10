@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：边界墙壁对象，保存线段端点及法线。
+ * 足球借助法线计算反射，绘图代码借助端点显示边界，同一份数据支持不同协作对象。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef WALL_H
 #define WALL_H
 #include "Cgdi.h"
@@ -39,7 +44,7 @@ public:
   {
     gdi->line(mA, mB);
 
-    //render the normals if rqd
+    // 按需要绘制法线，帮助观察墙壁朝向。
     if (renderNormals)
     {
       int midX = (int)((mA.x+mB.x)/2);

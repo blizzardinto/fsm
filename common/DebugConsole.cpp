@@ -1,8 +1,13 @@
+/*
+ * 阅读提示：调试输出组件，封装窗口、缓冲区和日志文件。
+ * 输出运算符让调用代码像写标准输出一样记录信息；禁用时使用相同接口的空接收器。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "DebugConsole.h"
 #include <iterator>
 #pragma warning (disable : 4786)
 
-//initialize static variable
+// 定义并初始化类的静态成员；静态成员由所有实例共享。
 std::vector<std::string> DebugConsole::mBuffer;
 HWND                     DebugConsole::mHwnd       = NULL;
 bool                     DebugConsole::mFlushed   = true;
@@ -15,18 +20,16 @@ int                      DebugConsole::mPosTop;
 
 
 
-//-----------------------------------InfoWinProc-----------------------------
-//
-//-----------------------------------------------------------------------
+// 调试窗口的消息回调，负责滚动和文字绘制。
 LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
                                          UINT msg,
                                          WPARAM wparam,
                                          LPARAM lparam)
 {
-  //these hold the dimensions of the client window area
+  // 保存调试窗口的客户区尺寸。
   static int cxClient, cyClient;
 
-  //font dimensions
+  // 保存字体字符的宽高。
   static int cxChar, cyChar, cxCaps, cyPage;
 
   int iVertPos;
@@ -34,7 +37,7 @@ LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
   TEXTMETRIC  tm;
   SCROLLINFO  si;
 
-  //get the size of the client window
+  // 获取窗口客户区大小。
   RECT rect;
   GetClientRect(hwnd, &rect);
   cxClient = rect.right;
@@ -44,7 +47,7 @@ LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
   {
     case WM_CREATE:
     {
-      //get the font info
+      // 获取字体度量，计算一行文字需要的空间。
       HDC hdc = GetDC(hwnd);
 
       GetTextMetrics(hdc, &tm);
@@ -52,7 +55,7 @@ LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
       cxCaps = (tm.tmPitchAndFamily & 1 ? 3 : 2) * cxChar / 2;
       cyChar = tm.tmHeight + tm.tmExternalLeading;
 
-      // Set vertical scroll bar range and page size
+      // 设置垂直滚动条的范围和页面大小。
       si.cbSize = sizeof (si) ;
       si.fMask  = SIF_RANGE | SIF_PAGE;
       si.nMin   = 0 ;
@@ -85,12 +88,12 @@ LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
 
     case WM_VSCROLL:
 
-      //Get all the vertical scroll bar information
+      // 读取垂直滚动条信息。
       si.cbSize = sizeof (si);
       si.fMask  = SIF_ALL;
       GetScrollInfo (hwnd, SB_VERT, &si) ;
 
-      // save the position for comparison later on
+      // 保存原位置，稍后判断滚动位置是否改变。
       iVertPos = si.nPos ;
 
       switch (LOWORD (wparam))
@@ -127,13 +130,12 @@ LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
              break ;
       }
 
-      //Set the position and then retrieve it.  Due to adjustments
-      //by Windows it may not be the same as the value set.
+      // 设置滚动位置后重新读取；Windows 可能对超出范围的值进行调整。
       si.fMask = SIF_POS ;
       SetScrollInfo (hwnd, SB_VERT, &si, TRUE) ;
       GetScrollInfo (hwnd, SB_VERT, &si) ;
 
-      // If the position has changed, scroll the window and update it
+      // 位置改变时滚动并刷新窗口。
       if (si.nPos != iVertPos)
       {
          ScrollWindow (hwnd, 0, cyChar * (iVertPos - si.nPos), NULL, NULL) ;
@@ -146,7 +148,7 @@ LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
 
     case umSetscroll:
     {
-      //Get all the vertical scroll bar information
+      // 读取垂直滚动条信息。
       si.cbSize = sizeof (si);
       si.fMask  = SIF_ALL;
       GetScrollInfo (hwnd, SB_VERT, &si);
@@ -177,13 +179,13 @@ LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
         if (mBuffer.size() > 1)
         {
 
-          // Get vertical scroll bar position
+          // 获取当前垂直滚动位置。
           si.cbSize = sizeof (si) ;
           si.fMask  = SIF_POS ;
           GetScrollInfo (hwnd, SB_VERT, &si) ;
           iVertPos = si.nPos ;
 
-          //number of lines we can fit on this page
+          // 计算当前页面能够显示的行数。
           int pageSize = (int)(cyClient / cyChar) - 1;
 
           int startIndex = 0;
@@ -225,9 +227,7 @@ LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
 
     default:break;
 
-  }//end switch
-
-  // default msg handler
+  }// 未处理的消息交给默认窗口过程。
   if (!mDestroyed)
   {
     return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -240,9 +240,7 @@ LRESULT CALLBACK DebugConsole::debugWindowProc(HWND hwnd,
 }
 
 
-//----------------------------- create -----------------------------------
-//
-//------------------------------------------------------------------------
+// 创建调试窗口及日志文件。
 bool DebugConsole::create()
 {
   mHwnd       = NULL;
@@ -250,7 +248,7 @@ bool DebugConsole::create()
   mPosTop    = 0;
   mFlushed   = true;
 
-  //open log file
+  // 打开日志文件。
   mLogOut.open("DebugLog.txt");
 
 
@@ -268,21 +266,17 @@ bool DebugConsole::create()
                        NULL };
 
 
-  //register the window class
+  // 注册调试窗口类。
   if (!RegisterClassEx(&wDebugConsole))
   {
     MessageBox(NULL, "Registration of Debug Console Failed!", "Error", 0);
 
-    //exit the application
+    // 注册失败时结束程序。
     return false;
   }
 
 
-  //get the size of the client window
- // RECT rectActive;
- // GetClientRect(GetActiveWindow(), &rectActive);
-
-  // create the info window
+  // 创建调试信息窗口。
   mHwnd = CreateWindow("Debug",
                             "Debug Console",
                             WS_OVERLAPPED | WS_VISIBLE | WS_SYSMENU| WS_VSCROLL | WS_THICKFRAME,
@@ -295,7 +289,7 @@ bool DebugConsole::create()
                             wDebugConsole.hInstance,
                             NULL );
 
-    //make sure the window creation has gone OK
+    // 检查窗口是否创建成功。
   if(!mHwnd)
   {
     MessageBox(mHwnd, "CreateWindowEx Failed!", "Error!", 0);
@@ -303,17 +297,14 @@ bool DebugConsole::create()
     return false;
   }
 
-  // Show the window
+  // 显示窗口。
   UpdateWindow(mHwnd);
 
   return true;
 
 }
 
-//---------------------------- instance ---------------------------------------
-//
-//  Retrieve a pointer to an instance of this class
-//-----------------------------------------------------------------------------
+// 返回调试控制台的单例对象指针。
 DebugConsole* DebugConsole::instance()
 {
    static DebugConsole instance;
@@ -324,8 +315,7 @@ DebugConsole* DebugConsole::instance()
    return &instance;
 }
 
-//--------------------------- writeAndResetBuffer -----------------------------
-//-----------------------------------------------------------------------------
+// 将缓冲区写入日志，然后清空并重置滚动信息。
 void DebugConsole::writeAndResetBuffer()
 {
 
@@ -333,7 +323,7 @@ void DebugConsole::writeAndResetBuffer()
   mPosTop    = 0;
   mFlushed   = true;
 
-  //write out the contents of the buffer to a file
+  // 把缓冲区内容写入文件。
   std::vector<std::string>::iterator it = mBuffer.begin();
 
   for (it; it != mBuffer.end(); ++it)

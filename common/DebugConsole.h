@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：调试输出组件，封装窗口、缓冲区和日志文件。
+ * 输出运算符让调用代码像写标准输出一样记录信息；禁用时使用相同接口的空接收器。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef DEBUG_CONSOLE_H
 #define DEBUG_CONSOLE_H
 #pragma warning (disable:4786)
@@ -10,39 +15,36 @@
 #include "WindowUtils.h"
 
 
-//need to define a custom message
+// 定义调试窗口使用的自定义消息。
 const int umSetscroll = WM_USER + 32;
 
-//maximum number of lines shown in console before the buffer is flushed to
-//a file
+// 超过此行数时，把缓冲区内容写入日志文件。
 const int maxBufferSize = 500;
 
-//initial dimensions of the console window
+// 调试窗口的初始尺寸。
 const int debugWindowWidth  = 400;
 const int debugWindowHeight = 400;
 
-//undefine DEBUG to send all debug messages to hyperspace (a sink - see below)
-//#define DEBUG
+// 启用 DEBUG 宏才会使用调试控制台；否则消息交给空接收器。
 #ifdef DEBUG
 #define debugCon *(DebugConsole::instance())
 #else
 #define debugCon *(CSink::instance())
 #endif
 
-//use these in your code to toggle output to the console on/off
+// 用这些开关控制调试输出的启用与禁用。
 #define debugOn  DebugConsole::on();
 #define debugOff DebugConsole::off();
 
 
-//this little class just acts as a sink for any input. Used in place
-//of the DebugConsole class when the console is not required
+// 空接收器提供相同的输出接口，但丢弃输入，便于关闭调试而不修改调用代码。
 class CSink
 {
 private:
 
   CSink(){};
 
-  //copy ctor and assignment should be private
+  // 禁止复制和赋值。
   CSink(const CSink&);
   CSink& operator=(const CSink&);
 
@@ -65,32 +67,31 @@ private:
 
   static HWND	         mHwnd;
 
-  //the string buffer. All input to debug stream is stored here
+  // 字符串缓冲区保存待输出的调试信息。
   static std::vector<std::string> mBuffer;
 
-  //if true the next input will be pushed into the buffer. If false,
-  //it will be appended.
+  // 标记下一次输入是新建一行还是追加到当前行。
   static bool          mFlushed;
 
-  //position of debug window
+  // 调试窗口的位置。
   static int           mPosTop;
   static int           mPosLeft;
 
-  //set to true if the window is destroyed
+  // 标记窗口是否已销毁。
   static bool          mDestroyed;
 
-  //if false the console will just disregard any input
+  // 禁用时忽略输入。
   static bool          mActive;
 
-  //default logging file
+  // 默认日志文件名。
   static std::ofstream mLogOut;
 
 
 
-  //the debug window message handler
+  // 调试窗口消息回调。
   static LRESULT CALLBACK debugWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
-  //this registers the window class and creates the window(called by the ctor)
+  // 构造时注册窗口类并创建窗口。
   static bool             create();
 
   static void             drawWindow(){InvalidateRect(mHwnd, NULL, TRUE); UpdateWindow(mHwnd);}
@@ -99,7 +100,7 @@ private:
 
   DebugConsole(){}
 
-  //copy ctor and assignment should be private
+  // 禁止复制和赋值，避免复制窗口和日志资源。
   DebugConsole(const DebugConsole&);
   DebugConsole& operator=(const DebugConsole&);
 
@@ -121,25 +122,23 @@ public:
     }
   }
 
-  //writes the contents of the buffer to the file "debug_log.txt", clears
-  //the buffer and resets the appropriate scroll info
+  // 将缓冲区写入日志文件，清空内容并重置滚动信息。
   void writeAndResetBuffer();
 
-  //use to activate deactivate
+  // 启用或禁用调试输出。
   static void  off(){mActive = false;}
   static void  on()  {mActive = true;}
 
   bool destroyed()const{return mDestroyed;}
 
 
-  //overload the << to accept any type
+  // 重载输出运算符，让控制台接受可写入流的不同类型。
   template <class T>
   DebugConsole& operator<<(const T& t)
   {
     if (!mActive || mDestroyed) return *this;
 
-    //reset buffer and scroll info if it overflows. write the excess
-    //to file
+    // 缓冲区超出限制时写入文件，并重置缓冲区和滚动信息。
     if (mBuffer.size() > maxBufferSize)
     {
        writeAndResetBuffer();

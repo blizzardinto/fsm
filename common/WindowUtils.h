@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：窗口工具函数，将菜单、尺寸和文件对话框操作封装成可复用接口。
+ * 这些函数处理平台细节，足球业务对象不需要了解窗口消息的具体过程。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef WINDOW_UTILS_H
 #define WINDOW_UTILS_H
 #pragma warning (disable:4786)
@@ -7,20 +12,20 @@
 
 struct Vector2D;
 
-//macro to detect keypresses
+// 检查按键是否处于按下状态的宏。
 #define KEYDOWN(vkCode) ((GetAsyncKeyState(vkCode) & 0x8000) ? 1 : 0)
 
 #define WAS_KEY_PRESSED(vkCode) ((GetKeyState(vkCode) & 0x8000) != 0)
 #define IS_KEY_PRESSED(vkCode) ((GetAsyncKeyState(vkCode) & 0x8000) != 0)
 
-//Call this to refresh the client window
+// 请求刷新客户区。
 inline void redrawWindow(HWND hwnd, bool redrawBackGround = true)
 {
   InvalidateRect(hwnd, NULL, redrawBackGround);
   UpdateWindow(hwnd);
 }
 
-//Call this to refresh the client window
+// 请求刷新客户区。
 inline void redrawWindowRect(HWND hwnd, bool redrawBackGround, RECT& redrawArea)
 {
   InvalidateRect(hwnd, &redrawArea, redrawBackGround);
@@ -28,31 +33,27 @@ inline void redrawWindowRect(HWND hwnd, bool redrawBackGround, RECT& redrawArea)
 }
 
 
-//Changes the state of a menu item given the item identifier, the
-//desired state and the HWND of the menu owner
+// 根据菜单项编号、目标状态和窗口句柄更新菜单项。
 void changeMenuState(HWND hwnd, UINT menuItem, UINT state);
 
-//if b is true menuItem is checked, otherwise it is unchecked
+// 布尔值为真时勾选菜单项，否则取消勾选。
 void checkMenuItemAppropriately(HWND hwnd, UINT menuItem, bool b);
 
 
-//this is a replacement for the StringCchLength function found in the
-//platform SDK. See MSDN for details. Only ever used for checking toolbar
-//strings
+// 检查字符串缓冲区长度，兼容原有窗口工具代码。
 bool checkBufferLength(char* buff, int maxLength, unsigned int& bufferLength);
 
 void errorBox(std::string& msg);
 void errorBox(char* msg);
 
-//gets the coordinates of the cursor relative to an active window
+// 获取鼠标相对于活动窗口的位置。
 Vector2D getClientCursorPosition();
 
-//gets the coordinates of the cursor relative to an active window
+// 获取鼠标相对于活动窗口的位置。
 Vector2D getClientCursorPosition(HWND hwnd);
 
 
-//two handy functions from Mr Petzold. They open a common dialog box to
-//grab a filename
+// 打开系统文件对话框获取文件名；实现参考 Petzold 的著作。
 void fileInitialize (HWND hwnd,
                      OPENFILENAME& ofn,
                      const std::string& defaultFileTypeDescription,
@@ -70,7 +71,7 @@ BOOL fileSaveDlg (HWND hwnd,
                   const std::string& defaultFileTypeDescription,
                   const std::string& defaultFileExtension);
 
-//call this to resize the specified window to the specified size.
+// 将指定窗口调整到指定客户区大小。
 void resizeWindow(HWND hwnd, int cx, int cy);
 
 int  getWindowHeight(HWND hwnd);

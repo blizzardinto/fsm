@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：二维坐标变换辅助函数，连接对象局部坐标与球场世界坐标。
+ * 轮廓在局部坐标中定义一次，再按对象位置和朝向变换，便于复用同一绘图形状。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef TRANSFORMATIONS_H
 #define TRANSFORMATIONS_H
 #include <vector>
@@ -6,74 +11,46 @@
 #include "C2DMatrix.h"
 
 
-//--------------------------- worldTransform -----------------------------
-//
-//  given a std::vector of 2D vectors, a position, orientation and scale,
-//  this function transforms the 2D vectors into the object's world space
-//------------------------------------------------------------------------
+// 根据位置、朝向和缩放，把局部顶点变换为世界坐标。
 std::vector<Vector2D> worldTransform(std::vector<Vector2D> &points,
                                     const Vector2D   &pos,
                                     const Vector2D   &forward,
                                     const Vector2D   &side,
                                     const Vector2D   &scale);
 
-//--------------------------- worldTransform -----------------------------
-//
-//  given a std::vector of 2D vectors, a position and  orientation
-//  this function transforms the 2D vectors into the object's world space
-//------------------------------------------------------------------------
+// 根据位置和朝向，把局部顶点变换为世界坐标。
 std::vector<Vector2D> worldTransform(std::vector<Vector2D> &points,
                                      const Vector2D   &pos,
                                      const Vector2D   &forward,
                                      const Vector2D   &side);
 
-//--------------------- pointToWorldSpace --------------------------------
-//
-//  Transforms a point from the agent's local space into world space
-//------------------------------------------------------------------------
+// 把局部位置变换为世界位置。
 Vector2D pointToWorldSpace(const Vector2D &point,
                            const Vector2D &agentHeading,
                            const Vector2D &agentSide,
                            const Vector2D &agentPosition);
 
-//--------------------- vectorToWorldSpace --------------------------------
-//
-//  Transforms a vector from the agent's local space into world space
-//------------------------------------------------------------------------
+// 把局部方向变换为世界方向，不包含平移。
 Vector2D vectorToWorldSpace(const Vector2D &vec,
                             const Vector2D &agentHeading,
                             const Vector2D &agentSide);
 
 
-//--------------------- pointToLocalSpace --------------------------------
-//
-//------------------------------------------------------------------------
+// 把世界位置变换为局部位置。
 Vector2D pointToLocalSpace(const Vector2D &point,
                            const Vector2D &agentHeading,
                            const Vector2D &agentSide,
                            const Vector2D &agentPosition);
 
-//--------------------- vectorToLocalSpace --------------------------------
-//
-//------------------------------------------------------------------------
+// 把世界方向变换为局部方向。
 Vector2D vectorToLocalSpace(const Vector2D &vec,
                             const Vector2D &agentHeading,
                             const Vector2D &agentSide);
 
-//-------------------------- vec2DRotateAroundOrigin --------------------------
-//
-//  rotates a vector ang rads around the origin
-//-----------------------------------------------------------------------------
+// 围绕原点旋转向量，角度使用弧度。
 void vec2DRotateAroundOrigin(Vector2D& v, double ang);
 
-//------------------------ createWhiskers ------------------------------------
-//
-//  given an origin, a facing direction, a 'field of view' describing the
-//  limit of the outer whiskers, a whisker length and the number of whiskers
-//  this method returns a vector containing the end positions of a series
-//  of whiskers radiating away from the origin and with equal distance between
-//  them. (like the spokes of a wheel clipped to a specific segment size)
-//----------------------------------------------------------------------------
+// 在给定视角中生成等角度间隔的探测线终点。
 std::vector<Vector2D> createWhiskers(unsigned int  numWhiskers,
                                      double        whiskerLength,
                                      double        fov,

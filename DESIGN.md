@@ -12,7 +12,7 @@
    - [2.2 有限状态机 (FSM) 类图](#22-有限状态机-fsm-类图)
    - [2.3 消息通信与实体管理类图](#23-消息通信与实体管理类图)
 3. [有限状态机体系与流转逻辑](#3-有限状态机体系与流转逻辑)
-   - [3.1 泛型 FSM 框架设计](#31-泛型-fsm-框架设计)
+   - [3.1 非模板 FSM 框架设计](#31-非模板-fsm-框架设计)
    - [3.2 守门员状态机 (GoalKeeper FSM)](#32-守门员状态机-goalkeeper-fsm)
    - [3.3 场上球员状态机 (FieldPlayer FSM)](#33-场上球员状态机-fieldplayer-fsm)
    - [3.4 球队战术状态机 (team FSM)](#34-球队战术状态机-team-fsm)
@@ -55,7 +55,7 @@ SimpleSoccer 采用了经典面向对象游戏架构，可按职责理解为以�
 +-------------------------------------------------------------+
 |               实体与智能体决策层 (Agent & FSM Layer)           |
 |  EntityPlayer, EntityPlayerGoalKeeper, EntityPlayerOnField, |
-|  StateMachine<T>, State<T>, SteeringBehaviors, SoccerBall   |
+|  StateMachine, State, AI controllers, SteeringBehaviors   |
 +-------------------------------------------------------------+
                               |
 +-------------------------------------------------------------+
@@ -134,19 +134,19 @@ classDiagram
     }
 
     class EntityPlayerGoalKeeper {
-        -StateMachine~EntityPlayerGoalKeeper~* mStateMachine
+        -unique_ptr~GoalkeeperAI~ mAi
         -Vector2D mLookAt
         +ballWithinRangeForIntercept() bool
         +tooFarFromGoalMouth() bool
         +getRearInterposeTarget() Vector2D
-        +getFsm() StateMachine*
+        +getAi() GoalkeeperAI*
     }
 
     class EntityPlayerOnField {
-        -StateMachine~EntityPlayerOnField~* mStateMachine
+        -unique_ptr~FieldPlayerAI~ mAi
         -Regulator* mKickLimiter
         +isReadyForNextKick() bool
-        +getFsm() StateMachine*
+        +getAi() FieldPlayerAI*
     }
 
     class SteeringBehaviors {
@@ -164,7 +164,7 @@ classDiagram
 
     class SoccerTeam {
         -TeamColor mColor
-        -StateMachine~SoccerTeam~* mStateMachine
+        -unique_ptr~TeamAI~ mAi
         -vector~EntityPlayer*~ mPlayers
         -SoccerPitch* mPitch
         -Goal* mOpponentsGoal
@@ -246,78 +246,50 @@ classDiagram
 
 ### 2.2 有限状态机 (FSM) 类图
 
-系统利用泛型 `State<entityType>` 抽象接口与 `StateMachine<entityType>` 容器驱动状态生命周期，具体状态类全部为 **单例模式**：
+通用状态机只调用非模板接口。控制器通过 PImpl 在实现文件中拥有全部具体状态，每个状态在构造时绑定自己的球员或球队。状态机保存借用指针，不删除状态。
 
 ```mermaid
 classDiagram
-    direction TB
-
-    class State~entityType~ {
+    class State {
         <<interface>>
-        +enter(entityType*)* void
-        +execute(entityType*)* void
-        +exit(entityType*)* void
-        +onMessage(entityType*, Telegram&)* bool
+        +enter() void
+        +execute() void
+        +exit() void
+        +onMessage(Telegram&) bool
+        +name() const char*
     }
-
-    class StateMachine~entityType~ {
-        -entityType* mOwner
-        -State~entityType~* mCurrentState
-        -State~entityType~* mPreviousState
-        -State~entityType~* mGlobalState
+    class StateMachine {
+        -State* mCurrentState
+        -State* mPreviousState
+        -State* mGlobalState
+        +initialize(State&, State*, bool) void
         +update() void
-        +changeState(State~entityType~*) void
-        +revertToPreviousState() void
+        +changeState(State&) void
         +handleMessage(Telegram&) bool
-        +isInState(State~entityType~&) bool
     }
-
-    StateMachine~entityType~ o-- State~entityType~
-
-    namespace GoalKeeperStates {
-        class GlobalKeeperState { +instance()$ }
-        class TendGoal { +instance()$ }
-        class InterceptBall { +instance()$ }
-        class ReturnHome { +instance()$ }
-        class PutBallBackInPlay { +instance()$ }
+    class FieldPlayerAI {
+        +changeState(FieldPlayerState) void
+        +isInState(FieldPlayerState) bool
     }
-
-    namespace FieldPlayerStates {
-        class GlobalPlayerState { +instance()$ }
-        class ChaseBall { +instance()$ }
-        class Dribble { +instance()$ }
-        class KickBall { +instance()$ }
-        class Wait { +instance()$ }
-        class ReceiveBall { +instance()$ }
-        class SupportAttacker { +instance()$ }
-        class ReturnToHomeRegion { +instance()$ }
+    class GoalkeeperAI {
+        +changeState(GoalkeeperState) void
     }
-
-    namespace TeamStates {
-        class PrepareForKickOff { +instance()$ }
-        class Defending { +instance()$ }
-        class Attacking { +instance()$ }
+    class TeamAI {
+        +changeState(TeamState) void
     }
-
-    State~entityType~ <|-- GlobalKeeperState
-    State~entityType~ <|-- TendGoal
-    State~entityType~ <|-- InterceptBall
-    State~entityType~ <|-- ReturnHome
-    State~entityType~ <|-- PutBallBackInPlay
-
-    State~entityType~ <|-- GlobalPlayerState
-    State~entityType~ <|-- ChaseBall
-    State~entityType~ <|-- Dribble
-    State~entityType~ <|-- KickBall
-    State~entityType~ <|-- Wait
-    State~entityType~ <|-- ReceiveBall
-    State~entityType~ <|-- SupportAttacker
-    State~entityType~ <|-- ReturnToHomeRegion
-
-    State~entityType~ <|-- PrepareForKickOff
-    State~entityType~ <|-- Defending
-    State~entityType~ <|-- Attacking
+    class ChaseBall {
+        -EntityPlayerOnField& mOwner
+    }
+    State <|-- ChaseBall
+    FieldPlayerAI *-- StateMachine
+    FieldPlayerAI *-- ChaseBall
+    GoalkeeperAI *-- StateMachine
+    TeamAI *-- StateMachine
+    StateMachine o-- State : borrows
+    ChaseBall --> EntityPlayerOnField : bound owner
 ```
+
+控制器只接受自己的状态枚举，因而不能把球队状态传给球员控制器。相同类型的状态在不同智能体之间是不同对象。它们不使用状态单例、业务对象强制转换或模板状态机。
 
 ---
 
@@ -365,25 +337,24 @@ classDiagram
 
 ## 3. 有限状态机体系与流转逻辑
 
-### 3.1 泛型 FSM 框架设计
+### 3.1 非模板 FSM 框架设计
 
-在 [`StateMachine.h`](./fsm/StateMachine.h) 中，状态机保存以下三种状态指针。它们不是三层嵌套状态；球队和球员分别运行自己的 FSM，没有父子状态机制：
-- **`mCurrentState`**：当前主要执行的状态。
-- **`mPreviousState`**：前一个状态（支持 `revertToPreviousState()` 回溯）。
-- **`mGlobalState`**：全局状态。在每一帧的 `update()` 中，先执行全局状态的 `execute`，再执行当时的当前状态；在收到消息时，若当前状态未处理该消息，自动冒泡转交至全局状态处理。
+[State.h](./fsm/State.h) 声明状态接口，[State.cpp](./fsm/State.cpp) 实现默认进入、退出和未处理消息行为。[StateMachine.h](./fsm/StateMachine.h) 声明调度接口，所有调度实现位于 [StateMachine.cpp](./fsm/StateMachine.cpp)，不依赖足球实体或 Win32。
 
-```cpp
-void update() const {
-    if (mGlobalState)  mGlobalState->execute(mOwner);
-    if (mCurrentState) mCurrentState->execute(mOwner);
-}
-```
+- 当前状态、前一状态和全局状态都是非拥有指针。AI 控制器拥有状态对象，且在这些状态销毁前停止使用状态机。
+- 每次更新先执行全局状态，再执行当时的当前状态；若全局执行期间切换状态，新状态会在本次更新执行。
+- 消息先交给当前状态；未处理时交给全局状态。即时投递与原来保持一致。
+- 切换顺序为记录前一状态、退出旧状态、进入新状态；同一状态的切换仍执行退出与重新进入，进入期间的嵌套切换也保留。
+- `initialize()` 设置当前、前一及全局状态；球员调用初始进入逻辑。球队保留原实现的初始化语义，设置 Defending 而不执行初始进入逻辑，避免在球队尚未完成创建时改动战术。
+- 空状态机的更新、消息处理和回退安全返回。调试名称由状态明确提供，不再依赖 RTTI 名字截断。
+
+状态类构造时接收具体业务对象的引用，生命周期方法不再接收 owner 参数。控制器使用 `unique_ptr<Impl>` 隐藏实现，Impl 直接拥有状态对象并最后声明状态机，使状态机先于借用的状态销毁。控制器和状态机禁止复制，避免复制后保留指向旧所有者的引用。
 
 ---
 
 ### 3.2 守门员状态机 (GoalKeeper FSM)
 
-守门员持有 [`StateMachine<EntityPlayerGoalKeeper>`](./entity/EntityPlayerGoalkeeper.h)，各状态定义于 [`StatesPlayerGoalKeeper.h`](./fsm/StatesPlayerGoalKeeper.h)：
+守门员持有 [GoalkeeperAI](./ai/GoalkeeperAI.h)，各状态定义于 [`StatesPlayerGoalKeeper.h`](./ai/StatesPlayerGoalKeeper.h)：
 
 ```mermaid
 stateDiagram-v2
@@ -422,7 +393,7 @@ stateDiagram-v2
 
 ### 3.3 场上球员状态机 (FieldPlayer FSM)
 
-场上球员持有 [`StateMachine<EntityPlayerOnField>`](./entity/EntityPlayerOnField.h)，各状态定义于 [`StatesPlayerOnField.h`](./fsm/StatesPlayerOnField.h)：
+场上球员持有 [FieldPlayerAI](./ai/FieldPlayerAI.h)，各状态定义于 [`StatesPlayerOnField.h`](./ai/StatesPlayerOnField.h)：
 
 ```mermaid
 stateDiagram-v2
@@ -477,13 +448,13 @@ stateDiagram-v2
 - **`KickBall`**：决策中枢，执行三级决策树：
   1. 能射门则射门（[`SoccerTeam::canShoot`](./game/SoccerTeam.h)）；
   2. 寻找最安全且向前推进的队友传球（[`SoccerTeam::findPass`](./game/SoccerTeam.h)）；
-  3. 若均不可行，切换至 [`Dribble`](./fsm/StatesPlayerOnField.h) 缓慢带球推进。
+  3. 若均不可行，切换至 [`Dribble`](./ai/StatesPlayerOnField.h) 缓慢带球推进。
 
 ---
 
 ### 3.4 球队战术状态机 (team FSM)
 
-球队持有 [`StateMachine<SoccerTeam>`](./game/SoccerTeam.h)，各状态定义于 [`StatesTeam.h`](./fsm/StatesTeam.h)：
+球队持有 [TeamAI](./ai/TeamAI.h)，各状态定义于 [`StatesTeam.h`](./ai/StatesTeam.h)：
 
 ```mermaid
 stateDiagram-v2
@@ -662,8 +633,8 @@ $$\mathbf{x}(t) = \mathbf{x}_0 + \mathbf{v}_0 \cdot t + \frac{1}{2} \mathbf{a} \
 
 | 设计模式 | 对应实现类 | 应用意图与收益 |
 | :--- | :--- | :--- |
-| **状态模式 (State Pattern)** | [`State<T>`](./fsm/State.h), [`StateMachine<T>`](./fsm/StateMachine.h) | 消除庞大的嵌套 `switch-case`，将球员和球队的各项行为封装为独立自治类，新增动作无须修改主体框架。 |
-| **单例模式 (Singleton Pattern)** | 所有具体状态子类、[`MessageDispatcher`](./messaging/MessageDispatcher.h)、[`EntityManager`](./entity/EntityManager.h) | 状态类均无成员变量（无自身状态），全局仅需一个单例共享实例，节约堆栈开销；消息与实体管理器全局唯一。 |
+| **状态模式 (State Pattern)** | [`State`](./fsm/State.h), [`StateMachine`](./fsm/StateMachine.h) | 消除庞大的嵌套 `switch-case`，将球员和球队的各项行为封装为独立自治类，新增动作无须修改主体框架。 |
+| **单例模式 (Singleton Pattern)** | [`MessageDispatcher`](./messaging/MessageDispatcher.h)、[`EntityManager`](./entity/EntityManager.h) 等全局服务 | 基础设施仍采用单例。具体 AI 状态不再是单例，每个控制器独立拥有并绑定其业务对象。 |
 | **中介者模式 (Mediator Pattern)** | [`MessageDispatcher`](./messaging/MessageDispatcher.h) | 传球请求、接球、支援与回位通知经调度器中转；球队仍直接保存球员指针，消息机制不消除所有对象耦合。 |
 | **策略模式 (Strategy Pattern)** | [`SteeringBehaviors`](./game/SteeringBehaviors.h) | 将寻找、到达、追击、拦截等运动算法抽离为可自由启用的插拔策略组合。 |
 | **模板方法 / 接口模式** | [`EntityBase`](./entity/EntityBase.h) | 统一规定实体的 `update()`, `render()`, `handleMessage()` 虚函数契约，球队通过球员基类指针调用具体角色；主循环直接调用 SoccerPitch，未统一遍历所有实体。 |
@@ -674,8 +645,9 @@ $$\mathbf{x}(t) = \mathbf{x}_0 + \mathbf{v}_0 \cdot t + \frac{1}{2} \mathbf{a} \
 
 | 模块 | 当前依赖与职责边界 |
 | :--- | :--- |
-| `fsm/` | `State.h`、`StateMachine.h` 是通用模板；同目录的足球状态直接调用球队、球员、场地和消息设施。 |
-| `entity/` | 通用实体与足球球员共存；球员依赖 `game/` 的球队、足球和 steering，业务依赖与 `fsm/`、`game/` 双向交织。 |
+| `fsm/` | 非模板状态接口与调度器，声明和实现分离；只依赖抽象状态及前置声明的消息类型。 |
+| `ai/` | 三类控制器及具体足球状态。控制器封装状态集合和类型化切换，具体状态绑定业务对象并调用球队、球员和消息设施。 |
+| `entity/` | 通用实体与足球球员共存；球员依赖 `game/` 的球队、足球和 steering，球员通过 `ai/` 控制器执行决策；具体状态仍依赖 `entity/` 和 `game/`，这一业务耦合尚未消除。 |
 | `game/` | 世界、球队、战术、物理与渲染共存；`SoccerTeam` 还负责球员创建及注册。 |
 | `messaging/` | 调度器依赖全局实体注册表与帧计数器；接收者通过虚函数处理消息。 |
 | `math/`、`common/` | `Vector2D` 使用 Win32 类型，`Region`、`Wall2D` 内置 GDI 绘图；基础层尚不能独立于窗口环境使用。 |
@@ -687,8 +659,8 @@ $$\mathbf{x}(t) = \mathbf{x}_0 + \mathbf{v}_0 \cdot t + \frac{1}{2} \mathbf{a} \
 ### 9.2 对象所有权与生命周期
 
 - `main.cpp` 创建并删除 `SoccerPitch`；按 `R` 删除旧场地并创建新场地。
-- 场地拥有足球、两支球队、两个球门、场地区域和分区对象；球队拥有球员、球队 FSM 和支援点计算器。
-- 球员拥有 steering，具体角色拥有各自 FSM；场上球员另外拥有踢球频率调节器。状态对象采用共享单例，不由 FSM 删除。
+- 场地拥有足球、两支球队、两个球门、场地区域和分区对象；球队拥有球员、TeamAI 和支援点计算器。
+- 球员拥有 steering，具体角色通过 unique_ptr 拥有各自 AI 控制器；场上球员另外拥有踢球频率调节器。控制器拥有全部状态和状态机，状态机只借用自己的状态对象，不删除它们。
 - 球队与球员之间、球队与场地之间，以及对手引用等使用非拥有的裸指针。拥有关系同样用裸指针表达，缺少异常情况下的自动清理。
 - `EntityManager` 保存球员指针但不拥有球员。当前球队销毁球员时没有调用 `removeEntity()`，重置也没有清空注册表，旧条目会成为悬空指针。
 - `getEntityFromId()` 对不存在的 id 使用断言，未提供安全的失败返回；因此调度器里的空指针检查不能覆盖无效 id 情况。
@@ -697,7 +669,7 @@ $$\mathbf{x}(t) = \mathbf{x}_0 + \mathbf{v}_0 \cdot t + \frac{1}{2} \mathbf{a} \
 
 延迟消息依赖 `FrameCounter`，当前没有接入帧计数更新与延迟派发。`Telegram::operator<` 主要按派发时间比较，不同消息具有相同时间时会被 `std::set` 视为等价；时间容差参与比较也不能保证严格弱序。完善此机制时应使用可靠的排序规则、保留同一时间的多个消息，并管理载荷及接收者的生命周期。
 
-Makefile 没有生成和包含头文件依赖文件，修改头文件后可能复用旧对象。建议添加 `-MMD -MP` 及 `.d` 文件包含规则。当前对象路径通过 `notdir` 去掉源文件目录，未来增加同名源文件会冲突，应保留目录结构。仓库目前没有自动化测试与 CI 配置。
+Makefile 没有生成和包含头文件依赖文件，修改头文件后可能复用旧对象。建议添加 `-MMD -MP` 及 `.d` 文件包含规则。当前对象路径通过 `notdir` 去掉源文件目录，未来增加同名源文件会冲突，应保留目录结构。仓库提供 make test，覆盖 FSM 生命周期和 AI 集成行为，目前尚无 CI 配置。
 
 ### 9.4 配置与文档使用约定
 
@@ -716,7 +688,7 @@ Makefile 没有生成和包含头文件依赖文件，修改头文件后可能�
 1. 补全实体注册与注销，验证比赛重复重置后的查找和消息投递。
 2. 修正消息队列排序、载荷所有权及无效接收者处理，再接入延迟调度和帧计数。
 3. 完善头文件依赖与对象路径。
-4. 将通用 FSM 与足球状态分开，将 GDI 绘图移到独立渲染模块；逐步用 RAII 表达对象所有权。
-5. 对实体生命周期、消息排序、FSM 切换和几何判定建立自动验证，再按需要引入 CI。
+4. 将 GDI 绘图移到独立渲染模块；在已分离的 fsm/ 与 ai/ 基础上，继续收窄业务状态访问能力，并逐步用 RAII 表达其他对象所有权。
+5. 在已有 FSM 切换和 AI 集成测试之外，扩展实体生命周期、消息排序及几何判定验证，再按需要引入 CI。
 
-以上问题及建议来自静态代码核对；文档更新不表示这些改进已经实现，也不表示通过了编译或运行验证。
+非模板 FSM 重构已经通过完整编译和 make test。测试涵盖生命周期顺序、消息回退、嵌套切换、状态实例隔离、开球流程及三场比赛共 9000 次无窗口更新。集成测试在比赛销毁后显式清空既有全局实体注册表；此前列出的注册表、延迟队列和渲染耦合问题仍待处理。

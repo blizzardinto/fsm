@@ -1,17 +1,15 @@
+/*
+ * 阅读提示：守门员具体类，继承球员公共能力，并拥有 GoalkeeperAI 控制器。
+ * 球队通过 EntityPlayer 指针统一更新成员，虚函数会自动选择守门员的实现。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef GOALY_H
 #define GOALY_H
-//------------------------------------------------------------------------
-//
-//  name:   EntityPlayerGoalKeeper.h
-//
-//  Desc:   class to implement a goalkeeper agent
-//
-//  Author: Mat Buckland 2003 (fup@ai-junkie.com)
-//
-//------------------------------------------------------------------------
+// 守门员派生类：在公共球员能力上增加守门决策与观察方向。原作者：Mat Buckland，2003（fup@ai-junkie.com）。
 #include "Vector2D.h"
 #include "EntityPlayer.h"
-#include "StateMachine.h"
+#include "GoalkeeperAI.h"
+#include <memory>
 
 class EntityPlayer;
 
@@ -20,19 +18,17 @@ class EntityPlayerGoalKeeper : public EntityPlayer
 {
 private:
 
-   //an instance of the state machine class
-  StateMachine<EntityPlayerGoalKeeper>*  mStateMachine;
+   // 智能指针独占 AI 控制器；球员销毁时控制器及其状态自动销毁。
+  std::unique_ptr<GoalkeeperAI> mAi;
 
-  //this vector is updated to point towards the ball and is used when
-  //rendering the goalkeeper (instead of the underlaying vehicle's heading)
-  //to ensure he always appears to be watching the ball
+  // 绘图时用此向量表现面向足球，移动方向仍由基类朝向决定。
   Vector2D   mLookAt;
 
 public:
 
    EntityPlayerGoalKeeper(SoccerTeam*        homeTeam,
               int                homeRegion,
-              State<EntityPlayerGoalKeeper>* startState,
+              GoalkeeperState startState,
               Vector2D           heading,
               Vector2D           velocity,
               double              mass,
@@ -41,31 +37,24 @@ public:
               double              maxTurnRate,
               double              scale);
 
-   ~EntityPlayerGoalKeeper(){delete mStateMachine;}
+   ~EntityPlayerGoalKeeper();
 
-   //these must be implemented
+   // 重写基类的更新、绘制和消息接口，提供守门员的具体行为。
    void        update();
    void        render();
    bool        handleMessage(const Telegram& msg);
 
 
-   //returns true if the ball comes close enough for the keeper to
-   //consider intercepting
+   // 判断足球是否足够接近，使守门员可以考虑出击。
    bool        ballWithinRangeForIntercept()const;
 
-   //returns true if the keeper has ventured too far away from the goalmouth
+   // 判断守门员是否离球门过远。
    bool        tooFarFromGoalMouth()const;
 
-   //this method is called by the Intercept state to determine the spot
-   //along the goalmouth which will act as one of the interposeBehavior targets
-   //(the other is the ball).
-   //the specific point at the goal line that the keeper is trying to cover
-   //is flexible and can move depending on where the ball is on the field.
-   //to achieve this we just scale the ball's y value by the ratio of the
-   //goal width to playingfield width
+   // 根据足球纵向位置计算球门侧的阻挡目标，与足球一起决定守门员站位。
    Vector2D    getRearInterposeTarget()const;
 
-   StateMachine<EntityPlayerGoalKeeper>* getFsm()const{return mStateMachine;}
+   GoalkeeperAI* getAi()const;
 
 
    Vector2D    lookAt()const{return mLookAt;}

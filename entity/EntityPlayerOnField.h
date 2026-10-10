@@ -1,30 +1,23 @@
+/*
+ * 阅读提示：场上球员具体类，继承球员公共能力，并拥有 FieldPlayerAI 控制器。
+ * 继承用于表达它是一个球员；组合用于表达它有一个决策控制器，二者承担不同职责。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #pragma warning (disable:4786)
 #ifndef FIELDPLAYER_H
 #define FIELDPLAYER_H
-//------------------------------------------------------------------------
-//
-//  name:   EntityPlayerOnField.h
-//
-//  Desc:   Derived from a EntityPlayer, this class encapsulates a player
-//          capable of moving around a soccer pitch, kicking, dribbling,
-//          shooting etc
-//
-//  Author: Mat Buckland 2003 (fup@ai-junkie.com)
-//
-//------------------------------------------------------------------------
+// 场上球员派生类：在公共球员能力上增加踢球、带球、接球等 AI 决策。原作者：Mat Buckland，2003（fup@ai-junkie.com）。
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <cassert>
 
-#include "StatesPlayerGoalKeeper.h"
 #include "Vector2D.h"
-#include "StateMachine.h"
 #include "EntityPlayer.h"
-#include "StateMachine.h"
-#include "Regulator.h"
+#include "FieldPlayerAI.h"
+#include <memory>
 
-class CSteeringBehavior;
+class Regulator;
 class SoccerTeam;
 class SoccerPitch;
 class Goal;
@@ -35,10 +28,10 @@ class EntityPlayerOnField : public EntityPlayer
 {
 private:
 
-   //an instance of the state machine class
-  StateMachine<EntityPlayerOnField>*  mStateMachine;
+   // 智能指针独占 AI 控制器；球员销毁时控制器及其状态自动销毁。
+  std::unique_ptr<FieldPlayerAI> mAi;
 
-  //limits the number of kicks a player may take per second
+  // 调节器限制每秒允许的踢球次数。
   Regulator*                  mKickLimiter;
 
 
@@ -46,7 +39,7 @@ public:
 
   EntityPlayerOnField(SoccerTeam*    homeTeam,
              int        homeRegion,
-             State<EntityPlayerOnField>* startState,
+             FieldPlayerState startState,
              Vector2D  heading,
              Vector2D      velocity,
              double         mass,
@@ -58,16 +51,16 @@ public:
 
   ~EntityPlayerOnField();
 
-  //call this to update the player's position and orientation
+  // 更新球员的位置和朝向。
   void        update();
 
   void        render();
 
   bool        handleMessage(const Telegram& msg);
 
-  StateMachine<EntityPlayerOnField>* getFsm()const{return mStateMachine;}
+  FieldPlayerAI* getAi()const;
 
-  bool        isReadyForNextKick()const{return mKickLimiter->isReady();}
+  bool        isReadyForNextKick()const;
 
 
 };

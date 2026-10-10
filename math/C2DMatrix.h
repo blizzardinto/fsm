@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：二维变换矩阵对象，封装平移、缩放和旋转的组合。
+ * 类内部保存矩阵元素，对外提供变换方法；调用者无需手动修改每个元素。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef C2DMATRIX_H
 #define C2DMATRIX_H
 #include <math.h>
@@ -31,7 +36,7 @@ private:
 
   Matrix mMatrix;
 
-  //multiplies mMatrix with mIn
+  // 将内部矩阵与传入矩阵相乘。
   void  matrixMultiply(Matrix &mIn);
 
 
@@ -39,32 +44,32 @@ public:
 
   C2DMatrix()
   {
-    //initialize the matrix to an identity matrix
+    // 构造时设置为单位矩阵。
     identity();
   }
 
-  //create an identity matrix
+  // 重置为不改变坐标的单位矩阵。
   void identity();
 
-  //create a transformation matrix
+  // 叠加平移变换。
   void translate(double x, double y);
 
-  //create a scale matrix
+  // 叠加缩放变换。
   void scale(double xScale, double yScale);
 
-  //create a rotation matrix
+  // 根据角度叠加旋转变换。
   void  rotate(double rotation);
 
-  //create a rotation matrix from a fwd and side 2D vector
+  // 根据朝向与侧向量叠加旋转变换。
   void  rotate(const Vector2D &fwd, const Vector2D &side);
 
-   //applys a transformation matrix to a std::vector of points
+   // 变换容器中的所有顶点。
   void transformVector2Ds(std::vector<Vector2D> &vPoints);
 
-  //applys a transformation matrix to a point
+  // 变换单个坐标。
   void transformVector2Ds(Vector2D &vPoint);
 
-  //accessors to the matrix elements
+  // 设置矩阵元素的接口。
   void element11(double val){mMatrix.element11 = val;}
   void element12(double val){mMatrix.element12 = val;}
   void element13(double val){mMatrix.element13 = val;}

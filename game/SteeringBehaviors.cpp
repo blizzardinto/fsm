@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：移动行为组件，借用一个球员对象，并把目标与行为开关换算成移动力。
+ * 组合允许球员复用寻找、到达、追踪、分离和阻挡算法；此组件不负责选择足球战术状态。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "SteeringBehaviors.h"
 #include "EntityPlayer.h"
 #include "Transformations.h"
@@ -12,9 +17,7 @@
 using std::string;
 using std::vector;
 
-//------------------------- ctor -----------------------------------------
-//
-//------------------------------------------------------------------------
+// 构造移动行为对象：绑定服务的球员，并初始化各行为权重。
 SteeringBehaviors::SteeringBehaviors(EntityPlayer*  agent,
                                      SoccerPitch* world,
                                      SoccerBall*  ball):
@@ -30,68 +33,53 @@ SteeringBehaviors::SteeringBehaviors(EntityPlayer*  agent,
 {
 }
 
-//--------------------- accumulateForce ----------------------------------
-//
-//  This function calculates how much of its max steering force the
-//  vehicle has left to apply and then applies that amount of the
-//  force to add.
-//------------------------------------------------------------------------
+// 按剩余驱动力预算累加一个行为的力；预算不足时只加入可用部分。
 bool SteeringBehaviors::accumulateForce(Vector2D &sf, Vector2D forceToAdd)
 {
-  //first calculate how much steering force we have left to use
+  // 计算目前还剩多少可用驱动力。
   double magnitudeSoFar = sf.length();
 
   double magnitudeRemaining = mPlayer->maxForce() - magnitudeSoFar;
 
-  //return false if there is no more force left to use
+  // 驱动力预算已经用完时返回假。
   if (magnitudeRemaining <= 0.0) return false;
 
-  //calculate the magnitude of the force we want to add
+  // 计算准备加入的力的大小。
   double magnitudeToAdd = forceToAdd.length();
 
-  //now calculate how much of the force we can really add
+  // 只加入预算允许的部分。
   if (magnitudeToAdd > magnitudeRemaining)
   {
     magnitudeToAdd = magnitudeRemaining;
   }
 
-  //add it to the steering force
+  // 将这一部分力累加到总移动力。
   sf += (vec2DNormalize(forceToAdd) * magnitudeToAdd);
 
   return true;
 }
 
-//---------------------- calculate ---------------------------------------
-//
-//  calculates the overall steering force based on the currently active
-//  steering behaviors.
-//------------------------------------------------------------------------
+// 汇总当前已启用的行为，得到球员本轮使用的移动力。
 Vector2D SteeringBehaviors::calculate()
 {
-  //reset the force
+  // 每轮开始清空上一轮累积的力。
   mSteeringForce.zero();
 
-  //this will hold the value of each individual steering force
+  // 临时保存单个行为产生的力。
   mSteeringForce = sumForces();
 
-  //make sure the force doesn't exceed the vehicles maximum allowable
+  // 把总力限制在球员最大驱动力范围内。
   mSteeringForce.truncate(mPlayer->maxForce());
 
   return mSteeringForce;
 }
 
-//-------------------------- sumForces -----------------------------------
-//
-//  this method calls each active steering behavior and acumulates their
-//  forces until the max steering force magnitude is reached at which
-//  time the function returns the steering force accumulated to that
-//  point
-//------------------------------------------------------------------------
+// 按优先顺序累积已启用行为的力，预算用完时停止继续叠加。
 Vector2D SteeringBehaviors::sumForces()
 {
    Vector2D force;
 
-  //the soccer players must always tag their neighbors
+  // 先标记附近球员，供分离行为使用。
    findNeighbours();
 
   if (on(separationBehavior))
@@ -132,31 +120,20 @@ Vector2D SteeringBehaviors::sumForces()
   return mSteeringForce;
 }
 
-//------------------------- forwardComponent -----------------------------
-//
-//  calculates the forward component of the steering force
-//------------------------------------------------------------------------
+// 将移动力投影到朝向，得到前向分量。
 double SteeringBehaviors::forwardComponent()
 {
   return mPlayer->heading().dot(mSteeringForce);
 }
 
-//--------------------------- sideComponent ------------------------------
-//
-//  //  calculates the side component of the steering force
-//------------------------------------------------------------------------
+// 将移动力投影到侧向量，得到侧向分量。
 double SteeringBehaviors::sideComponent()
 {
   return mPlayer->side().dot(mSteeringForce) * mPlayer->maxTurnRate();
 }
 
 
-//------------------------------- seek -----------------------------------
-//
-//  Given a target, this behavior returns a steering force which will
-//  allign the agent with the target and move the agent in the desired
-//  direction
-//------------------------------------------------------------------------
+// 寻找行为：朝目标产生期望速度，再减去当前速度得到调整力。
 Vector2D SteeringBehaviors::seek(Vector2D target)
 {
 
@@ -167,35 +144,27 @@ Vector2D SteeringBehaviors::seek(Vector2D target)
 }
 
 
-//--------------------------- arrive -------------------------------------
-//
-//  This behavior is similar to seekBehavior but it attempts to arriveBehavior at the
-//  target with a zero velocity
-//------------------------------------------------------------------------
+// 到达行为：目标越近速度越低，争取停在目标附近。
 Vector2D SteeringBehaviors::arrive(Vector2D    target,
                                    Deceleration deceleration)
 {
   Vector2D toTarget = target - mPlayer->pos();
 
-  //calculate the distance to the target
+  // 计算到目标的距离。
   double dist = toTarget.length();
 
   if (dist > 0)
   {
-    //because Deceleration is enumerated as an int, this value is required
-    //to provide fine tweaking of the deceleration..
+    // 枚举提供粗略减速等级，此系数进一步调整减速强度。
     const double decelerationTweaker = 0.3;
 
-    //calculate the speed required to reach the target given the desired
-    //deceleration
+    // 根据距离和减速等级计算期望速度。
     double speed =  dist / ((double)deceleration * decelerationTweaker);
 
-    //make sure the velocity does not exceed the max
+    // 限制期望速度不超过最大速度。
     speed = std::min(speed, mPlayer->maxSpeed());
 
-    //from here proceed just like seek except we don't need to normalize
-    //the toTarget vector because we have already gone to the trouble
-    //of calculating its length: dist.
+    // 用已经算出的距离归一化目标方向，避免重复求长度。
     Vector2D desiredVelocity =  toTarget * speed / dist;
 
     return (desiredVelocity - mPlayer->velocity());
@@ -205,17 +174,12 @@ Vector2D SteeringBehaviors::arrive(Vector2D    target,
 }
 
 
-//------------------------------ pursuit ---------------------------------
-//
-//  this behavior creates a force that steers the agent towards the
-//  ball
-//------------------------------------------------------------------------
+// 追踪行为：预测足球未来位置，再向预测位置移动。
 Vector2D SteeringBehaviors::pursuit(const SoccerBall* ball)
 {
   Vector2D toBall = ball->pos() - mPlayer->pos();
 
-  //the lookahead time is proportional to the distance between the ball
-  //and the pursuer;
+  // 预测时间由足球距离和速度共同决定。
   double lookAheadTime = 0.0;
 
   if (ball->speed() != 0.0)
@@ -223,59 +187,51 @@ Vector2D SteeringBehaviors::pursuit(const SoccerBall* ball)
     lookAheadTime = toBall.length() / ball->speed();
   }
 
-  //calculate where the ball will be at this time in the future
+  // 估算足球在预测时间后的坐标。
   mTarget = ball->futurePosition(lookAheadTime);
 
-  //now seekBehavior to the predicted future position of the ball
+  // 朝预测位置执行寻找行为。
   return arrive(mTarget, fast);
 }
 
 
-//-------------------------- findNeighbours ------------------------------
-//
-//  tags any vehicles within a predefined radius
-//------------------------------------------------------------------------
+// 标记感知半径内的其他球员。
 void SteeringBehaviors::findNeighbours()
 {
   std::list<EntityPlayer*>& allPlayers = AutoList<EntityPlayer>::getAllMembers();
   std::list<EntityPlayer*>::iterator curPlyr;
   for (curPlyr = allPlayers.begin(); curPlyr!=allPlayers.end(); ++curPlyr)
   {
-    //first clear any current tag
+    // 先清除上一次的邻居标记。
     (*curPlyr)->steering()->unTag();
 
-    //work in distance squared to avoid sqrts
+    // 比较距离平方以避免开平方。
     Vector2D to = (*curPlyr)->pos() - mPlayer->pos();
 
     if (to.lengthSq() < (mViewDistance * mViewDistance))
     {
       (*curPlyr)->steering()->tag();
     }
-  }//next
+  }// 处理下一个球员。
 }
 
 
-//---------------------------- separation --------------------------------
-//
-// this calculates a force repelling from the other neighbors
-//------------------------------------------------------------------------
+// 分离行为：受到邻居的排斥力，减少球员聚集和重叠。
 Vector2D SteeringBehaviors::separation()
 {
-   //iterate through all the neighbors and calculate the vector from the
+   // 遍历邻居，计算从邻居指向当前球员的向量。
   Vector2D steeringForce;
 
   std::list<EntityPlayer*>& allPlayers = AutoList<EntityPlayer>::getAllMembers();
   std::list<EntityPlayer*>::iterator curPlyr;
   for (curPlyr = allPlayers.begin(); curPlyr!=allPlayers.end(); ++curPlyr)
   {
-    //make sure this agent isn't included in the calculations and that
-    //the agent is close enough
+    // 排除自身，只考虑已标记为附近的对象。
     if((*curPlyr != mPlayer) && (*curPlyr)->steering()->tagged())
     {
       Vector2D toAgent = mPlayer->pos() - (*curPlyr)->pos();
 
-      //scale the force inversely proportional to the agents distance
-      //from its neighbor.
+      // 距离越近，排斥作用越强。
       steeringForce += vec2DNormalize(toAgent)/toAgent.length();
     }
   }
@@ -284,11 +240,7 @@ Vector2D SteeringBehaviors::separation()
 }
 
 
-//--------------------------- interpose ----------------------------------
-//
-//  Given an opponent and an object position this method returns a
-//  force that attempts to position the agent between them
-//------------------------------------------------------------------------
+// 阻挡行为：在球门侧目标和足球之间选择站位并减速到达。
 Vector2D SteeringBehaviors::interpose(const SoccerBall* ball,
                                       Vector2D  target,
                                       double     distFromTarget)
@@ -298,12 +250,10 @@ Vector2D SteeringBehaviors::interpose(const SoccerBall* ball,
 }
 
 
-//----------------------------- renderAids -------------------------------
-//
-//------------------------------------------------------------------------
+// 绘制移动行为调试辅助图形。
 void SteeringBehaviors::renderAids( )
 {
-  //render the steering force
+  // 绘制移动力向量。
   gdi->redPen();
 
   gdi->line(mPlayer->pos(), mPlayer->pos() + mSteeringForce * 20);

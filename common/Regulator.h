@@ -1,6 +1,11 @@
+/*
+ * 阅读提示：动作频率调节器，封装下一次允许执行的时刻。
+ * 每个使用者可以拥有自己的调节器，让踢球或支援评分按各自频率执行。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef REGULATOR
 #define REGULATOR
-#pragma comment(lib,"winmm.lib") //if you don't use MSVC make sure this library is included in your project
+#pragma comment(lib,"winmm.lib") // 非微软编译器构建时，也需要链接 Windows 多媒体计时库。
 #include "mmsystem.h"
 
 #include "utils.h"
@@ -12,10 +17,10 @@ class Regulator
 {
 private:
 
-  //the time period between updates
+  // 两次允许更新之间的时间间隔。
   double mUpdatePeriod;
 
-  //the next time the regulator allows code flow
+  // 下一次允许执行动作的时刻。
   DWORD mNextUpdateTime;
 
 
@@ -43,22 +48,18 @@ public:
   }
 
 
-  //returns true if the current time exceeds mNextUpdateTime
+  // 当前时刻超过下一次更新时间时，允许执行。
   bool isReady()
   {
-    //if a regulator is instantiated with a zero freq then it goes into
-    //stealth mode (doesn't regulate)
+    // 更新频率为零时不限制执行频率。
     if (isEqual(0.0, mUpdatePeriod)) return true;
 
-    //if the regulator is instantiated with a negative freq then it will
-    //never allow the code to flow
+    // 更新频率为负数时，始终禁止执行。
     if (mUpdatePeriod < 0) return false;
 
     DWORD currentTime = timeGetTime();
 
-    //the number of milliseconds the update period can vary per required
-    //update-step. This is here to make sure any multiple clients of this class
-    //have their updates spread evenly
+    // 为更新间隔加入少量随机变化，避免多个对象总在同一时刻执行动作。
     static const double updatePeriodVariator = 10.0;
 
     if (currentTime >= mNextUpdateTime)

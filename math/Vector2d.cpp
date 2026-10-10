@@ -1,42 +1,34 @@
+/*
+ * 阅读提示：二维向量值类型的计算实现，包括长度、点积、单位化和反射。
+ * 阅读公式时先确认向量表示位置还是方向；点的位置需要平移，方向向量通常只需要旋转。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "Vector2D.h"
 #include <cmath>
 #include <fstream>
 #include <limits>
 
-//------------------------- length ---------------------------------------
-//
-//  returns the length of a 2D vector
-//------------------------------------------------------------------------
+// 向量长度表示大小；位置差向量的长度就是距离。
 double Vector2D::length()const
 {
   return sqrt(x * x + y * y);
 }
 
 
-//------------------------- lengthSq -------------------------------------
-//
-//  returns the squared length of a 2D vector
-//------------------------------------------------------------------------
+// 返回向量长度平方，比较远近时可避免开平方。
 double Vector2D::lengthSq()const
 {
   return (x * x + y * y);
 }
 
 
-//------------------------- Vec2DDot -------------------------------------
-//
-//  calculates the dot product
-//------------------------------------------------------------------------
+// 计算点积，常用于方向投影和夹角判断。
 double Vector2D::dot(const Vector2D &v2)const
 {
   return x*v2.x + y*v2.y;
 }
 
-//------------------------ sign ------------------------------------------
-//
-//  returns positive if v2 is clockwise of this vector,
-//  minus if anticlockwise (Y axis pointing down, X axis to right)
-//------------------------------------------------------------------------
+// 根据叉积符号判断转向；屏幕横轴向右、纵轴向下，顺时针为正。
 int Vector2D::sign(const Vector2D& v2)const
 {
   if (y*v2.x > x*v2.y)
@@ -49,19 +41,13 @@ int Vector2D::sign(const Vector2D& v2)const
   }
 }
 
-//------------------------------ perp ------------------------------------
-//
-//  Returns a vector perpendicular to this vector
-//------------------------------------------------------------------------
+// 返回垂直向量，可用作对象局部坐标的侧轴。
 Vector2D Vector2D::perp()const
 {
   return Vector2D(-y, x);
 }
 
-//------------------------------ distance --------------------------------
-//
-//  calculates the euclidean distance between two vectors
-//------------------------------------------------------------------------
+// 把两个坐标看作点，计算它们的直线距离。
 double Vector2D::distance(const Vector2D &v2)const
 {
   double ySeparation = v2.y - y;
@@ -71,10 +57,7 @@ double Vector2D::distance(const Vector2D &v2)const
 }
 
 
-//------------------------------ distanceSq ------------------------------
-//
-//  calculates the euclidean distance squared between two vectors
-//------------------------------------------------------------------------
+// 计算两个点的距离平方。
 double Vector2D::distanceSq(const Vector2D &v2)const
 {
   double ySeparation = v2.y - y;
@@ -83,10 +66,7 @@ double Vector2D::distanceSq(const Vector2D &v2)const
   return ySeparation*ySeparation + xSeparation*xSeparation;
 }
 
-//----------------------------- truncate ---------------------------------
-//
-//  truncates a vector so that its length does not exceed max
-//------------------------------------------------------------------------
+// 保留方向，将过长的向量缩短到给定最大长度。
 void Vector2D::truncate(double max)
 {
   if (this->length() > max)
@@ -97,30 +77,20 @@ void Vector2D::truncate(double max)
   }
 }
 
-//--------------------------- reflect ------------------------------------
-//
-//  given a normalized vector this method reflects the vector it
-//  is operating upon. (like the path of a ball bouncing off a wall)
-//------------------------------------------------------------------------
+// 根据单位法线反射向量，模拟足球撞墙反弹。
 void Vector2D::reflect(const Vector2D& norm)
 {
   *this += 2.0 * this->dot(norm) * norm.getReverse();
 }
 
-//----------------------- getReverse ----------------------------------------
-//
-//  returns the vector that is the reverse of this vector
-//------------------------------------------------------------------------
+// 返回方向相反、长度相同的向量。
 Vector2D Vector2D::getReverse()const
 {
   return Vector2D(-this->x, -this->y);
 }
 
 
-//------------------------- normalize ------------------------------------
-//
-//  normalizes a 2D Vector
-//------------------------------------------------------------------------
+// 非零向量除以自身长度，得到长度为一的单位向量。
 void Vector2D::normalize()
 {
   double vectorLength = this->length();
@@ -132,7 +102,7 @@ void Vector2D::normalize()
   }
 }
 
-//------------------------- member operator overloads ---------------------
+// 成员运算符重载，让向量支持加减和数乘等写法。
 const Vector2D& Vector2D::operator+=(const Vector2D &rhs)
 {
   x += rhs.x;
@@ -176,7 +146,7 @@ bool Vector2D::operator!=(const Vector2D& rhs)const
 }
 
 
-//------------------------------------------------------------------------non member functions
+// 不依赖单个对象的向量辅助函数。
 
 Vector2D vec2DNormalize(const Vector2D &v)
 {
@@ -251,7 +221,7 @@ POINT vectorToPoint(const Vector2D& v)
 
 
 
-//------------------------------------------------------------------------operator overloads
+// 非成员运算符重载，支持向量与数值的常用运算。
 Vector2D operator*(const Vector2D &lhs, double rhs)
 {
   Vector2D result(lhs);
@@ -266,7 +236,7 @@ Vector2D operator*(double lhs, const Vector2D &rhs)
   return result;
 }
 
-//overload the - operator
+// 重载减法运算符。
 Vector2D operator-(const Vector2D &lhs, const Vector2D &rhs)
 {
   Vector2D result(lhs);
@@ -276,7 +246,7 @@ Vector2D operator-(const Vector2D &lhs, const Vector2D &rhs)
   return result;
 }
 
-//overload the + operator
+// 重载加法运算符。
 Vector2D operator+(const Vector2D &lhs, const Vector2D &rhs)
 {
   Vector2D result(lhs);
@@ -286,7 +256,7 @@ Vector2D operator+(const Vector2D &lhs, const Vector2D &rhs)
   return result;
 }
 
-//overload the / operator
+// 重载除法运算符。
 Vector2D operator/(const Vector2D &lhs, double val)
 {
   Vector2D result(lhs);
@@ -308,10 +278,7 @@ std::ifstream& operator>>(std::ifstream& is, Vector2D& lhs)
   return is;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-
-//treats a window as a toroid
+// 越过一侧边界后从另一侧出现，形成首尾相连的空间。
 void wrapAround(Vector2D &pos, int maxX, int maxY)
 {
   if (pos.x > maxX) {pos.x = 0.0;}
@@ -323,8 +290,7 @@ void wrapAround(Vector2D &pos, int maxX, int maxY)
   if (pos.y > maxY) {pos.y = 0.0;}
 }
 
-//returns true if the point p is not inside the region defined by topLeft
-//and botRgt
+// 判断点是否在给定矩形区域外。
 bool notInsideRegion(Vector2D p,
                      Vector2D topLeft,
                      Vector2D botRgt)
@@ -346,11 +312,7 @@ bool insideRegion(Vector2D p, int left, int top, int right, int bottom)
   return !( (p.x < left) || (p.x > right) || (p.y < top) || (p.y > bottom) );
 }
 
-//------------------ isSecondInFovOfFirst -------------------------------------
-//
-//  returns true if the target position is in the field of view of the entity
-//  positioned at posFirst facing in facingFirst
-//-----------------------------------------------------------------------------
+// 判断目标是否落在观察者的视野角范围内。
 bool isSecondInFovOfFirst(Vector2D posFirst,
                           Vector2D facingFirst,
                           Vector2D posSecond,

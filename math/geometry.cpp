@@ -1,10 +1,14 @@
+/*
+ * 阅读提示：几何算法集合，提供线段、圆、射线和多边形的相交与距离判断。
+ * 这些计算不依赖球队或窗口，适合用普通函数表达；面向对象并不要求把所有算法都包装成类。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "geometry.h"
 
-//given a plane and a ray this function determins how far along the ray
-//an interestion occurs. Returns negative if the ray is parallel
+// 求射线与平面交点沿射线方向的距离；平行时返回负值。
 double distanceToRayPlaneIntersection(Vector2D rayOrigin,
                                      Vector2D rayHeading,
-                                     Vector2D planePoint,  //any point on the plane
+                                     Vector2D planePoint,  // 平面上的任意一个点。
                                      Vector2D planeNormal)
 {
 
@@ -12,7 +16,7 @@ double distanceToRayPlaneIntersection(Vector2D rayOrigin,
   double numer = planeNormal.dot(rayOrigin) + d;
   double denom = planeNormal.dot(rayHeading);
 
-  // normal is parallel to vector
+  // 射线方向与平面法线垂直时，射线平行于平面。
   if ((denom < 0.000001) && (denom > -0.000001))
   {
    return (-1.0);
@@ -21,9 +25,9 @@ double distanceToRayPlaneIntersection(Vector2D rayOrigin,
   return -(numer / denom);
 }
 
-//------------------------- whereIsPoint --------------------------------------
+// 判断点位于平面的哪一侧。
 SpanType whereIsPoint(Vector2D point,
-                       Vector2D pointOnPlane, //any point on the plane
+                       Vector2D pointOnPlane, // 平面上的任意一个点。
                        Vector2D planeNormal)
 {
  Vector2D dir = pointOnPlane - point;
@@ -44,7 +48,7 @@ SpanType whereIsPoint(Vector2D point,
 }
 
 
-//-------------------------- GetRayCircleIntersec -----------------------------
+// 求射线与圆的第一个交点距离。
 double getRayCircleIntersect(Vector2D rayOrigin,
                              Vector2D rayHeading,
                              Vector2D circleOrigin,
@@ -56,14 +60,14 @@ double getRayCircleIntersect(Vector2D rayOrigin,
    double v           = toCircle.dot(rayHeading);
    double d           = radius*radius - (length*length - v*v);
 
-   // If there was no intersection, return -1
+   // 无交点时返回负一。
    if (d < 0.0) return (-1.0);
 
-   // Return the distance to the [first] intersecting point
+   // 返回射线到第一个交点的距离。
    return (v - sqrt(d));
 }
 
-//----------------------------- doRayCircleIntersect --------------------------
+// 射线与圆的判别式检查：注意本实现返回判别式小于零，即无实交点，与函数名称含义相反。
 bool doRayCircleIntersect(Vector2D rayOrigin,
                           Vector2D rayHeading,
                           Vector2D circleOrigin,
@@ -75,18 +79,12 @@ bool doRayCircleIntersect(Vector2D rayOrigin,
    double v           = toCircle.dot(rayHeading);
    double d           = radius*radius - (length*length - v*v);
 
-   // If there was no intersection, return -1
+   // 判别式小于零时没有实交点；本实现此时返回真，阅读调用时不能按名称推断其语义。
    return (d < 0.0);
 }
 
 
-//------------------------------------------------------------------------
-//  Given a point P and a circle of radius R centered at C this function
-//  determines the two points on the circle that intersect with the
-//  tangents from P to the circle. Returns false if P is within the circle.
-//
-//  thanks to Dave Eberly for this one.
-//------------------------------------------------------------------------
+// 从圆外点向圆作两条切线，计算切点；点在圆内或圆上时返回假。算法参考 Dave Eberly。
 bool getTangentPoints (Vector2D c, double radiusValue, Vector2D pointP, Vector2D& t1, Vector2D& t2)
 {
   Vector2D pmC = pointP - c;
@@ -94,7 +92,7 @@ bool getTangentPoints (Vector2D c, double radiusValue, Vector2D pointP, Vector2D
   double rSqr = radiusValue*radiusValue;
   if ( sqrLen <= rSqr )
   {
-      // P is inside or on the circle
+      // 点在圆内或圆上，无法得到两个不同的外部切点。
       return false;
   }
 
@@ -112,68 +110,52 @@ bool getTangentPoints (Vector2D c, double radiusValue, Vector2D pointP, Vector2D
 
 
 
-//------------------------- distToLineSegment ----------------------------
-//
-//  given a line segment AB and a point P, this function calculates the
-//  perpendicular distance between them
-//------------------------------------------------------------------------
+// 计算点到线段的最短距离；投影不在线段内时取最近端点。
 double distToLineSegment(Vector2D pointA,
                         Vector2D pointB,
                         Vector2D pointP)
 {
-  //if the angle is obtuse between PA and AB is obtuse then the closest
-  //vertex must be A
+  // 投影位于起点外侧时，最近点是端点 A。
   double dotA = (pointP.x - pointA.x)*(pointB.x - pointA.x) + (pointP.y - pointA.y)*(pointB.y - pointA.y);
 
   if (dotA <= 0) return vec2DDistance(pointA, pointP);
 
-  //if the angle is obtuse between PB and AB is obtuse then the closest
-  //vertex must be B
+  // 投影位于终点外侧时，最近点是端点 B。
   double dotB = (pointP.x - pointB.x)*(pointA.x - pointB.x) + (pointP.y - pointB.y)*(pointA.y - pointB.y);
 
   if (dotB <= 0) return vec2DDistance(pointB, pointP);
 
-  //calculate the point along AB that is the closest to P
+  // 计算线段上距离目标点最近的投影点。
   Vector2D point = pointA + ((pointB - pointA) * dotA)/(dotA + dotB);
 
-  //calculate the distance P-point
+  // 计算目标点到投影点的距离。
   return vec2DDistance(pointP,point);
 }
 
-//------------------------- distToLineSegmentSq ----------------------------
-//
-//  as above, but avoiding sqrt
-//------------------------------------------------------------------------
+// 计算点到线段的距离平方，避免开平方。
 double distToLineSegmentSq(Vector2D pointA,
                           Vector2D pointB,
                           Vector2D pointP)
 {
-  //if the angle is obtuse between PA and AB is obtuse then the closest
-  //vertex must be A
+  // 投影位于起点外侧时，最近点是端点 A。
   double dotA = (pointP.x - pointA.x)*(pointB.x - pointA.x) + (pointP.y - pointA.y)*(pointB.y - pointA.y);
 
   if (dotA <= 0) return vec2DDistanceSq(pointA, pointP);
 
-  //if the angle is obtuse between PB and AB is obtuse then the closest
-  //vertex must be B
+  // 投影位于终点外侧时，最近点是端点 B。
   double dotB = (pointP.x - pointB.x)*(pointA.x - pointB.x) + (pointP.y - pointB.y)*(pointA.y - pointB.y);
 
   if (dotB <= 0) return vec2DDistanceSq(pointB, pointP);
 
-  //calculate the point along AB that is the closest to P
+  // 计算线段上距离目标点最近的投影点。
   Vector2D point = pointA + ((pointB - pointA) * dotA)/(dotA + dotB);
 
-  //calculate the distance P-point
+  // 计算目标点到投影点的距离平方。
   return vec2DDistanceSq(pointP,point);
 }
 
 
-//--------------------lineIntersection2D-------------------------
-//
-//	Given 2 lines in 2D space AB, CD this returns true if an
-//	intersection occurs.
-//
-//-----------------------------------------------------------------
+// 判断两条二维线段是否相交。
 
 bool lineIntersection2D(Vector2D pointA,
                         Vector2D pointB,
@@ -185,7 +167,7 @@ bool lineIntersection2D(Vector2D pointA,
 
   double bot = (pointB.x-pointA.x)*(pointD.y-c.y)-(pointB.y-pointA.y)*(pointD.x-c.x);
 
-  if (bot == 0)//parallel
+  if (bot == 0)// 两条线段所在的直线平行。
   {
     return false;
   }
@@ -196,21 +178,15 @@ bool lineIntersection2D(Vector2D pointA,
 
   if( (r > 0) && (r < 1) && (s > 0) && (s < 1) )
   {
-    //lines intersect
+    // 交点同时在线段范围内，判定相交。
     return true;
   }
 
-  //lines do not intersect
+  // 交点不同时位于两条线段内，判定不相交。
   return false;
 }
 
-//--------------------lineIntersection2D-------------------------
-//
-//	Given 2 lines in 2D space AB, CD this returns true if an
-//	intersection occurs and sets dist to the distance the intersection
-//  occurs along AB
-//
-//-----------------------------------------------------------------
+// 判断两条线段是否相交，并通过引用返回沿第一条线段到交点的距离。
 
 bool lineIntersection2D(Vector2D pointA,
                         Vector2D pointB,
@@ -225,7 +201,7 @@ bool lineIntersection2D(Vector2D pointA,
   double bot = (pointB.x-pointA.x)*(pointD.y-c.y)-(pointB.y-pointA.y)*(pointD.x-c.x);
 
 
-  if (bot == 0)//parallel
+  if (bot == 0)// 两条线段所在的直线平行。
   {
     if (isEqual(rTop, 0) && isEqual(sTop, 0))
     {
@@ -252,13 +228,7 @@ bool lineIntersection2D(Vector2D pointA,
   }
 }
 
-//-------------------- lineIntersection2D-------------------------
-//
-//	Given 2 lines in 2D space AB, CD this returns true if an
-//	intersection occurs and sets dist to the distance the intersection
-//  occurs along AB. Also sets the 2d vector point to the point of
-//  intersection
-//-----------------------------------------------------------------
+// 判断两条线段是否相交，并返回到交点的距离和交点坐标。
 bool lineIntersection2D(Vector2D   pointA,
                         Vector2D   pointB,
                         Vector2D   c,
@@ -275,7 +245,7 @@ bool lineIntersection2D(Vector2D   pointA,
 
   if ( (rBot == 0) || (sBot == 0))
   {
-    //lines are parallel
+    // 两条直线平行，没有唯一交点。
     return false;
   }
 
@@ -299,14 +269,11 @@ bool lineIntersection2D(Vector2D   pointA,
   }
 }
 
-//----------------------- objectIntersection2D ---------------------------
-//
-//  tests two polygons for intersection. *Does not check for enclosure*
-//------------------------------------------------------------------------
+// 检查两个多边形的边是否相交；不检查一个多边形完全包含另一个的情况。
 bool objectIntersection2D(const std::vector<Vector2D>& object1,
                           const std::vector<Vector2D>& object2)
 {
-  //test each line segment of object1 against each segment of object2
+  // 将第一个多边形的每条边与第二个多边形的每条边分别比较。
   for (unsigned int r=0; r<object1.size()-1; ++r)
   {
     for (unsigned int t=0; t<object2.size()-1; ++t)
@@ -324,16 +291,12 @@ bool objectIntersection2D(const std::vector<Vector2D>& object1,
   return false;
 }
 
-//----------------------- segmentObjectIntersection2D --------------------
-//
-//  tests a line segment against a polygon for intersection
-//  *Does not check for enclosure*
-//------------------------------------------------------------------------
+// 检查线段是否与多边形边界相交；不检查线段完全处于内部的情况。
 bool segmentObjectIntersection2D(const Vector2D& pointA,
                                  const Vector2D& pointB,
                                  const std::vector<Vector2D>& object)
 {
-  //test AB against each segment of object
+  // 将线段与多边形的每条边比较。
   for (unsigned int r=0; r<object.size()-1; ++r)
   {
     if (lineIntersection2D(pointA, pointB, object[r], object[r+1]))
@@ -346,10 +309,7 @@ bool segmentObjectIntersection2D(const Vector2D& pointA,
 }
 
 
-//----------------------------- twoCirclesOverlapped ---------------------
-//
-//  Returns true if the two circles overlap
-//------------------------------------------------------------------------
+// 根据圆心距离和半径判断两个圆是否重叠。
 bool twoCirclesOverlapped(double x1, double y1, double r1,
                           double x2, double y2, double r2)
 {
@@ -364,10 +324,7 @@ bool twoCirclesOverlapped(double x1, double y1, double r1,
   return false;
 }
 
-//----------------------------- twoCirclesOverlapped ---------------------
-//
-//  Returns true if the two circles overlap
-//------------------------------------------------------------------------
+// 使用圆心向量判断两个圆是否重叠。
 bool twoCirclesOverlapped(Vector2D c1, double r1,
                           Vector2D c2, double r2)
 {
@@ -382,10 +339,7 @@ bool twoCirclesOverlapped(Vector2D c1, double r1,
   return false;
 }
 
-//--------------------------- twoCirclesEnclosed ---------------------------
-//
-//  returns true if one circle encloses the other
-//-------------------------------------------------------------------------
+// 判断一个圆是否完全包含另一个圆。
 bool twoCirclesEnclosed(double x1, double y1, double r1,
                         double x2, double y2, double r2)
 {
@@ -400,52 +354,40 @@ bool twoCirclesEnclosed(double x1, double y1, double r1,
   return false;
 }
 
-//------------------------ twoCirclesIntersectionPoints ------------------
-//
-//  Given two circles this function calculates the intersection points
-//  of any overlap.
-//
-//  returns false if no overlap found
-//
-// see http://astronomy.swin.edu.au/~pbourke/geometry/2circle/
-//------------------------------------------------------------------------
+// 计算两个圆的交点，无符合条件的重叠时返回假。算法参考：http://astronomy.swin.edu.au/~pbourke/geometry/2circle/。
 bool twoCirclesIntersectionPoints(double x1, double y1, double r1,
                                   double x2, double y2, double r2,
                                   double &p3X, double &p3Y,
                                   double &p4X, double &p4Y)
 {
-  //first check to see if they overlap
+  // 先判断两个圆是否存在重叠。
   if (!twoCirclesOverlapped(x1,y1,r1,x2,y2,r2))
   {
     return false;
   }
 
-  //calculate the distance between the circle centers
+  // 计算两圆圆心之间的距离。
   double d = sqrt( (x1-x2) * (x1-x2) + (y1-y2) * (y1-y2));
 
-  //Now calculate the distance from the center of each circle to the center
-  //of the line which connects the intersection points.
+  // 计算各圆心到公共弦中点的距离。
   double a = (r1 - r2 + (d * d)) / (2 * d);
   double b = (r2 - r1 + (d * d)) / (2 * d);
 
 
-  //MAYBE A TEST FOR EXACT OVERLAP?
-
-  //calculate the point P2 which is the center of the line which
-  //connects the intersection points
+  // 计算公共弦中点；完全重合等退化情况需要调用方结合算法限制理解。
   double p2X, p2Y;
 
   p2X = x1 + a * (x2 - x1) / d;
   p2Y = y1 + a * (y2 - y1) / d;
 
-  //calculate first point
+  // 计算公共弦一侧的交点。
   double h1 = sqrt((r1 * r1) - (a * a));
 
   p3X = p2X - h1 * (y2 - y1) / d;
   p3Y = p2Y + h1 * (x2 - x1) / d;
 
 
-  //calculate second point
+  // 计算公共弦另一侧的交点。
   double h2 = sqrt((r2 * r2) - (a * a));
 
   p4X = p2X + h2 * (y2 - y1) / d;
@@ -455,38 +397,28 @@ bool twoCirclesIntersectionPoints(double x1, double y1, double r1,
 
 }
 
-//------------------------ twoCirclesIntersectionArea --------------------
-//
-//  Tests to see if two circles overlap and if so calculates the area
-//  defined by the union
-//
-// see http://mathforum.org/library/drmath/view/54785.html
-//-----------------------------------------------------------------------
+// 计算两圆重叠区域面积；使用扇形面积减三角形面积。算法参考：http://mathforum.org/library/drmath/view/54785.html。
 double twoCirclesIntersectionArea(double x1, double y1, double r1,
                                   double x2, double y2, double r2)
 {
-  //first calculate the intersection points
+  // 先计算两圆交点。
   double iX1, iY1, iX2, iY2;
 
   if(!twoCirclesIntersectionPoints(x1,y1,r1,x2,y2,r2,iX1,iY1,iX2,iY2))
   {
-    return 0.0; //no overlap
+    return 0.0; // 未找到交点时，本实现返回零。
   }
 
-  //calculate the distance between the circle centers
+  // 计算圆心之间的距离。
   double d = sqrt( (x1-x2) * (x1-x2) + (y1-y2) * (y1-y2));
 
-  //find the angles given that A and B are the two circle centers
-  //and C and D are the intersection points
+  // 根据圆心和交点计算两个扇形的圆心角。
   double cbd = 2 * acos((r2*r2 + d*d - r1*r1) / (r2 * d * 2));
 
   double cad = 2 * acos((r1*r1 + d*d - r2*r2) / (r1 * d * 2));
 
 
-  //Then we find the segment of each of the circles cut off by the
-  //chord CD, by taking the area of the sector of the circle BCD and
-  //subtracting the area of triangle BCD. Similarly we find the area
-  //of the sector ACD and subtract the area of triangle ACD.
+  // 每个弓形面积等于扇形面积减去三角形面积，再将两部分相加。
 
   double area = 0.5f*cbd*r2*r2 - 0.5f*r2*r2*sin(cbd) +
                 0.5f*cad*r1*r1 - 0.5f*r1*r1*sin(cad);
@@ -494,20 +426,14 @@ double twoCirclesIntersectionArea(double x1, double y1, double r1,
   return area;
 }
 
-//-------------------------------- circleArea ---------------------------
-//
-//  given the radius, calculates the area of a circle
-//-----------------------------------------------------------------------
+// 根据半径计算圆面积。
 double circleArea(double radius)
 {
   return geometryPi * radius * radius;
 }
 
 
-//----------------------- pointInCircle ----------------------------------
-//
-//  returns true if the point p is within the radius of the given circle
-//------------------------------------------------------------------------
+// 判断点到圆心的距离是否小于半径。
 bool pointInCircle(Vector2D pos,
                    double    radius,
                    Vector2D p)
@@ -522,18 +448,13 @@ bool pointInCircle(Vector2D pos,
   return false;
 }
 
-//--------------------- lineSegmentCircleIntersection ---------------------------
-//
-//  returns true if the line segemnt AB intersects with a circle at
-//  position P with radius radius
-//------------------------------------------------------------------------
+// 判断线段是否与给定圆相交。
 bool lineSegmentCircleIntersection(Vector2D pointA,
                                    Vector2D pointB,
                                    Vector2D pointP,
                                    double    radius)
 {
-  //first determine the distance from the center of the circle to
-  //the line segment (working in distance squared space)
+  // 计算圆心到线段的距离平方，并与半径平方比较。
   double distToLineSq = distToLineSegmentSq(pointA, pointB, pointP);
 
   if (distToLineSq < radius*radius)
@@ -548,14 +469,7 @@ bool lineSegmentCircleIntersection(Vector2D pointA,
 
 }
 
-//------------------- getLineSegmentCircleClosestIntersectionPoint ------------
-//
-//  given a line segment AB and a circle position and radius, this function
-//  determines if there is an intersection and stores the position of the
-//  closest intersection in the reference intersectionPoint
-//
-//  returns false if no intersection point is found
-//-----------------------------------------------------------------------------
+// 检查线段与圆是否相交；成功时通过引用返回距离线段起点最近的交点。
 bool getLineSegmentCircleClosestIntersectionPoint(Vector2D pointA,
                                                   Vector2D pointB,
                                                   Vector2D pos,
@@ -564,27 +478,19 @@ bool getLineSegmentCircleClosestIntersectionPoint(Vector2D pointA,
 {
   Vector2D toBNorm = vec2DNormalize(pointB-pointA);
 
-  //move the circle into the local space defined by the vector B-A with origin
-  //at A
+  // 将圆心转换到以线段起点为原点、线段方向为横轴的局部坐标。
   Vector2D localPos = pointToLocalSpace(pos, toBNorm, toBNorm.perp(), pointA);
 
   bool ipFound = false;
 
-  //if the local position + the radius is negative then the circle lays behind
-  //point A so there is no intersection possible. If the local x pos minus the
-  //radius is greater than length A-B then the circle cannot intersect the
-  //line segment
+  // 圆整体位于线段起点之前或终点之后时，不可能相交。
   if ( (localPos.x+radius >= 0) &&
      ( (localPos.x-radius)*(localPos.x-radius) <= vec2DDistanceSq(pointB, pointA)) )
   {
-     //if the distance from the x axis to the object's position is less
-     //than its radius then there is a potential intersection.
+     // 圆心到横轴的距离小于半径时，可能存在交点。
      if (fabs(localPos.y) < radius)
      {
-        //now to do a line/circle intersection test. The center of the
-        //circle is represented by A, B. The intersection points are
-        //given by the formulae x = A +/-sqrt(r^2-B^2), y=0. We only
-        //need to look at the smallest positive value of x.
+        // 在局部坐标中求圆与横轴的交点，选择靠近起点的交点。
         double a = localPos.x;
         double b = localPos.y;
 

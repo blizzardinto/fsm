@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：窗口工具函数，将菜单、尺寸和文件对话框操作封装成可复用接口。
+ * 这些函数处理平台细节，足球业务对象不需要了解窗口消息的具体过程。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "WindowUtils.h"
 #include <windows.h>
 #include "Vector2D.h"
@@ -6,11 +11,7 @@
 
 
 
-//---------------------- changeMenuState ---------------------------------
-//
-//  Changes the state of a menu item given the item identifier, the
-//  desired state and the HWND of the menu owner
-//------------------------------------------------------------------------
+// 根据菜单项编号和目标状态，更新指定窗口的菜单项。
 void changeMenuState(HWND hwnd, UINT menuItem, UINT state)
 {
   MENUITEMINFO mi;
@@ -23,10 +24,7 @@ void changeMenuState(HWND hwnd, UINT menuItem, UINT state)
   DrawMenuBar(hwnd);
 }
 
-//-------------------- checkMenuItemAppropriately ----------------------------
-//
-//  if b is true menuItem is checked, otherwise it is unchecked
-//-----------------------------------------------------------------------------
+// 布尔值为真时勾选菜单项，否则取消勾选。
 void checkMenuItemAppropriately(HWND hwnd, UINT menuItem, bool b)
 {
   if (b)
@@ -40,12 +38,7 @@ void checkMenuItemAppropriately(HWND hwnd, UINT menuItem, bool b)
 }
 
 
-//--------------------- checkBufferLength --------------------------------
-//
-//  this is a replacement for the StringCchLength function found in the
-//  platform SDK. See MSDN for details. Only ever used for checking toolbar
-//  strings
-//------------------------------------------------------------------------
+// 检查字符串缓冲区长度，提供旧版工具栏代码所需的长度检查接口。
 bool checkBufferLength(char* buff, int maxLength, int& bufferLength)
 {
   std::string s = ttos(buff);
@@ -70,7 +63,7 @@ void errorBox(char* msg)
   MessageBox(NULL, msg, "Error", MB_OK);
 }
 
-//gets the coordinates of the cursor relative to an active window
+// 获取鼠标相对于活动窗口的位置。
 Vector2D getClientCursorPosition()
 {
   POINT mousePos;
@@ -95,11 +88,7 @@ Vector2D getClientCursorPosition(HWND hwnd)
 }
 
 
-//-----------------------------------------------------------------------------
-//
-//  The following 3 functions are taken from Petzold's book and enable the
-//  client to use the file dialog common control
-//-----------------------------------------------------------------------------
+// 以下文件对话框辅助函数参考 Petzold 的著作。
 void fileInitialize (HWND hwnd,
                      OPENFILENAME& ofn,
                      const std::string& defaultFileTypeDescription,
@@ -122,13 +111,13 @@ void fileInitialize (HWND hwnd,
      ofn.lpstrCustomFilter = NULL ;
      ofn.nMaxCustFilter    = 0 ;
      ofn.nFilterIndex      = 0 ;
-     ofn.lpstrFile         = NULL ;          // Set in Open and Close functions
+     ofn.lpstrFile         = NULL ;          // 该字段由打开或保存对话框函数设置。
      ofn.nMaxFile          = MAX_PATH ;
-     ofn.lpstrFileTitle    = NULL ;          // Set in Open and Close functions
+     ofn.lpstrFileTitle    = NULL ;          // 该字段由打开或保存对话框函数设置。
      ofn.nMaxFileTitle     = MAX_PATH ;
      ofn.lpstrInitialDir   = NULL ;
      ofn.lpstrTitle        = NULL ;
-     ofn.Flags             = 0 ;             // Set in Open and Close functions
+     ofn.Flags             = 0 ;             // 该字段由打开或保存对话框函数设置。
      ofn.nFileOffset       = 0 ;
      ofn.nFileExtension    = 0 ;
      ofn.lpstrDefExt       = defaultFileExtension.c_str() ;
@@ -174,31 +163,28 @@ BOOL fileSaveDlg (HWND               hwnd,
      return GetSaveFileName (&ofn) ;
 }
 
-//-------------------------- resizeWindow -------------------------------------
-//
-//  call this to resize the active window to the specified size
-//-----------------------------------------------------------------------------
+// 将窗口调整到指定的客户区大小。
 void resizeWindow(HWND hwnd, int cx, int cy)
 {
-  //does this window have a menu. If so set a flag to true
+  // 判断窗口是否带菜单。
   HMENU hwndMenu = GetMenu(hwnd);
   bool bMenu = false;
   if (hwndMenu) bMenu = true;
 
-  //create a rect of the desired window size
+  // 用矩形描述期望的客户区尺寸。
   RECT desiredSize;
   desiredSize.left = 0;
   desiredSize.top  = 0;
   desiredSize.right = cx;
   desiredSize.bottom = cy;
 
-  //determine the size the window should be given the desired client area
+  // 根据边框、标题栏和菜单计算实际窗口尺寸。
   AdjustWindowRectEx(&desiredSize,
                      WS_OVERLAPPED | WS_VISIBLE | WS_CAPTION | WS_SYSMENU,
                      bMenu,
                      NULL);
 
-  //resize the window to fit
+  // 调整窗口大小。
   SetWindowPos(hwnd,
                NULL,
                GetSystemMetrics(SM_CXSCREEN)/2 - cx/2,
@@ -208,8 +194,7 @@ void resizeWindow(HWND hwnd, int cx, int cy)
                SWP_NOZORDER);
 }
 
-//------------------------- getWindowHeight -----------------------------------
-//-----------------------------------------------------------------------------
+// 返回窗口高度。
 int  getWindowHeight(HWND hwnd)
 {
   if (hwnd == 0) return 0;
@@ -221,8 +206,7 @@ int  getWindowHeight(HWND hwnd)
   return windowRect.bottom - windowRect.top;
 }
 
-//------------------------- getWindowWidth  -----------------------------------
-//-----------------------------------------------------------------------------
+// 返回窗口宽度。
 int  getWindowWidth(HWND hwnd)
 {
   if (hwnd == 0) return 0;

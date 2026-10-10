@@ -1,36 +1,36 @@
+/*
+ * 阅读提示：配置读取基类，封装文件流、去注释和数值转换。
+ * ParamLoader 复用读取能力，再定义足球需要哪些参数，展示了基类能力与业务派生类的分工。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "iniFileLoaderBase.h"
 using std::string;
 
 
-//removes any commenting from a line of text
+// 从一行配置文字中去掉注释。
 void removeCommentingFromLine(string& line)
 {
-   //search for any comment and remove
+   // 查找注释起点。
    string::size_type idx = line.find('//');
 
    if (idx != string::npos)
    {
-     //cut out the comment
+     // 删除注释起点之后的文字。
      line = line.substr(0, idx);
    }
 }
-//----------------------- getNextParameter ------------------------------------
-//
-//  searches the text file for the next valid parameter. Discards any comments
-//  and returns the value as a string
-//-----------------------------------------------------------------------------
+// 顺序读取下一个有效参数，忽略空行和注释，并返回参数值字符串。
 string IniFileLoaderBase::getNextParameter()
 {
 
-  //this will be the string that holds the bext parameter
+  // 保存下一条参数所在的文本行。
   std::string line;
 
   std::getline(file, line);
 
   removeCommentingFromLine(line);
 
-  //if the line is of zero length, get the next line from
-  //the file
+  // 空行不包含参数，继续读取下一行。
   if (line.length() == 0)
   {
     return getNextParameter();
@@ -42,42 +42,38 @@ string IniFileLoaderBase::getNextParameter()
 }
 
 
-//-------------------------- getParameterValueAsString ------------------------
-//
-// given a line of text this function removes the parameter description
-// and returns just the parameter as a std::string
-//-----------------------------------------------------------------------------
+// 去掉参数名称，只保留参数值字符串。
 void IniFileLoaderBase::getParameterValueAsString(string& line)
 {
-  //find beginning of parameter description
+  // 查找参数名称的起点。
   string::size_type begIdx;
   string::size_type endIdx;
 
-  //define some delimiters
+  // 定义用于分隔名称和值的字符。
   const string delims(" \;=,");
 
   begIdx = line.find_first_not_of(delims);
 
-  //find the end of the parameter description
+  // 查找参数名称的结束位置。
   if (begIdx != string::npos)
   {
     endIdx = line.find_first_of(delims, begIdx);
 
-    //end of word is the end of the line
+    // 没有分隔符时，以行尾作为结束位置。
     if (endIdx == string::npos)
     {
       endIdx = line.length();
     }
   }
 
-  //find the beginning of the parameter value
+  // 查找参数值的起点。
   begIdx = line.find_first_not_of(delims, endIdx);
-  //find the end of the parameter value
+  // 查找参数值的结束位置。
   if(begIdx != string::npos)
   {
     endIdx = line.find_first_of(delims, begIdx);
 
-    //end of word is the end of the line
+    // 没有分隔符时，以行尾作为结束位置。
     if (endIdx == string::npos)
     {
       endIdx = line.length();
@@ -87,13 +83,10 @@ void IniFileLoaderBase::getParameterValueAsString(string& line)
   line = line.substr(begIdx, endIdx);
 }
 
-//--------------------------- getNextToken ------------------------------------
-//
-//  ignores any commenting and gets the next string
-//-----------------------------------------------------------------------------
+// 忽略注释，提取下一段以分隔符划分的字符串。
 std::string IniFileLoaderBase::getNextToken()
 {
-  //strip the line of any commenting
+  // 先从当前行中去掉注释。
   while (currentLine.length() == 0)
   {
     std::getline(file, currentLine);
@@ -101,21 +94,21 @@ std::string IniFileLoaderBase::getNextToken()
     removeCommentingFromLine(currentLine);
   }
 
-   //find beginning of parameter description
+   // 查找字符串的起点。
   string::size_type begIdx;
   string::size_type endIdx;
 
-  //define some delimiters
+  // 定义分隔字符。
   const string delims(" \;=,");
 
   begIdx = currentLine.find_first_not_of(delims);
 
-  //find the end of the parameter description
+  // 查找字符串的结束位置。
   if (begIdx != string::npos)
   {
     endIdx = currentLine.find_first_of(delims, begIdx);
 
-    //end of word is the end of the line
+    // 没有分隔符时，以行尾作为结束位置。
     if (endIdx == string::npos)
     {
       endIdx = currentLine.length();
@@ -126,7 +119,7 @@ std::string IniFileLoaderBase::getNextToken()
 
   if (endIdx != currentLine.length())
   {
-    //strip the token from the line
+    // 从当前行中移除已经取出的字符串。
     currentLine = currentLine.substr(endIdx+1, currentLine.length());
   }
 

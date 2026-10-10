@@ -1,19 +1,12 @@
+/*
+ * 阅读提示：球员公共基类，在运动能力之上封装球队关系、角色、距离判断和移动行为。
+ * 守门员与场上球员继承这些共同能力，同时分别提供自己的更新和 AI 实现。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #pragma warning (disable:4786)
 #ifndef PLAYERBASE_H
 #define PLAYERBASE_H
-//------------------------------------------------------------------------
-//
-//  name: EntityPlayer.h
-//
-//  Desc: Definition of a soccer player base class. The player inherits
-//        from the autolist class so that any player created will be
-//        automatically added to a list that is easily accesible by any
-//        other game objects. (mainly used by the steering behaviors and
-//        player state classes)
-//
-//  Author: Mat Buckland 2003 (fup@ai-junkie.com)
-//
-//------------------------------------------------------------------------
+// 球员公共基类：保存球队关系和移动能力，并通过自动列表登记所有球员。原作者：Mat Buckland，2003（fup@ai-junkie.com）。
 #include <vector>
 #include <string>
 #include <cassert>
@@ -35,33 +28,33 @@ class EntityPlayer : public EntityMovable,
 
 public:
 
+  // 枚举给角色编号起名字；角色是数据分类，具体更新行为仍由派生类决定。
   enum PlayerRole{goalKeeper, attacker, defender};
 
 protected:
 
-  //this player's role in the team
+  // 球员在球队中的角色。
   PlayerRole             mPlayerRole;
 
-  //a pointer to this player's team
+  // 借用所属球队的指针；球队的生命周期应覆盖球员的使用期。
   SoccerTeam*             mTeam;
 
-  //the steering behaviors
+  // 球员拥有的移动行为对象，负责把动作目标转换为力。
   SteeringBehaviors*      mSteering;
 
-  //the region that this player is assigned to.
+  // 当前阵型分配给球员的区域编号。
   int                     mHomeRegion;
 
-  //the region this player moves to before kickoff
+  // 开球前应返回的默认区域编号。
   int                     mDefaultRegion;
 
-  //the distance to the ball (in squared-space). This value is queried
-  //a lot so it's calculated once each time-step and stored here.
+  // 缓存到足球的距离平方，每轮更新计算一次，供多个判断复用。
   double                   mDistSqToBall;
 
 
-  //the vertex buffer
+  // 球员轮廓在自身局部坐标中的顶点。
   std::vector<Vector2D>   mPlayerVertices;
-  //the buffer for the transformed vertices
+  // 经过旋转、缩放和平移后的绘图顶点。
   std::vector<Vector2D>   mTransformedPlayerVertices;
 
 public:
@@ -81,56 +74,50 @@ public:
   virtual ~EntityPlayer();
 
 
-  //returns true if there is an opponent within this player's
-  //comfort zone
+  // 判断前方是否存在进入舒适距离的对手。
   bool        isThreatened()const;
 
-  //rotates the player to face the ball or the player's current target
+  // 转向足球或当前移动目标。
   void        trackBall();
   void        trackTarget();
 
-  //this messages the player that is closest to the supporting spot to
-  //change state to support the attacking player
+  // 寻找支援者并通过消息让他进入支援状态。
   void        findSupport()const;
 
-  //returns true if the ball can be grabbed by the goalkeeper
+  // 判断足球是否在守门员可接住的范围内。
   bool        ballWithinKeeperRange()const;
 
-  //returns true if the ball is within kicking range
+  // 判断足球是否在球员可踢到的范围内。
   bool        ballWithinKickingRange()const;
 
-  //returns true if a ball comes within range of a receiver
+  // 判断足球是否接近接球队员。
   bool        ballWithinReceivingRange()const;
 
-  //returns true if the player is located within the boundaries
-  //of his home region
+  // 判断球员是否位于自己的站位区域内。
   bool        inHomeRegion()const;
 
-  //returns true if this player is ahead of the attacker
+  // 判断自己是否比控球队员更靠近对方球门。
   bool        isAheadOfAttacker()const;
 
-  //returns true if a player is located at the designated support spot
+  // 判断球员是否已经到达支援位置。
   bool        atSupportSpot()const;
 
-  //returns true if the player is located at his steering target
+  // 判断球员是否已经到达移动目标。
   bool        atTarget()const;
 
-  //returns true if the player is the closest player in his team to
-  //the ball
+  // 判断自己是否是本队距离足球最近的球员。
   bool        isClosestTeamMemberToBall()const;
 
-  //returns true if the point specified by 'position' is located in
-  //front of the player
+  // 判断指定位置是否在球员前方。
   bool        positionInFrontOfPlayer(Vector2D position)const;
 
-  //returns true if the player is the closest player on the pitch to the ball
+  // 判断自己是否是双方球员中距离足球最近的人。
   bool        isClosestPlayerOnPitchToBall()const;
 
-  //returns true if this player is the controlling player
+  // 判断球队登记的控球队员是否就是自己。
   bool        isControllingPlayer()const;
 
-  //returns true if the player is located in the designated 'hot region' --
-  //the area close to the opponent's goal
+  // 判断自己是否处于靠近对方球门的进攻区域。
   bool        inHotRegion()const;
 
   PlayerRole role()const{return mPlayerRole;}
@@ -138,8 +125,7 @@ public:
   double       distSqToBall()const{return mDistSqToBall;}
   void        setDistSqToBall(double val){mDistSqToBall = val;}
 
-  //calculate distance to opponent's/home goal. Used frequently by the passing
-  //methods
+  // 计算到本方或对方球门的距离，供传球决策使用。
   double       distToOppGoal()const;
   double       distToHomeGoal()const;
 

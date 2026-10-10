@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：实体抽象基类：封装身份编号、位置、大小和公共更新接口。
+ * 把球员和足球当作实体使用时，调用者依赖基类接口；派生类通过虚函数提供具体实现。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
  #ifndef BASE_GAME_ENTITY_H
 #define BASE_GAME_ENTITY_H
 #pragma warning (disable:4786)
@@ -19,36 +24,34 @@ public:
 
   enum {defaultEntityType = -1};
 
+// 私有成员只由本类方法管理；外部通过接口访问，避免随意破坏编号等约束。
 private:
 
-  //each entity has a unique id
+  // 每个实体都有唯一编号，消息系统据此查找对象。
   int         mId;
 
-  //every entity has a type associated with it (health, troll, ammo etc)
+  // 实体的类型编号，可用于区分不同类别。
   int         mType;
 
-  //this is a generic flag.
+  // 通用标记，邻居筛选等算法可以临时使用它。
   bool        mTag;
 
-  //this is the next valid id. Each time a EntityBase is instantiated
-  //this value is updated
+  // 类的静态成员保存下一个可用编号，由所有实体共享。
   static int  mNextValidId;
 
-  //this must be called within each function Object() { [native code] } to make sure the id is set
-  //correctly. It verifies that the value passed to the method is greater
-  //or equal to the next valid id, before setting the id and incrementing
-  //the next valid id
+  // 设置编号并更新静态计数器，保证后续对象取得不同编号。
   void setId(int val);
 
 
+// 受保护成员允许派生类使用，但普通调用者仍不能直接访问。
 protected:
 
-  //its location in the environment
+  // 实体在二维世界中的位置。
   Vector2D mPosition;
 
   Vector2D mScale;
 
-  //the magnitude of this object's bounding radius
+  // 包围圆半径，用于简化碰撞和距离判断。
   double    mBoundingRadius;
 
 
@@ -56,22 +59,24 @@ protected:
 
 public:
 
+  // 虚析构：通过基类指针删除球员或足球时，也会先执行具体派生类的析构。
   virtual ~EntityBase(){}
 
   virtual void update(){};
 
+  // 纯虚函数使本类成为抽象类，不能直接创建 EntityBase；具体实体必须实现绘制。
   virtual void render()=0;
 
   virtual bool handleMessage(const Telegram& msg){return false;}
 
-  //entities should be able to read/write their data to a stream
+  // 可由派生类提供读写流的实现。
   virtual void write(std::ostream&  os)const{}
   virtual void read (std::ifstream& is){}
 
-  //use this to grab the next valid id
+  // 获取下一个可用实体编号。
   static int   getNextValidId(){return mNextValidId;}
 
-  //this can be used to reset the next id
+  // 重置编号计数器；调用方需要保证现有实体不会发生编号冲突。
   static void  resetNextValidId(){mNextValidId = 0;}
 
 

@@ -1,38 +1,30 @@
+/*
+ * 阅读提示：对象之间传递的消息数据，包含发送者、接收者、类型、时间和附加指针。
+ * 结构体适合把相关数据组合起来；附加指针没有类型检查和所有权，发送双方必须约定用途。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef TELEGRAM_H
 #define TELEGRAM_H
-//------------------------------------------------------------------------
-//
-//  name:   Telegram.h
-//
-//  Desc:   This defines a telegram. A telegram is a data structure that
-//          records information required to dispatch messages. Messages
-//          are used by game agents to communicate with each other.
-//
-//  Author: Mat Buckland (fup@ai-junkie.com)
-//
-//------------------------------------------------------------------------
+// 消息结构体把对象通信所需的数据放在一起。原作者：Mat Buckland（fup@ai-junkie.com）。
 #include <iostream>
 #include <math.h>
 
 
 struct Telegram
 {
-  //the entity that sent this telegram
+  // 发送者的实体编号。
   int          sender;
 
-  //the entity that is to receive this telegram
+  // 接收者的实体编号。
   int          receiver;
 
-  //the message itself. These are all enumerated in the file
-  //"MessageTypes.h"
+  // 消息类型编号，足球消息定义在 SoccerMessages.h 中。
   int          msg;
 
-  //messages can be dispatched immediately or delayed for a specified amount
-  //of time. If a delay is necessary this field is stamped with the time
-  //the message should be dispatched.
+  // 延迟消息的计划发送时刻。
   double       dispatchTime;
 
-  //any additional information that may accompany the message
+  // 借用的附加数据指针；不保存类型，也不拥有数据，发送双方必须约定类型与有效期。
   void*        extraInfo;
 
 
@@ -57,10 +49,7 @@ struct Telegram
 };
 
 
-//these telegrams will be stored in a priority queue. Therefore the >
-//operator needs to be overloaded so that the PQ can sort the telegrams
-//by time priority. Note how the times must be smaller than
-//smallestDelay apart before two Telegrams are considered unique.
+// 为延迟消息的排序和去重提供比较规则；时间差小于阈值且发送者、接收者、类型相同的消息被视为相等。
 const double smallestDelay = 0.25;
 
 
@@ -93,8 +82,7 @@ inline std::ostream& operator<<(std::ostream& os, const Telegram& t)
   return os;
 }
 
-//handy helper function for dereferencing the extraInfo field of the Telegram
-//to the required type.
+// 根据发送双方约定的类型转换附加指针，再取出对应数据；调用方必须保证类型正确且指针有效。
 template <class T>
 inline T dereferenceToType(void* p)
 {

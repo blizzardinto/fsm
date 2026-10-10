@@ -1,10 +1,12 @@
+/*
+ * 阅读提示：Windows 绘图服务，封装画笔、画刷和设备上下文操作。
+ * 资源句柄需要成对获取与释放；绘图结束前恢复旧对象，避免破坏设备上下文或泄漏资源。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "Cgdi.h"
 
 
-//--------------------------- instance ----------------------------------------
-//
-//   this class is a singleton
-//-----------------------------------------------------------------------------
+// 单例入口：提供整个程序共用的绘图服务对象。
 Cgdi* Cgdi::instance()
 {
   static Cgdi instance;
@@ -126,23 +128,23 @@ void Cgdi::lightBlueBrush() {if(mHdc)SelectObject(mHdc, mLightBlueBrush);}
 void Cgdi::darkGreenBrush() {if(mHdc)SelectObject(mHdc, mDarkGreenBrush);}
 void Cgdi::orangeBrush() {if(mHdc)SelectObject(mHdc, mOrangeBrush);}
 
-//ALWAYS call this before drawing
+// 绘图前必须先绑定设备上下文，并保存原来的画笔和画刷。
 void Cgdi::startDrawing(HDC hdc)
 {
   assert(mHdc == NULL);
 
   mHdc = hdc;
 
-  //get the current pen
+  // 保存设备上下文当前选中的画笔。
   mOldPen = (HPEN)SelectObject(hdc, mBlackPen);
-  //select it back in
+  // 把原画笔重新选回设备上下文。
   SelectObject(hdc, mOldPen);
 
   mOldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(BLACK_BRUSH));
   SelectObject(hdc, mOldBrush);
 }
 
-//ALWAYS call this after drawing
+// 绘图后必须恢复原来的绘图对象。
 void Cgdi::stopDrawing(HDC hdc)
 {
   assert(hdc != NULL);
@@ -153,7 +155,7 @@ void Cgdi::stopDrawing(HDC hdc)
   mHdc = NULL;
 }
 
-//---------------------------Text
+// 文字绘制接口。
 
 void Cgdi::textAtPos(int x, int y, const std::string &s)
 {
@@ -177,7 +179,7 @@ void Cgdi::opaqueText(){SetBkMode(mHdc, OPAQUE);}
 void Cgdi::textColor(int color){assert(color < numColors); SetTextColor(mHdc, colors[color]);}
 void Cgdi::textColor(int r, int g, int b){SetTextColor(mHdc, RGB(r,g,b));}
 
-//----------------------------pixels
+// 像素绘制接口。
 void Cgdi::drawDot(Vector2D pos, COLORREF color)
 {
   SetPixel(mHdc, (int)pos.x, (int)pos.y, color);
@@ -188,7 +190,7 @@ void Cgdi::drawDot(int x, int y, COLORREF color)
   SetPixel(mHdc, x, y, color);
 }
 
-//-------------------------line Drawing
+// 线段和箭头绘制接口。
 
 void Cgdi::line(Vector2D from, Vector2D to)
 {
@@ -210,7 +212,7 @@ void Cgdi::line(double a, double b, double x, double y)
 
 void Cgdi::polyLine(const std::vector<Vector2D>& points)
 {
-  //make sure we have at least 2 points
+  // 绘制线段至少需要两个点。
   if (points.size() < 2) return;
 
   MoveToEx(mHdc, (int)points[0].x, (int)points[0].y, NULL);
@@ -225,18 +227,18 @@ void Cgdi::lineWithArrow(Vector2D from, Vector2D to, double size)
 {
   Vector2D norm = vec2DNormalize(to-from);
 
-  //calculate where the arrow is attached
+  // 计算箭头与线段相接的位置。
   Vector2D crossingPoint = to - (norm * size);
 
-  //calculate the two extra points required to make the arrowhead
+  // 计算箭头三角形另外两个顶点。
   Vector2D arrowPoint1 = crossingPoint + (norm.perp() * 0.4f * size);
   Vector2D arrowPoint2 = crossingPoint - (norm.perp() * 0.4f * size);
 
-  //draw the line
+  // 绘制箭杆线段。
   MoveToEx(mHdc, (int)from.x, (int)from.y, NULL);
   LineTo(mHdc, (int)crossingPoint.x, (int)crossingPoint.y);
 
-  //draw the arrowhead (filled with the currently selected brush)
+  // 用当前画刷填充箭头三角形。
   POINT p[3];
 
   p[0] = vectorToPoint(arrowPoint1);
@@ -253,7 +255,7 @@ void Cgdi::cross(Vector2D pos, int diameter)
   line((int)pos.x-diameter,(int)pos.y+diameter, (int)pos.x+diameter, (int)pos.y-diameter);
 }
 
-//---------------------Geometry drawing methods
+// 圆、矩形和多边形等几何图形的绘制接口。
 
 void Cgdi::rect(int left, int top, int right, int bot)
 {
@@ -324,5 +326,5 @@ void Cgdi::setPenColor(int color)
   case lightBlue: lightBluePen(); return;
   case lightGrey: lightGreyPen(); return;
   case lightPink: lightPinkPen(); return;
-  }//end switch
+  }// 结束颜色选择分支。
 }

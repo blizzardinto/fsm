@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：参数加载对象，复用配置读取基类，将按顺序读取的值保存为比赛参数。
+ * 当前使用单例共享配置；文件顺序必须与读取顺序一致，参数名称本身不参与查找。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef PARAMLOADER
 #define PARAMLOADER
 #pragma warning(disable:4800)
@@ -106,7 +111,7 @@ public:
   int   numSupportSpotsX;
   int   numSupportSpotsY;
 
-  //these values tweak the various rules used to calculate the support spots
+  // 支援位置评分规则的权重和参数。
   double spotPassSafeScore;
   double spotCanScoreFromPositionScore;
   double spotDistFromControllingPlayerScore;
@@ -130,7 +135,7 @@ public:
 
   double playerMass;
 
-  //max steering force
+  // 最大移动驱动力。
   double playerMaxForce;
   double playerMaxSpeedWithBall;
   double playerMaxSpeedWithoutBall;
@@ -149,42 +154,37 @@ public:
 
   double  playerComfortZoneSq;
 
-  //in the range zero to 1.0. adjusts the amount of noise added to a kick,
-  //the lower the value the worse the players get
+  // 踢球精度取零到一；值越小，加入的方向误差越大。
   double  playerKickingAccuracy;
 
-  //the number of times the SoccerTeam::canShoot method attempts to find
-  //a valid shot
+  // 每次射门判断随机尝试的目标数量。
   int    numAttemptsToFindValidStrike;
 
-  //the distance away from the center of its home region a player
-  //must be to be considered at home
+  // 判断球员到家时采用的距离阈值。
   double withinRangeOfHome;
 
-  //how close a player must get to a sweet spot before he can change state
+  // 判断球员是否到达目标位置的距离阈值。
   double withinRangeOfSupportSpot;
   double withinRangeOfSupportSpotSq;
 
 
-  //the minimum distance a receiving player must be from the passing player
+  // 传球者与接球者之间允许的最小距离。
   double   minPassDist;
   double   goalkeeperMinPassDist;
 
-  //this is the distance the keeper puts between the back of the net
-  //and the ball when using the interposeBehavior steering behavior
+  // 阻挡行为中守门员与球门侧目标之间的距离。
   double  entityPlayerGoalKeeperTendingDistance;
 
-  //when the ball becomes within this distance of the goalkeeper he
-  //changes state to intercept the ball
+  // 足球接近到此距离时，守门员考虑切换到拦截状态。
   double  entityPlayerGoalKeeperInterceptRange;
   double  entityPlayerGoalKeeperInterceptRangeSq;
 
-  //how close the ball must be to a receiver before he starts chasing it
+  // 接球队员距离足球足够近时，转入追球状态。
   double  ballWithinReceivingRange;
   double  ballWithinReceivingRangeSq;
 
 
-  //these values control what debug info you can see
+  // 控制画面上显示哪些调试信息。
   bool  bStates;
   bool  bIds;
   bool  bSupportSpots;
@@ -198,10 +198,10 @@ public:
 
   double separationCoefficient;
 
-  //how close a neighbour must be before an agent perceives it
+  // 邻居感知半径。
   double viewDistance;
 
-  //zero this to turn the constraint off
+  // 设为零时关闭重叠分离约束。
   bool bNonPenetrationConstraint;
 
 };

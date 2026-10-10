@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：球队聚合对象，拥有球员、球队 AI 和支援位置计算器。
+ * 它还借用球场、球门及对手指针；读成员时先区分拥有关系与临时协作关系，才能理解生命周期。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef SOCCERTEAM_H
 #define SOCCERTEAM_H
 #pragma warning (disable:4786)
@@ -5,7 +10,8 @@
 
 #include "Region.h"
 #include "SupportSpotCalculator.h"
-#include "StateMachine.h"
+#include "TeamAI.h"
+#include <memory>
 
 class Goal;
 class EntityPlayer;
@@ -26,43 +32,42 @@ public:
 
 private:
 
-   //an instance of the state machine class
-  StateMachine<SoccerTeam>*  mStateMachine;
+   // 球队通过智能指针独占自己的 AI 控制器和状态对象。
+  std::unique_ptr<TeamAI> mAi;
 
-  //the team must know its own color!
+  // 球队颜色用于区分阵型和绘图外观。
   TeamColor                mColor;
 
-  //pointers to the team members
+  // 球队拥有这些球员，析构时逐一销毁；容器保存基类指针以统一访问不同角色。
   std::vector<EntityPlayer*>  mPlayers;
 
-  //a pointer to the soccer pitch
+  // 借用所属球场的指针，不负责销毁球场。
   SoccerPitch*              mPitch;
 
-  //pointers to the goals
+  // 借用本方和对方球门，由球场拥有球门。
   Goal*                     mOpponentsGoal;
   Goal*                     mHomeGoal;
 
-  //a pointer to the opposing team
+  // 借用对手球队指针，不负责销毁对手。
   SoccerTeam*               mOpponents;
 
-  //pointers to 'key' players
+  // 借用控球、支援、接球和最近球员的指针，表示当前协作角色。
   EntityPlayer*               mControllingPlayer;
   EntityPlayer*               mSupportingPlayer;
   EntityPlayer*               mReceivingPlayer;
   EntityPlayer*               mPlayerClosestToBall;
 
-  //the squared distance the closest player is from the ball
+  // 缓存最近球员到足球的距离平方。
   double                     mDistSqToBallOfClosestPlayer;
 
-  //players use this to determine strategic positions on the playing field
+  // 球队拥有支援位置计算器，用它选择进攻站位。
   SupportSpotCalculator*    mSupportSpotCalc;
 
 
-  //creates all the players for this team
+  // 创建本队所有球员。
   void createPlayers();
 
-  //called each frame. Sets m_pClosestPlayerToBall to point to the player
-  //closest to the ball.
+  // 每轮计算距离足球最近的本队球员。
   void calculateClosestPlayerToBall();
 
 
@@ -75,78 +80,57 @@ public:
 
   ~SoccerTeam();
 
-  //the usual suspects
+  // 球队的构造、析构、更新和绘制接口。
   void        render()const;
   void        update();
 
-  //calling this changes the state of all field players to that of
-  //ReturnToHomeRegion. Mainly used when a goal keeper has
-  //possession
+  // 通过消息让场上球员返回区域，主要用于守门员持球后的重新组织。
   void        returnAllEntityPlayerOnFieldsToHome()const;
 
-  //returns true if player has a clean shot at the goal and sets shotTarget
-  //to a normalized vector pointing in the direction the shot should be
-  //made. Else returns false and sets heading to a zero vector
+  // 检查是否有安全射门；成功时通过引用返回门线上的目标位置，而非单位方向。
   bool        canShoot(Vector2D  ballPos,
                        double     power,
                        Vector2D  shotTarget = Vector2D())const;
 
-  //The best pass is considered to be the pass that cannot be intercepted
-  //by an opponent and that is as far forward of the receiver as possible
-  //If a pass is found, the receiver's address is returned in the
-  //reference, 'receiver' and the position the pass will be made to is
-  //returned in the  reference 'passTarget'
+  // 寻找不会被拦截且向前推进较多的传球，通过引用参数返回接球者指针和目标位置。
   bool        findPass(const EntityPlayer*const passer,
                       EntityPlayer*&           receiver,
                       Vector2D&              passTarget,
                       double                  power,
                       double                  minPassingDistance)const;
 
-  //Three potential passes are calculated. One directly toward the receiver's
-  //current position and two that are the tangents from the ball position
-  //to the circle of radius 'range' from the receiver.
-  //These passes are then tested to see if they can be intercepted by an
-  //opponent and to make sure they terminate within the playing area. If
-  //all the passes are invalidated the function returns false. Otherwise
-  //the function returns the pass that takes the ball closest to the
-  //opponent's goal area.
+  // 对接球者当前位置及可达圆的两个切点进行评估，选出场内、安全且更靠近对方门线的目标。
   bool        getBestPassToReceiver(const EntityPlayer* const passer,
                                     const EntityPlayer* const receiver,
                                     Vector2D& passTarget,
                                     const double power)const;
 
-  //test if a pass from positions 'from' to 'target' kicked with force
-  //'passingForce'can be intercepted by an opposing player
+  // 判断一个对手能否拦截给定起点、目标和力量的传球。
   bool        isPassSafeFromOpponent(Vector2D    from,
                                      Vector2D    target,
                                      const EntityPlayer* const receiver,
                                      const EntityPlayer* const opp,
                                      double       passingForce)const;
 
-  //tests a pass from position 'from' to position 'target' against each member
-  //of the opposing team. Returns true if the pass can be made without
-  //getting intercepted
+  // 所有对手都无法拦截时，传球才安全。
   bool        isPassSafeFromAllOpponents(Vector2D from,
                                          Vector2D target,
                                          const EntityPlayer* const receiver,
                                          double     passingForce)const;
 
-  //returns true if there is an opponent within radius of position
+  // 判断指定位置的半径范围内是否有对手。
   bool        isOpponentWithinRadius(Vector2D pos, double rad);
 
-  //this tests to see if a pass is possible between the requester and
-  //the controlling player. If it is possible a message is sent to the
-  //controlling player to pass the ball asap.
+  // 传球可行时，向当前控球队员发送请求消息。
   void        requestPass(EntityPlayerOnField* requester)const;
 
-  //calculates the best supporting position and finds the most appropriate
-  //attacker to travel to the spot
+  // 更新最佳支援位置，并选择最合适的支援球员。
   EntityPlayer* determineBestSupportingAttacker();
 
 
   const std::vector<EntityPlayer*>& members()const{return mPlayers;}
 
-  StateMachine<SoccerTeam>* getFsm()const{return mStateMachine;}
+  TeamAI* getAi()const;
 
   Goal*const           homeGoal()const{return mHomeGoal;}
   Goal*const           opponentsGoal()const{return mOpponentsGoal;}
@@ -176,7 +160,7 @@ public:
   {
     mControllingPlayer = plyr;
 
-    //rub it in the opponents faces!
+    // 返回球队名称，供界面和调试输出使用。
     opponents()->lostControl();
   }
 
@@ -193,7 +177,7 @@ public:
 
   void updateTargetsOfWaitingPlayers()const;
 
-  //returns false if any of the team are not located within their home region
+  // 任何一个球员不在自己的区域内，就返回假。
   bool allPlayersAtHome()const;
 
   std::string name()const{if (mColor == blue) return "Blue"; return "Red";}

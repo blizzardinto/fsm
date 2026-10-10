@@ -4,6 +4,7 @@
       "name": "Win32",
       "includePath": [
         "${workspaceFolder}",
+        "${workspaceFolder}/ai",
         "${workspaceFolder}/common",
         "${workspaceFolder}/entity",
         "${workspaceFolder}/fsm",

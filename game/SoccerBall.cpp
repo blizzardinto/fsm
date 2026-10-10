@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：足球对象，复用可移动实体的数据，封装踢球、摩擦、反弹和位置预测。
+ * 球员请求踢球时只调用公开接口，不应直接修改足球内部速度，这体现了封装。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "SoccerBall.h"
 #include "geometry.h"
 #include "DebugConsole.h"
@@ -6,12 +11,7 @@
 #include "Wall2D.h"
 
 
-//----------------------------- addNoiseToKick --------------------------------
-//
-//  this can be used to vary the accuracy of a player's kick. Just call it
-//  prior to kicking the ball using the ball's position and the ball target as
-//  parameters.
-//-----------------------------------------------------------------------------
+// 踢球前按精度参数扰动目标方向，模拟踢球误差。
 Vector2D addNoiseToKick(Vector2D ballPos, Vector2D ballTarget)
 {
 
@@ -26,39 +26,29 @@ Vector2D addNoiseToKick(Vector2D ballPos, Vector2D ballTarget)
 
 
 
-//-------------------------- kick ----------------------------------------
-//
-//  applys a force to the ball in the direction of heading. Truncates
-//  the new velocity to make sure it doesn't exceed the max allowable.
-//------------------------------------------------------------------------
+// 踢球：把踢球力量除以质量得到速度大小，并沿给定方向设置足球速度。
 void SoccerBall::kick(Vector2D direction, double force)
 {
-  //ensure direction is normalized
+  // 把方向变成单位向量，防止向量长度影响踢球力量。
   direction.normalize();
 
-  //calculate the acceleration
+  // 力量除以质量得到本次踢球的速度增量尺度。
   Vector2D acceleration = (direction * force) / mMass;
 
-  //update the velocity
+  // 沿踢球方向设置速度。
   mVelocity = acceleration;
 }
 
-//----------------------------- update -----------------------------------
-//
-//  updates the ball physics, tests for any collisions and adjusts
-//  the ball's velocity accordingly
-//------------------------------------------------------------------------
+// 更新足球物理：保存旧位置、检测墙壁碰撞、施加摩擦并更新位置。
 void SoccerBall::update()
 {
-  //keep a record of the old position so the goal::scored method
-  //can utilize it for goal testing
+  // 保存上一位置，让球门可以检测这一轮移动是否穿越门线。
   mOldPos = mPosition;
 
-      //Test for collisions
+      // 检测与场地边界的碰撞。
     testCollisionWithWalls(mPitchBoundary);
 
-  //Simulate prm.friction. Make sure the speed is positive
-  //first though
+  // 足球仍在移动时，沿速度方向施加摩擦减速。
   if (mVelocity.lengthSq() > prm.friction * prm.friction)
   {
     mVelocity += vec2DNormalize(mVelocity) * prm.friction;
@@ -67,100 +57,65 @@ void SoccerBall::update()
 
 
 
-    //update heading
+    // 根据非零速度更新朝向。
     mHeading = vec2DNormalize(mVelocity);
   }
 }
 
-//---------------------- timeToCoverDistance -----------------------------
-//
-//  Given a force and a distance to cover given by two vectors, this
-//  method calculates how long it will take the ball to travel between
-//  the two points
-//------------------------------------------------------------------------
+// 按踢球力量和摩擦估算足球从起点到终点所需的时间；无法到达时返回负值。
 double SoccerBall::timeToCoverDistance(Vector2D pointA,
                                       Vector2D pointB,
                                       double force)const
 {
-  //this will be the velocity of the ball in the next time step *if*
-  //the player was to make the pass.
+  // 踢球力量除以质量，得到传球后的初速度。
   double speed = force / mMass;
 
-  //calculate the velocity at B using the equation
-  //
-  //  v^2 = u^2 + 2as
-  //
-
-  //first calculate s (the distance between the two positions)
+  // 先求距离，再使用匀加速公式：末速度平方等于初速度平方加二倍加速度乘距离。
   double distanceToCover =  vec2DDistance(pointA, pointB);
 
   double term = speed*speed + 2.0*distanceToCover*prm.friction;
 
-  //if  (u^2 + 2as) is negative it means the ball cannot reach point B.
+  // 末速度平方不大于零时，本实现将该传球视为不可行并返回负值。
   if (term <= 0.0) return -1.0;
 
   double v = sqrt(term);
 
-  //it IS possible for the ball to reach B and we know its speed when it
-  //gets there, so now it's easy to calculate the time using the equation
-  //
-  //    t = v-u
-  //        ---
-  //         a
-  //
+  // 已知初速度、末速度和摩擦加速度，用速度差除以加速度计算时间。
   return (v-speed)/prm.friction;
 }
 
-//--------------------- futurePosition -----------------------------------
-//
-//  given a time this method returns the ball position at that time in the
-//  future
-//------------------------------------------------------------------------
+// 根据当前速度和摩擦预测一段时间后的足球位置。
 Vector2D SoccerBall::futurePosition(double time)const
 {
-  //using the equation s = ut + 1/2at^2, where s = distance, a = friction
-  //u=start velocity
-
-  //calculate the ut term, which is a vector
+  // 位移公式为初速度乘时间加一半加速度乘时间平方；先计算速度向量对应的部分。
   Vector2D ut = mVelocity * time;
 
-  //calculate the 1/2at^2 term, which is scalar
+  // 计算摩擦造成的标量位移。
   double halfAccelerationTimeSquared = 0.5 * prm.friction * time * time;
 
-  //turn the scalar quantity into a vector by multiplying the value with
-  //the normalized velocity vector (because that gives the direction)
+  // 将摩擦位移乘以速度单位向量，得到沿运动方向的向量。
   Vector2D scalarToVector = halfAccelerationTimeSquared * vec2DNormalize(mVelocity);
 
-  //the predicted position is the balls position plus these two terms
+  // 当前位置加上两个位移项，得到预测位置。
   return pos() + ut + scalarToVector;
 }
 
 
-//----------------------------- render -----------------------------------
-//
-//  Renders the ball
-//------------------------------------------------------------------------
+// 绘制足球。
 void SoccerBall::render()
 {
   gdi->blackBrush();
 
   gdi->circle(mPosition, mBoundingRadius);
 
-  /*
-  gdi->greenBrush();
-  for (int i=0; i<IPPoints.size(); ++i)
-  {
-    gdi->circle(IPPoints[i], 3);
-  }
-  */
+  /* 调试时可额外绘制碰撞交点；正式绘制只显示足球。 */
 }
 
 
-//----------------------- testCollisionWithWalls -------------------------
-//
+// 检查足球下一步运动是否撞到场地墙壁。
 void SoccerBall::testCollisionWithWalls(const std::vector<Wall2D>& walls)
 {
-  //test ball against each wall, find out which is closest
+  // 遍历墙壁，寻找最近的有效碰撞。
   int idxClosest = -1;
 
   Vector2D velNormal = vec2DNormalize(mVelocity);
@@ -169,17 +124,13 @@ void SoccerBall::testCollisionWithWalls(const std::vector<Wall2D>& walls)
 
   double distToIntersection = maxFloat;
 
-  //iterate through each wall and calculate if the ball intersects.
-  //If it does then store the index into the closest intersecting wall
+  // 检查各墙壁是否相交，并记录最近碰撞墙壁的编号。
   for (unsigned int w=0; w<walls.size(); ++w)
   {
-    //assuming a collision if the ball continued on its current heading
-    //calculate the point on the ball that would hit the wall. This is
-    //simply the wall's normal(inversed) multiplied by the ball's radius
-    //and added to the balls center (its position)
+    // 从球心沿墙壁法线的反方向移动一个半径，得到球面上的候选碰撞点。
     Vector2D thisCollisionPoint = pos() - (walls[w].normal() * boundingRadius());
 
-    //calculate exactly where the collision point will hit the plane
+    // 计算候选点沿运动方向与墙壁所在直线的交点。
     if (whereIsPoint(thisCollisionPoint,
                      walls[w].from(),
                      walls[w].normal()) == planeBackside)
@@ -203,8 +154,7 @@ void SoccerBall::testCollisionWithWalls(const std::vector<Wall2D>& walls)
       intersectionPoint = thisCollisionPoint + (distToWall * velNormal);
     }
 
-    //check to make sure the intersection point is actually on the line
-    //segment
+    // 检查交点是否落在实际墙壁线段上。
     bool onLineSegment = false;
 
     if (lineIntersection2D(walls[w].from(),
@@ -217,13 +167,7 @@ void SoccerBall::testCollisionWithWalls(const std::vector<Wall2D>& walls)
     }
 
 
-                                                                          //Note, there is no test for collision with the end of a line segment
-
-    //now check to see if the collision point is within range of the
-    //velocity vector. [work in distance squared to avoid sqrt] and if it
-    //is the closest hit found so far.
-    //If it is that means the ball will collide with the wall sometime
-    //between this time step and the next one.
+                                                                          // 此算法不检测线段端点碰撞；用距离平方检查碰撞能否在本次移动内发生，并保留最近的一次。
     double distSq = vec2DDistanceSq(thisCollisionPoint, intersectionPoint);
 
     if ((distSq <= mVelocity.lengthSq()) && (distSq < distToIntersection) && onLineSegment)
@@ -232,25 +176,14 @@ void SoccerBall::testCollisionWithWalls(const std::vector<Wall2D>& walls)
       idxClosest = w;
       collisionPoint = intersectionPoint;
     }
-  }//next wall
-
-
-  //to prevent having to calculate the exact time of collision we
-  //can just check if the velocity is opposite to the wall normal
-  //before reflecting it. This prevents the case where there is overshoot
-  //and the ball gets reflected back over the line before it has completely
-  //reentered the playing area.
+  }// 仅当速度朝向墙壁时才反射，避免足球越过边界后被连续反射。
   if ( (idxClosest >= 0 ) && velNormal.dot(walls[idxClosest].normal()) < 0)
   {
     mVelocity.reflect(walls[idxClosest].normal());
   }
 }
 
-//----------------------- PlaceAtLocation -------------------------------------
-//
-//  positions the ball at the desired location and sets the ball's velocity to
-//  zero
-//-----------------------------------------------------------------------------
+// 把足球放到指定位置，并将速度清零。
 void SoccerBall::placeAtPosition(Vector2D newPos)
 {
   mPosition = newPos;

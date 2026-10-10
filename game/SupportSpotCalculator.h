@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：支援位置计算组件，生成候选位置，并根据安全传球、射门和距离进行评分。
+ * 球队把这项计算委托给独立对象，减少球队类自身承担的工作。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef SUPPORTSPOTCALCULATOR
 #define SUPPORTSPOTCALCULATOR
 #pragma warning (disable:4786)
@@ -22,7 +27,7 @@ class SupportSpotCalculator
 {
 private:
 
-  //a data structure to hold the values and positions of each spot
+  // 小结构体把每个支援点的位置和分数放在一起。
   struct SupportSpot
   {
 
@@ -42,11 +47,10 @@ private:
 
   std::vector<SupportSpot>  mSpots;
 
-  //a pointer to the highest valued spot from the last update
+  // 借用容器中最高分元素的指针；容器重新分配可能使此指针失效。
   SupportSpot*              mBestSupportingSpot;
 
-  //this will regulate how often the spots are calculated (default is
-  //one update per second)
+  // 调节器限制支援评分的更新频率，具体频率由参数决定。
   Regulator*                mRegulator;
 
 public:
@@ -57,18 +61,13 @@ public:
 
   ~SupportSpotCalculator();
 
-  //draws the spots to the screen as a hollow circles. The higher the
-  //score, the bigger the circle. The best supporting spot is drawn in
-  //bright green.
+  // 候选点分数越高圆越大，最佳点用绿色突出显示。
   void       render()const;
 
-  //this method iterates through each possible spot and calculates its
-  //score.
+  // 遍历所有候选点并计算评分。
   Vector2D  determineBestSupportingPosition();
 
-  //returns the best supporting spot if there is one. If one hasn't been
-  //calculated yet, this method calls determineBestSupportingPosition and
-  //returns the result.
+  // 有缓存就返回最佳点，否则先计算。
   Vector2D  getBestSupportingSpot();
 };
 

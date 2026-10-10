@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：程序入口和窗口事件适配层。它创建球场对象，并按计时器驱动更新和绘制。
+ * 阅读时从 WinMain 的主循环出发，再跟进 SoccerPitch::update，观察对象如何逐层协作。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #pragma warning (disable:4786)
 #include <windows.h>
 #include <time.h>
@@ -13,21 +18,18 @@
 #include "DebugConsole.h"
 
 
-//--------------------------------- Globals ------------------------------
-//
-//------------------------------------------------------------------------
+// 全局对象：窗口主循环共同使用的比赛、计时器和绘图状态。
 
 const wchar_t* gApplicationName = L"基于有限状态机的足球人";
 const wchar_t* gWindowClassName = L"MyWindowClass";
 
 SoccerPitch* gSoccerPitch;
 
-//create a timer
+// 创建计时器，用来控制每秒更新的次数。
 PrecisionTimer timer(prm.frameRate);
 
 
-//used when a user clicks on a menu item to ensure the option is 'checked'
-//correctly
+// 菜单命令与勾选状态配合，保持界面显示和实际选项一致。
 void checkAllMenuItemsAppropriately(HWND hwnd)
 {
    checkMenuItemAppropriately(hwnd, IDM_SHOW_REGIONS, prm.bRegions);
@@ -39,10 +41,7 @@ void checkAllMenuItemsAppropriately(HWND hwnd)
 }
 
 
-//---------------------------- windowProc ---------------------------------
-//
-//	This is the callback function which handles all the windows messages
-//-------------------------------------------------------------------------
+// 窗口消息回调：Windows 把创建、键盘、绘图等事件交给这个函数处理。
 
 LRESULT CALLBACK windowProc (HWND   hwnd,
                              UINT   msg,
@@ -50,10 +49,10 @@ LRESULT CALLBACK windowProc (HWND   hwnd,
                              LPARAM lParam)
 {
 
-   //these hold the dimensions of the client window area
+   // 保存客户区宽高；客户区不包含标题栏和边框。
    static int cxClient, cyClient;
 
-   //used to create the back buffer
+   // 双缓冲绘图：先画到内存位图，再一次性显示，减少闪烁。
    static HDC		hdcBackBuffer;
    static HBITMAP	hBitmap;
    static HBITMAP	hOldBitmap;
@@ -61,14 +60,10 @@ LRESULT CALLBACK windowProc (HWND   hwnd,
     switch (msg)
     {
 
-    //A WM_CREATE msg is sent when your application window is first
-    //created
+    // 窗口首次创建时，Windows 会发送 WM_CREATE 消息。
     case WM_CREATE:
       {
-         //to get get the size of the client window first we need  to create
-         //a RECT and then ask Windows to fill in our RECT structure with
-         //the client window size. Then we assign to cxClient and cyClient
-         //accordingly
+         // 通过 RECT 接收客户区边界，再计算宽度和高度。
          RECT rect;
 
          GetClientRect(hwnd, &rect);
@@ -76,16 +71,14 @@ LRESULT CALLBACK windowProc (HWND   hwnd,
          cxClient = rect.right;
          cyClient = rect.bottom;
 
-         //seed random number generator
+         // 初始化随机数种子，让每次比赛的随机行为有所不同。
          srand((unsigned) time(NULL));
 
 
-         //---------------create a surface to render to(backbuffer)
-
-         //create a memory device context
+         // 创建内存设备上下文，作为离屏绘图的画布。
          hdcBackBuffer = CreateCompatibleDC(NULL);
 
-         //get the DC for the front buffer
+         // 获取窗口设备上下文，用它创建兼容的内存位图。
          HDC hdc = GetDC(hwnd);
 
          hBitmap = CreateCompatibleBitmap(hdc,
@@ -93,10 +86,10 @@ LRESULT CALLBACK windowProc (HWND   hwnd,
                                           cyClient);
 
 
-         //select the bitmap into the memory device context
+         // 把位图选入内存设备上下文，后续绘图就落在该位图上。
          hOldBitmap = (HBITMAP)SelectObject(hdcBackBuffer, hBitmap);
 
-         //don't forget to release the DC
+         // 获取的窗口设备上下文需要及时释放。
          ReleaseDC(hwnd, hdc);
 
          gSoccerPitch = new SoccerPitch(cxClient, cyClient);
@@ -172,7 +165,7 @@ LRESULT CALLBACK windowProc (HWND   hwnd,
 
             break;
 
-        }//end switch
+        }// 结束菜单命令的分支处理。
       }
 
       break;
@@ -205,9 +198,9 @@ LRESULT CALLBACK windowProc (HWND   hwnd,
 
             break;
 
-        }//end switch
+        }// 结束按键的分支处理。
 
-      }//end WM_KEYUP
+      }// 结束键盘松开事件的处理。
 
       break;
 
@@ -227,7 +220,7 @@ LRESULT CALLBACK windowProc (HWND   hwnd,
 
 
 
-         //now blit backbuffer to front
+         // 将已经画好的内存位图复制到窗口上。
          BitBlt(ps.hdc, 0, 0, cxClient, cyClient, hdcBackBuffer, 0, 0, SRCCOPY);
 
          EndPaint (hwnd, &ps);
@@ -236,33 +229,30 @@ LRESULT CALLBACK windowProc (HWND   hwnd,
 
       break;
 
-    //has the user resized the client area?
+    // 判断客户区大小是否发生变化。
     case WM_SIZE:
       {
-        //if so we need to update our variables so that any drawing
-        //we do using cxClient and cyClient is scaled accordingly
+        // 更新客户区尺寸，供后续绘图使用。
         cxClient = LOWORD(lParam);
         cyClient = HIWORD(lParam);
 
-      //now to resize the backbuffer accordingly. First select
-      //the old bitmap back into the DC
+      // 重建缓冲位图之前，先把原来的位图选回设备上下文。
       SelectObject(hdcBackBuffer, hOldBitmap);
 
-      //don't forget to do this or you will get resource leaks
+      // 删除不再使用的位图，防止绘图资源泄漏。
       DeleteObject(hBitmap);
 
-      //get the DC for the application
+      // 获取窗口的设备上下文。
       HDC hdc = GetDC(hwnd);
 
-      //create another bitmap of the same size and mode
-      //as the application
+      // 按新的客户区尺寸创建兼容位图。
       hBitmap = CreateCompatibleBitmap(hdc,
                       cxClient,
                       cyClient);
 
       ReleaseDC(hwnd, hdc);
 
-      //select the new bitmap into the DC
+      // 将新位图选入内存设备上下文。
       SelectObject(hdcBackBuffer, hBitmap);
 
       }
@@ -272,42 +262,36 @@ LRESULT CALLBACK windowProc (HWND   hwnd,
      case WM_DESTROY:
        {
 
-         //clean up our backbuffer objects
+         // 释放双缓冲使用的位图和设备上下文。
          SelectObject(hdcBackBuffer, hOldBitmap);
 
          DeleteDC(hdcBackBuffer);
          DeleteObject(hBitmap);
 
-         // kill the application, this sends a WM_QUIT message
+         // 请求退出程序，向消息队列发送 WM_QUIT。
          PostQuitMessage (0);
        }
 
        break;
 
-     }//end switch
-
-     //this is where all the messages not specifically handled by our
-     //winproc are sent to be processed
+     }// 未处理的消息交给 Windows 默认窗口过程。
      return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
-//-------------------------------- WinMain -------------------------------
-//
-//	The entry point of the windows program
-//------------------------------------------------------------------------
+// Windows 程序入口：建立窗口，启动计时器，然后进入消息与比赛循环。
 int WINAPI WinMain (HINSTANCE hInstance,
                     HINSTANCE hPrevInstance,
                     LPSTR     szCmdLine,
                     int       iCmdShow)
 {
 
-  //handle to our window
+  // 保存窗口句柄；句柄是 Windows 用来标识资源的编号。
   HWND						hWnd;
 
-  //our window class structure
+  // 窗口类描述窗口使用的回调、图标和鼠标样式。
   WNDCLASSEXW    winclass;
 
-  // first fill in the window class stucture
+  // 填写窗口类配置。
   winclass.cbSize        = sizeof(WNDCLASSEXW);
   winclass.style         = CS_HREDRAW | CS_VREDRAW;
   winclass.lpfnWndProc   = windowProc;
@@ -315,47 +299,45 @@ int WINAPI WinMain (HINSTANCE hInstance,
   winclass.cbWndExtra    = 0;
   winclass.hInstance     = hInstance;
   winclass.hIcon         = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON1));
-  winclass.hCursor       = LoadCursorW(NULL, MAKEINTRESOURCEW(32512)); // IDC_ARROW
+  winclass.hCursor       = LoadCursorW(NULL, MAKEINTRESOURCEW(32512)); // 使用系统箭头光标。
   winclass.hbrBackground = NULL;
   winclass.lpszMenuName  = MAKEINTRESOURCEW(IDR_MENU1);
   winclass.lpszClassName = gWindowClassName;
   winclass.hIconSm       = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON1));
 
-  //register the window class
+  // 向 Windows 注册窗口类。
   if (!RegisterClassExW(&winclass))
   {
     MessageBox(NULL, "Registration Failed!", "Error", 0);
 
-    //exit the application
+    // 注册失败时结束程序。
     return 0;
   }
 
-  //create the window and assign its id to hwnd
-  hWnd = CreateWindowExW(NULL,                 // extended style
-                         gWindowClassName,  // window class name
-                         gApplicationName,  // window caption
+  // 创建窗口，并保存它的句柄。
+  hWnd = CreateWindowExW(NULL,                 // 扩展窗口样式。
+                         gWindowClassName,  // 已注册的窗口类名称。
+                         gApplicationName,  // 窗口标题。
                          WS_OVERLAPPED | WS_VISIBLE | WS_CAPTION | WS_SYSMENU,
                          GetSystemMetrics(SM_CXSCREEN)/2 - windowWidth/2,
                          GetSystemMetrics(SM_CYSCREEN)/2 - windowHeight/2,
-                         windowWidth,     // initial x size
-                         windowHeight,    // initial y size
-                         NULL,                 // parent window handle
-                         NULL,                 // window menu handle
-                         hInstance,            // program instance handle
-                         NULL);                // creation parameters
-
-  //make sure the window creation has gone OK
+                         windowWidth,     // 初始窗口宽度。
+                         windowHeight,    // 初始窗口高度。
+                         NULL,                 // 父窗口句柄；空值表示没有父窗口。
+                         NULL,                 // 菜单句柄。
+                         hInstance,            // 当前程序实例句柄。
+                         NULL);                // 创建时的附加参数；随后检查窗口是否创建成功。
   if(!hWnd)
   {
     MessageBox(NULL, "CreateWindowEx Failed!", "Error!", 0);
   }
 
-  //start the timer
+  // 在主循环开始前启动计时器。
   timer.start();
 
   MSG msg;
 
-  //enter the message loop
+  // 消息循环同时驱动窗口事件和比赛更新。
   bool bDone = false;
 
   while(!bDone)
@@ -365,7 +347,7 @@ int WINAPI WinMain (HINSTANCE hInstance,
     {
       if( msg.message == WM_QUIT )
       {
-        // Stop loop if it's a quit message
+        // 收到退出消息后跳出循环。
         bDone = true;
       }
 
@@ -378,16 +360,16 @@ int WINAPI WinMain (HINSTANCE hInstance,
 
     if (timer.readyForNextFrame() && msg.message != WM_QUIT)
     {
-      //update game states
+      // 更新比赛中的球队、球员和足球。
       gSoccerPitch->update();
 
-      //render
+      // 请求绘制当前比赛画面。
       redrawWindow(hWnd, true);
 
       Sleep(2);
     }
 
-  }//end while
+  }// 主循环结束。
 
   delete gSoccerPitch;
 

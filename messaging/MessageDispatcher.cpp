@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：对象通信服务，封装按编号投递与延迟消息存储。
+ * 发送者请求对方做事而不是直接操作对方状态；接收者通过自己的消息接口决定如何响应。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "MessageDispatcher.h"
 #include "EntityBase.h"
 #include "FrameCounter.h"
@@ -6,13 +11,7 @@
 
 using std::set;
 
-//uncomment below to send message info to the debug window
-//#define SHOW_MESSAGING_INFO
-
-//--------------------------- instance ----------------------------------------
-//
-//   this class is a singleton
-//-----------------------------------------------------------------------------
+// 消息分发器采用单例；启用 SHOW_MESSAGING_INFO 宏可观察消息传递。
 MessageDispatcher* MessageDispatcher::instance()
 {
   static MessageDispatcher instance;
@@ -20,27 +19,19 @@ MessageDispatcher* MessageDispatcher::instance()
   return &instance;
 }
 
-//----------------------------- Dispatch ---------------------------------
-//
-//  see description in header
-//------------------------------------------------------------------------
+// 将消息交给接收实体的虚函数处理。
 void MessageDispatcher::discharge(EntityBase* pReceiver, const Telegram& telegram)
 {
   if (!pReceiver->handleMessage(telegram))
   {
-    //telegram could not be handled
+    // 接收者返回假表示没有处理该消息。
     #ifdef SHOW_MESSAGING_INFO
     debugCon << "Message not handled" << "";
     #endif
   }
 }
 
-//---------------------------- dispatchMsg ---------------------------
-//
-//  given a message, a receiver, a sender and any time delay, this function
-//  routes the message to the correct agent (if no delay) or stores
-//  in the message queue to be dispatched at the correct time
-//------------------------------------------------------------------------
+// 按编号查找接收者；即时消息立即发送，延迟消息记录时间后排队。
 void MessageDispatcher::dispatchMsg(double       delay,
                                     int          sender,
                                     int          receiver,
@@ -48,10 +39,10 @@ void MessageDispatcher::dispatchMsg(double       delay,
                                     void*        additionalInfo = NULL)
 {
 
-  //get a pointer to the receiver
+  // 根据实体编号取得接收者的借用指针。
   EntityBase* pReceiver = entityMgr->getEntityFromId(receiver);
 
-  //make sure the receiver is valid
+  // 找不到接收者时放弃发送。
   if (pReceiver == NULL)
   {
     #ifdef SHOW_MESSAGING_INFO
@@ -61,10 +52,10 @@ void MessageDispatcher::dispatchMsg(double       delay,
     return;
   }
 
-  //create the telegram
+  // 将发送者、接收者、消息类型及附加数据组成消息对象。
   Telegram telegram(0, sender, receiver, msg, additionalInfo);
 
-  //if there is no delay, route telegram immediately
+  // 延迟为零时同步调用接收者。
   if (delay <= 0.0)
   {
     #ifdef SHOW_MESSAGING_INFO
@@ -73,18 +64,18 @@ void MessageDispatcher::dispatchMsg(double       delay,
          << ". Msg is " << msg << "";
     #endif
 
-    //send the telegram to the recipient
+    // 通过接收者的消息接口投递。
     discharge(pReceiver, telegram);
   }
 
-  //else calculate the time when the telegram should be dispatched
+  // 延迟非零时计算将来的发送时刻。
   else
   {
     double currentTime = tickCounter->getCurrentFrame();
 
     telegram.dispatchTime = currentTime + delay;
 
-    //and put it in the queue
+    // 将消息放入按时间排序的容器。
     mDelayedMessages.insert(telegram);
 
     #ifdef SHOW_MESSAGING_INFO
@@ -95,27 +86,22 @@ void MessageDispatcher::dispatchMsg(double       delay,
   }
 }
 
-//---------------------- dispatchDelayedMessages -------------------------
-//
-//  This function dispatches any telegrams with a timestamp that has
-//  expired. Any dispatched telegrams are removed from the queue
-//------------------------------------------------------------------------
+// 发送已经到期的延迟消息，并移除发送完成的记录。
+// 队列只保存消息数据，过期不会自行执行；必须由程序主动调用这个接口推进投递。
 void MessageDispatcher::dispatchDelayedMessages()
 {
-  //first get current time
+  // 获取当前时间。
   double currentTime = tickCounter->getCurrentFrame();
 
-  //now peek at the queue to see if any telegrams need dispatching.
-  //remove all telegrams from the front of the queue that have gone
-  //past their sell by date
+  // 从队首开始处理所有已到期消息。
   while( !mDelayedMessages.empty() &&
        (mDelayedMessages.begin()->dispatchTime < currentTime) &&
          (mDelayedMessages.begin()->dispatchTime > 0) )
   {
-    //read the telegram from the front of the queue
+    // 取出最早的消息。
     const Telegram& telegram = *mDelayedMessages.begin();
 
-    //find the recipient
+    // 根据编号查找接收者。
     EntityBase* pReceiver = entityMgr->getEntityFromId(telegram.receiver);
 
     #ifdef SHOW_MESSAGING_INFO
@@ -123,10 +109,10 @@ void MessageDispatcher::dispatchDelayedMessages()
          << pReceiver->id() << ". Msg is "<< telegram.msg << "";
     #endif
 
-    //send the telegram to the recipient
+    // 调用接收者的消息处理接口。
     discharge(pReceiver, telegram);
 
-  //remove it from the queue
+  // 从队列中删除已发送的消息记录。
     mDelayedMessages.erase(mDelayedMessages.begin());
   }
 }

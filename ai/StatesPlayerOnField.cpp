@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：场上球员状态集合，分别处理追球、踢球、等待、带球、接球和支援。
+ * 状态决定做什么，移动行为负责怎么算移动力，球员更新负责真正改变速度和位置。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "StatesPlayerOnField.h"
 #include "DebugConsole.h"
 #include "SoccerPitch.h"
@@ -15,23 +20,20 @@
 #include "Regulator.h"
 
 
-//uncomment below to send state info to the debug window
+// 启用场上球员的调试宏后，可以在调试窗口观察状态变化。
 #define PLAYER_STATE_INFO_ON
 
 
-//************************************************************************ Global state
+// 全局状态：处理跨越具体动作的速度设置和公共消息。
 
-GlobalPlayerState* GlobalPlayerState::instance()
+
+
+
+void GlobalPlayerState::execute()
 {
-  static GlobalPlayerState instance;
-
-  return &instance;
-}
-
-
-void GlobalPlayerState::execute(EntityPlayerOnField* player)
-{
-  //if a player is in possession and close to the ball reduce his max speed
+  // 从绑定的引用取得指针，只是为了沿用箭头调用写法，仍然操作同一个球员。
+  auto* player = &mOwner;
+  // 控球队员接近足球时降低最大速度，避免带球时跑得过快。
   if((player->ballWithinReceivingRange()) && (player->isControllingPlayer()))
   {
     player->setMaxSpeed(prm.playerMaxSpeedWithBall);
@@ -45,17 +47,18 @@ void GlobalPlayerState::execute(EntityPlayerOnField* player)
 }
 
 
-bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& telegram)
+bool GlobalPlayerState::onMessage(const Telegram& telegram)
 {
+  auto* player = &mOwner;
   switch(telegram.msg)
   {
   case msgReceiveBall:
     {
-      //set the target
+      // 根据消息内容设置移动目标。
       player->steering()->setTarget(*(static_cast<Vector2D*>(telegram.extraInfo)));
 
-      //change state
-      player->getFsm()->changeState(ReceiveBall::instance());
+      // 通过 AI 控制器切换状态。
+      player->getAi()->changeState(FieldPlayerState::receiveBall);
 
       return true;
     }
@@ -64,17 +67,17 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
 
   case msgSupportAttacker:
     {
-      //if already supporting just return
-      if (player->getFsm()->isInState(*SupportAttacker::instance()))
+      // 如果已经处于支援状态，就不重复切换。
+      if (player->getAi()->isInState(FieldPlayerState::supportAttacker))
       {
         return true;
       }
 
-      //set the target to be the best supporting position
+      // 将目标设置为球队计算出的最佳支援位置。
       player->steering()->setTarget(player->team()->getSupportSpot());
 
-      //change the state
-      player->getFsm()->changeState(SupportAttacker::instance());
+      // 切换到消息要求的状态。
+      player->getAi()->changeState(FieldPlayerState::supportAttacker);
 
       return true;
     }
@@ -83,8 +86,8 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
 
  case msgWait:
     {
-      //change the state
-      player->getFsm()->changeState(Wait::instance());
+      // 切换到消息要求的状态。
+      player->getAi()->changeState(FieldPlayerState::wait);
 
       return true;
     }
@@ -95,7 +98,7 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
     {
       player->setDefaultHomeRegion();
 
-      player->getFsm()->changeState(ReturnToHomeRegion::instance());
+      player->getAi()->changeState(FieldPlayerState::returnToHomeRegion);
 
       return true;
     }
@@ -105,7 +108,7 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
   case msgPassToMe:
     {
 
-      //get the position of the player requesting the pass
+      // 取出请求传球的队员对象，读取他的位置。
       EntityPlayerOnField* receiver = static_cast<EntityPlayerOnField*>(telegram.extraInfo);
 
       #ifdef PLAYER_STATE_INFO_ON
@@ -113,9 +116,7 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
                     receiver->id() << " to make pass" << "";
       #endif
 
-      //if the ball is not within kicking range or their is already a
-      //receiving player, this player cannot pass the ball to the player
-      //making the request.
+      // 足球不在踢球范围，或已有接球者时，不能响应新的传球请求。
       if (player->team()->receiver() != NULL ||
          !player->ballWithinKickingRange() )
       {
@@ -126,7 +127,7 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
         return true;
       }
 
-      //make the pass
+      // 朝请求者的位置传球。
       player->ball()->kick(receiver->pos() - player->ball()->pos(),
                            prm.maxPassingForce);
 
@@ -135,7 +136,7 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
      debugCon << "Player " << player->id() << " Passed ball to requesting player" << "";
      #endif
 
-      //let the receiver know a pass is coming
+      // 通知队友进入接球状态。
       Vector2D passTarget = receiver->pos();
       dispatcher->dispatchMsg(sendMsgImmediately,
                               player->id(),
@@ -145,8 +146,8 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
 
 
 
-      //change state
-      player->getFsm()->changeState(Wait::instance());
+      // 传球后切换状态。
+      player->getAi()->changeState(FieldPlayerState::wait);
 
       player->findSupport();
 
@@ -155,7 +156,7 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
 
     break;
 
-  }//end switch
+  }// 结束消息分支。
 
   return false;
 }
@@ -163,18 +164,14 @@ bool GlobalPlayerState::onMessage(EntityPlayerOnField* player, const Telegram& t
 
 
 
-//***************************************************************************** CHASEBALL
+// 追球状态：接近足球，准备踢球。
 
-ChaseBall* ChaseBall::instance()
+
+
+
+void ChaseBall::enter()
 {
-  static ChaseBall instance;
-
-  return &instance;
-}
-
-
-void ChaseBall::enter(EntityPlayerOnField* player)
-{
+  auto* player = &mOwner;
   player->steering()->seekOn();
 
   #ifdef PLAYER_STATE_INFO_ON
@@ -182,18 +179,18 @@ void ChaseBall::enter(EntityPlayerOnField* player)
   #endif
 }
 
-void ChaseBall::execute(EntityPlayerOnField* player)
+void ChaseBall::execute()
 {
-  //if the ball is within kicking range the player changes state to KickBall.
+  auto* player = &mOwner;
+  // 足球进入踢球范围时，切换到踢球状态。
   if (player->ballWithinKickingRange())
   {
-    player->getFsm()->changeState(KickBall::instance());
+    player->getAi()->changeState(FieldPlayerState::kickBall);
 
     return;
   }
 
-  //if the player is the closest player to the ball then he should keep
-  //chasing it
+  // 本队离球最近的球员继续追球。
   if (player->isClosestTeamMemberToBall())
   {
     player->steering()->setTarget(player->ball()->pos());
@@ -201,31 +198,27 @@ void ChaseBall::execute(EntityPlayerOnField* player)
     return;
   }
 
-  //if the player is not closest to the ball anymore, he should return back
-  //to his home region and wait for another opportunity
-  player->getFsm()->changeState(ReturnToHomeRegion::instance());
+  // 如果不再是最近的球员，就回到自己的区域等待机会。
+  player->getAi()->changeState(FieldPlayerState::returnToHomeRegion);
 }
 
 
-void ChaseBall::exit(EntityPlayerOnField* player)
+void ChaseBall::exit()
 {
+  auto* player = &mOwner;
   player->steering()->seekOff();
 }
 
 
 
-//*****************************************************************************SUPPORT ATTACKING PLAYER
+// 支援状态：为控球队员提供可传球的位置。
 
-SupportAttacker* SupportAttacker::instance()
+
+
+
+void SupportAttacker::enter()
 {
-  static SupportAttacker instance;
-
-  return &instance;
-}
-
-
-void SupportAttacker::enter(EntityPlayerOnField* player)
-{
+  auto* player = &mOwner;
   player->steering()->arriveOn();
 
   player->steering()->setTarget(player->team()->getSupportSpot());
@@ -235,16 +228,17 @@ void SupportAttacker::enter(EntityPlayerOnField* player)
   #endif
 }
 
-void SupportAttacker::execute(EntityPlayerOnField* player)
+void SupportAttacker::execute()
 {
-  //if his team loses control go back home
+  auto* player = &mOwner;
+  // 本队失去控球权后，返回自己的区域。
   if (!player->team()->inControl())
   {
-    player->getFsm()->changeState(ReturnToHomeRegion::instance()); return;
+    player->getAi()->changeState(FieldPlayerState::returnToHomeRegion); return;
   }
 
 
-  //if the best supporting spot changes, change the steering target
+  // 最佳支援位置变化时，同步更新移动目标。
   if (player->team()->getSupportSpot() != player->steering()->target())
   {
     player->steering()->setTarget(player->team()->getSupportSpot());
@@ -252,8 +246,7 @@ void SupportAttacker::execute(EntityPlayerOnField* player)
     player->steering()->arriveOn();
   }
 
-  //if this player has a shot at the goal AND the attacker can pass
-  //the ball to him the attacker should pass the ball to this player
+  // 如果自己具备射门机会，就向控球队员请求传球。
   if( player->team()->canShoot(player->pos(),
                                prm.maxShootingForce))
   {
@@ -261,18 +254,17 @@ void SupportAttacker::execute(EntityPlayerOnField* player)
   }
 
 
-  //if this player is located at the support spot and his team still have
-  //possession, he should remain still and turn to face the ball
+  // 已到支援点且仍由本队控球时，停下并面向足球。
   if (player->atTarget())
   {
     player->steering()->arriveOff();
 
-    //the player should keep his eyes on the ball!
+    // 面向足球，保持观察方向。
     player->trackBall();
 
     player->setVelocity(Vector2D(0,0));
 
-    //if not threatened by another player request a pass
+    // 附近没有对手威胁时，请求传球。
     if (!player->isThreatened())
     {
       player->team()->requestPass(player);
@@ -281,10 +273,10 @@ void SupportAttacker::execute(EntityPlayerOnField* player)
 }
 
 
-void SupportAttacker::exit(EntityPlayerOnField* player)
+void SupportAttacker::exit()
 {
-  //set supporting player to null so that the team knows it has to
-  //determine a new one.
+  auto* player = &mOwner;
+  // 清空球队的支援球员记录，便于重新选择支援者。
   player->team()->setSupportingPlayer(NULL);
 
   player->steering()->arriveOff();
@@ -293,18 +285,14 @@ void SupportAttacker::exit(EntityPlayerOnField* player)
 
 
 
-//************************************************************************ RETURN TO HOME REGION
+// 返回区域状态：让球员回到分配给他的站位区域。
 
-ReturnToHomeRegion* ReturnToHomeRegion::instance()
+
+
+
+void ReturnToHomeRegion::enter()
 {
-  static ReturnToHomeRegion instance;
-
-  return &instance;
-}
-
-
-void ReturnToHomeRegion::enter(EntityPlayerOnField* player)
-{
+  auto* player = &mOwner;
   player->steering()->arriveOn();
 
   if (!player->homeRegion()->inside(player->steering()->target(), Region::halfsize))
@@ -317,76 +305,68 @@ void ReturnToHomeRegion::enter(EntityPlayerOnField* player)
   #endif
 }
 
-void ReturnToHomeRegion::execute(EntityPlayerOnField* player)
+void ReturnToHomeRegion::execute()
 {
+  auto* player = &mOwner;
   if (player->pitch()->gameOn())
   {
-    //if the ball is nearer this player than any other team member  &&
-    //there is not an assigned receiver && the goalkeeper does not gave
-    //the ball, go chase it
+    // 自己是本队最近球员，且没有接球者或持球守门员时，转去追球。
     if ( player->isClosestTeamMemberToBall() &&
          (player->team()->receiver() == NULL) &&
          !player->pitch()->entityPlayerGoalKeeperHasBall())
     {
-      player->getFsm()->changeState(ChaseBall::instance());
+      player->getAi()->changeState(FieldPlayerState::chaseBall);
 
       return;
     }
   }
 
-  //if game is on and close enough to home, change state to wait and set the
-  //player target to his current position.(so that if he gets jostled out of
-  //position he can move back to it)
+  // 比赛进行中，接近区域后进入等待状态，并把当前位置设为目标，便于被挤开后返回。
   if (player->pitch()->gameOn() && player->homeRegion()->inside(player->pos(),
                                                              Region::halfsize))
   {
     player->steering()->setTarget(player->pos());
-    player->getFsm()->changeState(Wait::instance());
+    player->getAi()->changeState(FieldPlayerState::wait);
   }
-  //if game is not on the player must return much closer to the center of his
-  //home region
+  // 比赛暂停时，需要更接近区域中心才能结束返回动作。
   else if(!player->pitch()->gameOn() && player->atTarget())
   {
-    player->getFsm()->changeState(Wait::instance());
+    player->getAi()->changeState(FieldPlayerState::wait);
   }
 }
 
-void ReturnToHomeRegion::exit(EntityPlayerOnField* player)
+void ReturnToHomeRegion::exit()
 {
+  auto* player = &mOwner;
   player->steering()->arriveOff();
 }
 
 
 
 
-//***************************************************************************** WAIT
+// 等待状态：保持站位，同时观察是否需要接球或追球。
 
-Wait* Wait::instance()
+
+
+
+void Wait::enter()
 {
-  static Wait instance;
-
-  return &instance;
-}
-
-
-void Wait::enter(EntityPlayerOnField* player)
-{
+  auto* player = &mOwner;
   #ifdef PLAYER_STATE_INFO_ON
   debugCon << "Player " << player->id() << " enters wait state" << "";
   #endif
 
-  //if the game is not on make sure the target is the center of the player's
-  //home region. This is ensure all the players are in the correct positions
-  //ready for kick off
+  // 开球前将目标设为区域中心，使球员回到正确站位。
   if (!player->pitch()->gameOn())
   {
     player->steering()->setTarget(player->homeRegion()->center());
   }
 }
 
-void Wait::execute(EntityPlayerOnField* player)
+void Wait::execute()
 {
-  //if the player has been jostled out of position, get back in position
+  auto* player = &mOwner;
+  // 如果被其他球员挤离目标位置，就移动回去。
   if (!player->atTarget())
   {
     player->steering()->arriveOn();
@@ -400,12 +380,11 @@ void Wait::execute(EntityPlayerOnField* player)
 
     player->setVelocity(Vector2D(0,0));
 
-    //the player should keep his eyes on the ball!
+    // 面向足球，保持观察方向。
     player->trackBall();
   }
 
-  //if this player's team is controlling AND this player is not the attacker
-  //AND is further up the field than the attacker he should request a pass.
+  // 本队控球，自己不是控球队员且位置更靠前时，请求传球。
   if ( player->team()->inControl()    &&
      (!player->isControllingPlayer()) &&
        player->isAheadOfAttacker() )
@@ -417,44 +396,40 @@ void Wait::execute(EntityPlayerOnField* player)
 
   if (player->pitch()->gameOn())
   {
-   //if the ball is nearer this player than any other team member  AND
-    //there is not an assigned receiver AND neither goalkeeper has
-    //the ball, go chase it
+   // 自己是本队最近球员，没有接球者且守门员未持球时，开始追球。
    if (player->isClosestTeamMemberToBall() &&
        player->team()->receiver() == NULL  &&
        !player->pitch()->entityPlayerGoalKeeperHasBall())
    {
-     player->getFsm()->changeState(ChaseBall::instance());
+     player->getAi()->changeState(FieldPlayerState::chaseBall);
 
      return;
    }
   }
 }
 
-void Wait::exit(EntityPlayerOnField* player){}
-
-
-
-
-//************************************************************************ KICK BALL
-
-KickBall* KickBall::instance()
+void Wait::exit()
 {
-  static KickBall instance;
-
-  return &instance;
-}
+  auto* player = &mOwner;}
 
 
-void KickBall::enter(EntityPlayerOnField* player)
+
+
+// 踢球状态：依次考虑射门、传球和带球。
+
+
+
+
+void KickBall::enter()
 {
-  //let the team know this player is controlling
+  auto* player = &mOwner;
+  // 向球队登记当前控球队员。
    player->team()->setControllingPlayer(player);
 
-   //the player can only make so many kick attempts per second.
+   // 调节器限制踢球频率，避免每次更新都能踢球。
    if (!player->isReadyForNextKick())
    {
-     player->getFsm()->changeState(ChaseBall::instance());
+     player->getAi()->changeState(FieldPlayerState::chaseBall);
    }
 
 
@@ -463,16 +438,14 @@ void KickBall::enter(EntityPlayerOnField* player)
   #endif
 }
 
-void KickBall::execute(EntityPlayerOnField* player)
+void KickBall::execute()
 {
-  //calculate the dot product of the vector pointing to the ball
-  //and the player's heading
+  auto* player = &mOwner;
+  // 用点积判断足球方向与球员朝向是否一致。
   Vector2D toBall = player->ball()->pos() - player->pos();
   double   dot    = player->heading().dot(vec2DNormalize(toBall));
 
-  //cannot kick the ball if the goalkeeper is in possession or if it is
-  //behind the player or if there is already an assigned receiver. So just
-  //continue chasing the ball
+  // 守门员持球、足球在身后或已有接球者时，继续追球而不踢球。
   if (player->team()->receiver() != NULL   ||
       player->pitch()->entityPlayerGoalKeeperHasBall() ||
       (dot < 0) )
@@ -481,24 +454,20 @@ void KickBall::execute(EntityPlayerOnField* player)
     debugCon << "Goaly has ball / ball behind player" << "";
     #endif
 
-    player->getFsm()->changeState(ChaseBall::instance());
+    player->getAi()->changeState(FieldPlayerState::chaseBall);
 
     return;
   }
 
-  /* Attempt a shot at the goal */
+  /* 尝试射门。 */
 
-  //if a shot is possible, this vector will hold the position along the
-  //opponent's goal line the player should aim for.
+  // 如果能射门，这个向量保存对方门线上应瞄准的位置。
   Vector2D    ballTarget;
 
-  //the dot product is used to adjust the shooting force. The more
-  //directly the ball is ahead, the more forceful the kick
+  // 足球越接近正前方，允许使用的射门力量越大。
   double power = prm.maxShootingForce * dot;
 
-  //if it is determined that the player could score a goal from this position
-  //OR if he should just kick the ball anyway, the player will attempt
-  //to make the shot
+  // 能够射门，或随机决定尝试射门时，执行射门动作。
   if (player->team()->canShoot(player->ball()->pos(),
                                power,
                                ballTarget)                   ||
@@ -508,18 +477,16 @@ void KickBall::execute(EntityPlayerOnField* player)
    debugCon << "Player " << player->id() << " attempts a shot at " << ballTarget << "";
    #endif
 
-   //add some noise to the kick. We don't want players who are
-   //too accurate! The amount of noise can be adjusted by altering
-   //prm.playerKickingAccuracy
+   // 加入方向误差，模拟踢球精度；误差大小由 playerKickingAccuracy 控制。
    ballTarget = addNoiseToKick(player->ball()->pos(), ballTarget);
 
-   //this is the direction the ball will be kicked in
+   // 根据足球位置和瞄准位置计算踢球方向。
    Vector2D kickDirection = ballTarget - player->ball()->pos();
 
    player->ball()->kick(kickDirection, power);
 
-   //change state
-   player->getFsm()->changeState(Wait::instance());
+   // 踢球后切换状态。
+   player->getAi()->changeState(FieldPlayerState::wait);
 
    player->findSupport();
 
@@ -527,14 +494,14 @@ void KickBall::execute(EntityPlayerOnField* player)
  }
 
 
-  /* Attempt a pass to a player */
+  /* 尝试传球。 */
 
-  //if a receiver is found this will point to it
+  // 找到接球者后，这个指针指向该队友；它不负责销毁队友。
   EntityPlayer* receiver = NULL;
 
   power = prm.maxPassingForce * dot;
 
-  //test if there are any potential candidates available to receive a pass
+  // 检查是否存在合适的接球队员。
   if (player->isThreatened()  &&
       player->team()->findPass(player,
                               receiver,
@@ -542,7 +509,7 @@ void KickBall::execute(EntityPlayerOnField* player)
                               power,
                               prm.minPassDist))
   {
-    //add some noise to the kick
+    // 为传球方向加入精度误差。
     ballTarget = addNoiseToKick(player->ball()->pos(), ballTarget);
 
     Vector2D kickDirection = ballTarget - player->ball()->pos();
@@ -555,7 +522,7 @@ void KickBall::execute(EntityPlayerOnField* player)
     #endif
 
 
-    //let the receiver know a pass is coming
+    // 发送消息通知队友准备接球。
     dispatcher->dispatchMsg(sendMsgImmediately,
                             player->id(),
                             receiver->id(),
@@ -563,38 +530,33 @@ void KickBall::execute(EntityPlayerOnField* player)
                             &ballTarget);
 
 
-    //the player should wait at his current position unless instruced
-    //otherwise
-    player->getFsm()->changeState(Wait::instance());
+    // 传球后留在当前位置等待后续指令。
+    player->getAi()->changeState(FieldPlayerState::wait);
 
     player->findSupport();
 
     return;
   }
 
-  //cannot shoot or pass, so dribble the ball upfield
+  // 无法射门或传球时，改为带球推进。
   else
   {
     player->findSupport();
 
-    player->getFsm()->changeState(Dribble::instance());
+    player->getAi()->changeState(FieldPlayerState::dribble);
   }
 }
 
 
-//*************************************************************************** DRIBBLE
+// 带球状态：通过短距离踢球逐步推进。
 
-Dribble* Dribble::instance()
+
+
+
+void Dribble::enter()
 {
-  static Dribble instance;
-
-  return &instance;
-}
-
-
-void Dribble::enter(EntityPlayerOnField* player)
-{
-  //let the team know this player is controlling
+  auto* player = &mOwner;
+  // 向球队登记当前控球队员。
   player->team()->setControllingPlayer(player);
 
 #ifdef PLAYER_STATE_INFO_ON
@@ -602,75 +564,59 @@ void Dribble::enter(EntityPlayerOnField* player)
   #endif
 }
 
-void Dribble::execute(EntityPlayerOnField* player)
+void Dribble::execute()
 {
+  auto* player = &mOwner;
   double dot = player->team()->homeGoal()->facing().dot(player->heading());
 
-  //if the ball is between the player and the home goal, it needs to swivel
-  // the ball around by doing multiple small kicks and turns until the player
-  //is facing in the correct direction
+  // 朝向不利于向前推进时，通过小角度转向和轻踢来调整足球方向。
   if (dot < 0)
   {
-    //the player's heading is going to be rotated by a small amount (pi/4)
-    //and then the ball will be kicked in that direction
+    // 将朝向旋转一小段角度，再朝该方向轻踢足球。
     Vector2D direction = player->heading();
 
-    //calculate the sign (+/-) of the angle between the player heading and the
-    //facing direction of the goal so that the player rotates around in the
-    //correct direction
+    // 根据朝向与球门方向的叉积符号，选择顺时针或逆时针转向。
     double angle = quarterPi * -1 *
                  player->team()->homeGoal()->facing().sign(player->heading());
 
     vec2DRotateAroundOrigin(direction, angle);
 
-    //this value works well whjen the player is attempting to control the
-    //ball and turn at the same time
+    // 调整方向时使用较小力量，便于控制足球。
     const double kickingForce = 0.8;
 
     player->ball()->kick(direction, kickingForce);
   }
 
-  //kick the ball down the field
+  // 朝对方半场踢球推进。
   else
   {
     player->ball()->kick(player->team()->homeGoal()->facing(),
                          prm.maxDribbleForce);
   }
 
-  //the player has kicked the ball so he must now change state to follow it
-  player->getFsm()->changeState(ChaseBall::instance());
+  // 球已踢出，切换到追球状态跟上它。
+  player->getAi()->changeState(FieldPlayerState::chaseBall);
 
   return;
 }
 
 
 
-//************************************************************************     RECEIVEBALL
+// 接球状态：选择到达目标点或追踪足球的移动方式。
 
-ReceiveBall* ReceiveBall::instance()
+
+
+
+void ReceiveBall::enter()
 {
-  static ReceiveBall instance;
-
-  return &instance;
-}
-
-
-void ReceiveBall::enter(EntityPlayerOnField* player)
-{
-  //let the team know this player is receiving the ball
+  auto* player = &mOwner;
+  // 向球队登记接球队员。
   player->team()->setReceiver(player);
 
-  //this player is also now the controlling player
+  // 同时把接球队员登记为控球队员。
   player->team()->setControllingPlayer(player);
 
-  //there are two types of receive behavior. One uses arriveBehavior to direct
-  //the receiver to the position sent by the passer in its telegram. The
-  //other uses the pursuitBehavior behavior to pursue the ball.
-  //This statement selects between them dependent on the probability
-  //chanceOfUsingArriveTypeReceiveBehavior, whether or not an opposing
-  //player is close to the receiving player, and whether or not the receiving
-  //player is in the opponents 'hot region' (the third of the pitch closest
-  //to the opponent's goal
+  // 接球有两种策略：减速到达传球目标，或追踪移动的足球；根据随机概率、对手距离和进攻区域选择。
   const double passThreatRadius = 70.0;
 
   if (( player->inHotRegion() ||
@@ -693,13 +639,13 @@ void ReceiveBall::enter(EntityPlayerOnField* player)
   }
 }
 
-void ReceiveBall::execute(EntityPlayerOnField* player)
+void ReceiveBall::execute()
 {
-  //if the ball comes close enough to the player or if his team lose control
-  //he should change state to chase the ball
+  auto* player = &mOwner;
+  // 足球足够近，或本队失去控球权时，切换到追球状态。
   if (player->ballWithinReceivingRange() || !player->team()->inControl())
   {
-    player->getFsm()->changeState(ChaseBall::instance());
+    player->getAi()->changeState(FieldPlayerState::chaseBall);
 
     return;
   }
@@ -709,8 +655,7 @@ void ReceiveBall::execute(EntityPlayerOnField* player)
     player->steering()->setTarget(player->ball()->pos());
   }
 
-  //if the player has 'arrived' at the steering target he should wait and
-  //turn to face the ball
+  // 已到移动目标时停下，并转向足球。
   if (player->atTarget())
   {
     player->steering()->arriveOff();
@@ -720,8 +665,9 @@ void ReceiveBall::execute(EntityPlayerOnField* player)
   }
 }
 
-void ReceiveBall::exit(EntityPlayerOnField* player)
+void ReceiveBall::exit()
 {
+  auto* player = &mOwner;
   player->steering()->arriveOff();
   player->steering()->pursuitOff();
 
@@ -734,4 +680,66 @@ void ReceiveBall::exit(EntityPlayerOnField* player)
 
 
 
+
+
+GlobalPlayerState::GlobalPlayerState(EntityPlayerOnField& owner) : mOwner(owner) {}
+
+const char* GlobalPlayerState::name() const { return "GlobalPlayerState"; }
+
+void GlobalPlayerState::enter() {}
+
+void GlobalPlayerState::exit() {}
+
+
+ChaseBall::ChaseBall(EntityPlayerOnField& owner) : mOwner(owner) {}
+
+const char* ChaseBall::name() const { return "ChaseBall"; }
+
+bool ChaseBall::onMessage(const Telegram& telegram) {return false;}
+
+
+Dribble::Dribble(EntityPlayerOnField& owner) : mOwner(owner) {}
+
+const char* Dribble::name() const { return "Dribble"; }
+
+void Dribble::exit() {}
+
+bool Dribble::onMessage(const Telegram& telegram) {return false;}
+
+
+ReturnToHomeRegion::ReturnToHomeRegion(EntityPlayerOnField& owner) : mOwner(owner) {}
+
+const char* ReturnToHomeRegion::name() const { return "ReturnToHomeRegion"; }
+
+bool ReturnToHomeRegion::onMessage(const Telegram& telegram) {return false;}
+
+
+Wait::Wait(EntityPlayerOnField& owner) : mOwner(owner) {}
+
+const char* Wait::name() const { return "Wait"; }
+
+bool Wait::onMessage(const Telegram& telegram) {return false;}
+
+
+KickBall::KickBall(EntityPlayerOnField& owner) : mOwner(owner) {}
+
+const char* KickBall::name() const { return "KickBall"; }
+
+void KickBall::exit() {}
+
+bool KickBall::onMessage(const Telegram& telegram) {return false;}
+
+
+ReceiveBall::ReceiveBall(EntityPlayerOnField& owner) : mOwner(owner) {}
+
+const char* ReceiveBall::name() const { return "ReceiveBall"; }
+
+bool ReceiveBall::onMessage(const Telegram& telegram) {return false;}
+
+
+SupportAttacker::SupportAttacker(EntityPlayerOnField& owner) : mOwner(owner) {}
+
+const char* SupportAttacker::name() const { return "SupportAttacker"; }
+
+bool SupportAttacker::onMessage(const Telegram& telegram) {return false;}
 

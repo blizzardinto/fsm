@@ -1,21 +1,26 @@
+/*
+ * 阅读提示：二维变换矩阵对象，封装平移、缩放和旋转的组合。
+ * 类内部保存矩阵元素，对外提供变换方法；调用者无需手动修改每个元素。
+ * 本文件提供方法实现；对应头文件描述可供其他模块使用的接口。
+ */
 #include "C2DMatrix.h"
 
-//multiply two matrices together
+// 矩阵相乘，把多个二维变换组合成一个变换。
 void C2DMatrix::matrixMultiply(Matrix &mIn)
 {
   C2DMatrix::Matrix matTemp;
 
-  //first row
+  // 计算结果矩阵的第一行。
   matTemp.element11 = (mMatrix.element11*mIn.element11) + (mMatrix.element12*mIn.element21) + (mMatrix.element13*mIn.element31);
   matTemp.element12 = (mMatrix.element11*mIn.element12) + (mMatrix.element12*mIn.element22) + (mMatrix.element13*mIn.element32);
   matTemp.element13 = (mMatrix.element11*mIn.element13) + (mMatrix.element12*mIn.element23) + (mMatrix.element13*mIn.element33);
 
-  //second
+  // 计算结果矩阵的第二行。
   matTemp.element21 = (mMatrix.element21*mIn.element11) + (mMatrix.element22*mIn.element21) + (mMatrix.element23*mIn.element31);
   matTemp.element22 = (mMatrix.element21*mIn.element12) + (mMatrix.element22*mIn.element22) + (mMatrix.element23*mIn.element32);
   matTemp.element23 = (mMatrix.element21*mIn.element13) + (mMatrix.element22*mIn.element23) + (mMatrix.element23*mIn.element33);
 
-  //third
+  // 计算结果矩阵的第三行。
   matTemp.element31 = (mMatrix.element31*mIn.element11) + (mMatrix.element32*mIn.element21) + (mMatrix.element33*mIn.element31);
   matTemp.element32 = (mMatrix.element31*mIn.element12) + (mMatrix.element32*mIn.element22) + (mMatrix.element33*mIn.element32);
   matTemp.element33 = (mMatrix.element31*mIn.element13) + (mMatrix.element32*mIn.element23) + (mMatrix.element33*mIn.element33);
@@ -23,7 +28,7 @@ void C2DMatrix::matrixMultiply(Matrix &mIn)
   mMatrix = matTemp;
 }
 
-//applies a 2D transformation matrix to a std::vector of Vector2Ds
+// 用当前矩阵逐个变换顶点容器中的坐标。
 void C2DMatrix::transformVector2Ds(std::vector<Vector2D> &vPoint)
 {
   for (unsigned int i=0; i<vPoint.size(); ++i)
@@ -38,7 +43,7 @@ void C2DMatrix::transformVector2Ds(std::vector<Vector2D> &vPoint)
   }
 }
 
-//applies a 2D transformation matrix to a single Vector2D
+// 用当前矩阵变换一个二维坐标。
 void C2DMatrix::transformVector2Ds(Vector2D &vPoint)
 {
   double tempX =(mMatrix.element11*vPoint.x) + (mMatrix.element21*vPoint.y) + (mMatrix.element31);
@@ -50,7 +55,7 @@ void C2DMatrix::transformVector2Ds(Vector2D &vPoint)
   vPoint.y = tempY;
 }
 
-//create an identity matrix
+// 单位矩阵表示不改变原坐标。
 void C2DMatrix::identity()
 {
   mMatrix.element11 = 1; mMatrix.element12 = 0; mMatrix.element13 = 0;
@@ -60,7 +65,7 @@ void C2DMatrix::identity()
   mMatrix.element31 = 0; mMatrix.element32 = 0; mMatrix.element33 = 1;
 }
 
-//create a transformation matrix
+// 构造平移矩阵。
 void C2DMatrix::translate(double x, double y)
 {
   Matrix mat;
@@ -71,11 +76,11 @@ void C2DMatrix::translate(double x, double y)
 
   mat.element31 = x;    mat.element32 = y;    mat.element33 = 1;
 
-  //and multiply
+  // 与已有矩阵相乘，叠加本次变换；变换顺序会影响结果。
   matrixMultiply(mat);
 }
 
-//create a scale matrix
+// 构造缩放矩阵。
 void C2DMatrix::scale(double xScale, double yScale)
 {
   C2DMatrix::Matrix mat;
@@ -86,11 +91,11 @@ void C2DMatrix::scale(double xScale, double yScale)
 
   mat.element31 = 0; mat.element32 = 0; mat.element33 = 1;
 
-  //and multiply
+  // 与已有矩阵相乘，叠加缩放。
   matrixMultiply(mat);
 }
 
-//create a rotation matrix
+// 根据角度构造旋转矩阵。
 void C2DMatrix::rotate(double rot)
 {
   C2DMatrix::Matrix mat;
@@ -104,11 +109,11 @@ void C2DMatrix::rotate(double rot)
 
   mat.element31 = 0; mat.element32 = 0;mat.element33 = 1;
 
-  //and multiply
+  // 与已有矩阵相乘，叠加旋转。
   matrixMultiply(mat);
 }
 
-//create a rotation matrix from a 2D vector
+// 根据朝向和侧向量构造旋转矩阵。
 void C2DMatrix::rotate(const Vector2D &fwd, const Vector2D &side)
 {
   C2DMatrix::Matrix mat;
@@ -119,6 +124,6 @@ void C2DMatrix::rotate(const Vector2D &fwd, const Vector2D &side)
 
   mat.element31 = 0; mat.element32 = 0;mat.element33 = 1;
 
-  //and multiply
+  // 与已有矩阵相乘，叠加方向变换。
   matrixMultiply(mat);
 }

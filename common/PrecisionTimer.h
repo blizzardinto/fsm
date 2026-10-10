@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：高精度计时器对象，封装计数频率、起点和下一帧时刻。
+ * 主循环通过公开方法询问能否更新，无需直接操作计时器内部数据。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef PRECISION_TIMER_H
 #define PRECISION_TIMER_H
 #include <windows.h>
@@ -26,28 +31,24 @@ private:
 
   bool      mStarted;
 
-  //if true a call to timeElapsed() will return 0 if the current
-  //time elapsed is much smaller than the previous. Used to counter
-  //the problems associated with the user using menus/resizing/moving
-  //a window etc
+  // 平滑模式处理异常短的时间间隔，减轻菜单操作、窗口移动等对计时的影响。
   bool      mSmoothUpdates;
 
 
 public:
 
-  //ctors
+  // 构造函数负责初始化计时数据。
   PrecisionTimer();
   PrecisionTimer(double fps);
 
 
-  //whatdayaknow, this starts the timer
+  // 启动计时器。
   void    start();
 
-  //determines if enough time has passed to move onto next frame
+  // 判断是否已经经过一帧所需的时间。
   inline bool    readyForNextFrame();
 
-  //only use this after a call to the above.
-  //double  GetTimeElapsed(){return mTimeElapsed;}
+  // 经过时间的读取应配合更新计时的方法使用。
 
   inline double  timeElapsed();
 
@@ -66,12 +67,7 @@ public:
 };
 
 
-//-------------------------readyForNextFrame()-------------------------------
-//
-//  returns true if it is time to move on to the next frame step. to be used if
-//  FPS is set.
-//
-//----------------------------------------------------------------------------
+// 固定帧率模式：到达下一帧时刻才返回真。
 inline bool PrecisionTimer::readyForNextFrame()
 {
   assert(mNormalFps && "PrecisionTimer::ReadyForNextFrame<No FPS set in timer>");
@@ -84,7 +80,7 @@ inline bool PrecisionTimer::readyForNextFrame()
     mTimeElapsed = (mCurrentTime - mLastTime) * mTimeScale;
     mLastTime    = mCurrentTime;
 
-    //update time to render next frame
+    // 计算下一帧允许执行的时刻。
     mNextTime = mCurrentTime + mFrameTime;
 
     return true;
@@ -93,10 +89,7 @@ inline bool PrecisionTimer::readyForNextFrame()
   return false;
 }
 
-//--------------------------- timeElapsed --------------------------------
-//
-//  returns time elapsed since last call to this function.
-//-------------------------------------------------------------------------
+// 返回距上次调用经过的秒数。
 inline double PrecisionTimer::timeElapsed()
 {
   mLastTimeElapsed = mTimeElapsed;

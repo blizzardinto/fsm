@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：比赛的顶层协调对象，创建并管理区域、球门、足球和两支球队。
+ * 一次更新依次推进足球与球队；球队再推进球员。这是对象分工协作，而不是让窗口管理所有细节。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef SOCCERPITCH_H
 #define SOCCERPITCH_H
 #pragma warning (disable:4786)
@@ -29,32 +34,29 @@ public:
   Goal*                mRedGoal;
   Goal*                mBlueGoal;
 
-  //container for the boundary walls
+  // 保存球场边界墙壁的容器。
   std::vector<Wall2D>  mWalls;
 
-  //defines the dimensions of the playing area
+  // 表示比赛区域边界的矩形对象。
   Region*              mPlayingArea;
 
-  //the playing field is broken up into regions that the team
-  //can make use of to implement strategies.
+  // 战术区域供球队分配球员站位。
   std::vector<Region*> mRegions;
 
-  //true if a goal keeper has possession
+  // 标记是否有守门员持球。
   bool                 mEntityPlayerGoalKeeperHasBall;
 
-  //true if the game is in play. Set to false whenever the players
-  //are getting ready for kickoff
+  // 标记比赛是否进行中；准备开球时设为假。
   bool                 mGameOn;
 
-  //set true to pause the motion
+  // 暂停标记为真时停止比赛更新。
   bool                 mPaused;
 
-  //local copy of client window dimensions
+  // 保存窗口客户区宽高。
   int                  mClientWidth,
                        mClientHeight;
 
-  //this instantiates the regions the players utilize to  position
-  //themselves
+  // 创建供球员站位使用的区域对象。
   void createRegions(double width, double height);
 
 

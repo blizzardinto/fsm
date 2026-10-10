@@ -1,3 +1,8 @@
+/*
+ * 阅读提示：移动行为组件，借用一个球员对象，并把目标与行为开关换算成移动力。
+ * 组合允许球员复用寻找、到达、追踪、分离和阻挡算法；此组件不负责选择足球战术状态。
+ * 阅读接口时先看类的职责，再看公开方法，最后看内部成员和实现。
+ */
 #ifndef SteeringBehaviorsS_H
 #define SteeringBehaviorsS_H
 #pragma warning (disable:4786)
@@ -15,7 +20,7 @@ class CWall;
 class CObstacle;
 
 
-//---------------------------- class details -----------------------------
+// 移动行为类的成员和内部算法。
 
 class SteeringBehaviors
 {
@@ -25,24 +30,23 @@ private:
 
   SoccerBall*   mBall;
 
-  //the steering force created by the combined effect of all
-  //the selected behaviors
+  // 当前已启用行为共同产生的移动力。
   Vector2D     mSteeringForce;
 
-  //the current target (usually the ball or predicted ball position)
+  // 当前目标，通常是足球或预测的足球位置。
   Vector2D     mTarget;
 
-  //the distance the player tries to interposeBehavior from the target
+  // 阻挡行为中与球门侧目标保持的距离。
   double        mInterposeDist;
 
-  //multipliers.
+  // 各行为的权重，用来调整其影响大小。
   double        mMultSeparation;
 
-  //how far it can 'see'
+  // 感知邻居的距离。
   double        mViewDistance;
 
 
-  //binary flags to indicate whether or not a behavior should be active
+  // 用不同二进制位表示哪些行为被启用；多个行为可同时开启。
   int           mFlags;
 
   enum BehaviorType
@@ -55,46 +59,42 @@ private:
     interposeBehavior          = 0x0010
   };
 
-  //used by group behaviors to tag neighbours
+  // 邻居标记使用的内部编号。
   bool         mTagged;
 
-  //arrive makes use of these to determine how quickly a vehicle
-  //should decelerate to its target
+  // 到达行为的减速等级。
   enum Deceleration{slow = 3, normal = 2, fast = 1};
 
 
-  //this behavior moves the agent towards a target position
+  // 朝目标移动的寻找行为。
   Vector2D seek(Vector2D target);
 
-  //this behavior is similar to seekBehavior but it attempts to arriveBehavior
-  //at the target with a zero velocity
+  // 接近目标时减速的到达行为。
   Vector2D arrive(Vector2D target, Deceleration decel);
 
-  //This behavior predicts where its prey will be and seeks
-  //to that location
+  // 预测足球位置并向预测点移动的追踪行为。
   Vector2D pursuit(const SoccerBall* ball);
 
   Vector2D separation();
 
-  //this attempts to steer the agent to a position between the opponent
-  //and the object
+  // 移动到球门侧目标与足球之间的阻挡行为。
   Vector2D interpose(const SoccerBall* ball,
                      Vector2D pos,
                      double    distFromTarget);
 
 
-  //finds any neighbours within the view radius
+  // 标记感知半径内的邻居。
   void      findNeighbours();
 
 
-  //this function tests if a specific bit of mFlags is set
+  // 检查行为标志中的某一位是否已设置。
   bool      on(BehaviorType bt){return (mFlags & bt) == bt;}
 
   bool      accumulateForce(Vector2D &sf, Vector2D forceToAdd);
 
   Vector2D  sumForces();
 
-  //a vertex buffer to contain the feelers rqd for dribbling
+  // 为探测方向保留的顶点缓冲区。
   std::vector<Vector2D> mAntenna;
 
 
@@ -109,18 +109,15 @@ public:
 
   Vector2D calculate();
 
-  //calculates the component of the steering force that is parallel
-  //with the vehicle heading
+  // 计算与朝向平行的力分量。
   double    forwardComponent();
 
-  //calculates the component of the steering force that is perpendicuar
-  //with the vehicle heading
+  // 计算与朝向垂直的力分量。
   double    sideComponent();
 
   Vector2D force()const{return mSteeringForce;}
 
-  //renders visual aids and info for seeing how each behavior is
-  //calculated
+  // 绘制目标和移动力，帮助观察行为计算结果。
   void      renderInfo();
   void      renderAids();
 

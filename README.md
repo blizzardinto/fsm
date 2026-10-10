@@ -62,12 +62,16 @@
 │   ├── EntityPlayerGoalkeeper.h / .cpp # 守门员智能体实现
 │   ├── EntityPlayerOnField.h / .cpp    # 场上球员智能体实现
 │   └── EntityFunctionTemplates.h       # 实体泛型辅助模板（按距离排序、区域判定等）
-├── fsm/                                # 有限状态机引擎与具体行为状态
-│   ├── State.h                         # 状态抽象接口模板类
-│   ├── StateMachine.h                  # 通用有限状态机调度核心模板类
-│   ├── StatesPlayerGoalKeeper.h / .cpp # 守门员具体状态实现（守门、拦截出击、门前归位等）
-│   ├── StatesPlayerOnField.h / .cpp    # 场上球员具体状态实现（追球、盘带、接球、支援等）
-│   └── StatesTeam.h / StatesTeam.cpp   # 球队宏观战术状态（准备开球、进攻、防守）
+├── fsm/                                # 非模板、与足球业务无关的状态调度
+│   ├── State.h / State.cpp             # 状态生命周期与消息接口
+│   └── StateMachine.h / .cpp           # 当前、前一和全局状态的调度
+├── ai/                                 # 每个球队和球员独立拥有的 AI 控制器
+│   ├── FieldPlayerAI.h / .cpp          # 场上球员状态集合与类型化切换
+│   ├── GoalkeeperAI.h / .cpp           # 门将状态集合与类型化切换
+│   ├── TeamAI.h / .cpp                 # 球队战术状态集合与类型化切换
+│   ├── StatesPlayerOnField.h / .cpp    # 场上球员状态，构造时绑定球员
+│   ├── StatesPlayerGoalKeeper.h / .cpp # 门将状态，构造时绑定门将
+│   └── StatesTeam.h / .cpp             # 球队状态，构造时绑定球队
 ├── game/                               # 足球比赛业务领域与战术决策
 │   ├── SoccerPitch.h / SoccerPitch.cpp # 足球场地主控类（驱动各系统运转、渲染赛场）
 │   ├── SoccerBall.h / SoccerBall.cpp   # 足球实体、物理运动与反弹碰撞检测
@@ -94,6 +98,7 @@
 │   ├── resource.h                      # 菜单与图标资源 ID 定义
 │   ├── Script1.rc                      # Windows 菜单与图标资源脚本
 │   └── icon1.ico                       # 程序图标
+├── tests/                              # 状态机生命周期与 AI 集成测试
 ├── obj/                                # 构建输出（对象、编译资源和可执行文件，Git 忽略）
 ├── DESIGN.md                           # 系统架构与详细设计文档
 └── README.md                           # 项目说明文档
@@ -121,6 +126,9 @@ make run
 
 # 3. 清理构建生成的中间对象与目标程序
 make clean
+
+# 4. 执行状态机与 AI 集成测试
+make test
 ```
 
 所有编译产物均放在 `obj/`。在项目根目录执行 `make run` 或 `./obj/SimpleSoccer.exe`；VS Code 调试配置也指向该可执行文件，并将工作目录保留在项目根目录，以读取 `res/Params.ini`。
@@ -184,10 +192,24 @@ make clean
 项目采用经典面向对象游戏 AI 结构：
 - **`SoccerPitch`** 作为世界主控，维持比赛推进、物理碰撞更新和渲染驱动。
 - **`SoccerTeam`** 统一指挥红队与蓝队，管理传球路由策略与战术状态。
-- **`StateMachine<T>`** 作为通用的 FSM 调度核心，由 `EntityPlayerGoalKeeper`、`EntityPlayerOnField` 及 `SoccerTeam` 各自持有。
+- **`StateMachine`** 只依赖非模板 `State` 接口。`FieldPlayerAI`、`GoalkeeperAI` 和 `TeamAI` 分别拥有自己的状态对象及状态机；球员和球队通过 `unique_ptr` 持有控制器。具体状态构造时绑定业务对象引用，不再共享单例。
+- 状态切换通过 `getAi()->changeState(FieldPlayerState::chaseBall)` 等类型化枚举进行；控制器内部选择自己的状态对象，不对外暴露通用状态机。
 - **`MessageDispatcher`** 集中投递即时消息，通过实体 id 查找接收者。延迟调度和实体销毁后的清理仍需完善。
 
 关于详细的架构设计与 UML 图解，请参阅 [`DESIGN.md`](./DESIGN.md)。
+## 给 C++ 初学者的阅读路线
+
+源码注释统一使用中文。各文件开头解释模块职责，核心接口附近说明继承、多态、组合和对象生命周期。建议先理解对象如何协作，再逐步阅读数学与窗口细节。
+
+1. 从 [main.cpp](./main.cpp) 的主循环进入 [SoccerPitch::update](./game/SoccerPitch.cpp)，理解“球场更新球队，球队更新球员”的调用过程。
+2. 对照 [EntityBase](./entity/EntityBase.h)、[EntityMovable](./entity/EntityMovable.h) 和 [EntityPlayer](./entity/EntityPlayer.h)，观察基类如何复用数据与接口，以及派生类如何重写虚函数。
+3. 阅读 [State](./fsm/State.h) 和 [StateMachine](./fsm/StateMachine.cpp)，再看 [FieldPlayerAI](./ai/FieldPlayerAI.h) 与 [具体球员状态](./ai/StatesPlayerOnField.cpp)，区分通用调度和具体动作。
+4. 阅读 [SoccerTeam](./game/SoccerTeam.h) 的成员注释，区分“拥有球员”与“借用球场、对手指针”；再看智能指针如何自动销毁 AI 控制器。
+5. 跟随一次传球，阅读 [Telegram](./messaging/Telegram.h) 与 [MessageDispatcher](./messaging/MessageDispatcher.cpp)，理解对象如何用消息协作。
+6. 最后阅读 [移动行为](./game/SteeringBehaviors.cpp)、[二维向量](./math/Vector2D.h) 和 [状态机测试](./tests/stateMachineTest.cpp)，把动作、数学计算和测试联系起来。
+
+阅读语法时可以记住：类是对象的类型，成员变量保存状态，成员函数表达能力；继承表示“是一种”，组合表示“拥有一个”。引用和原始指针本身不负责释放对象，独占智能指针则表达拥有关系。`const` 方法承诺不通过该方法修改对象的普通成员，`override` 让编译器检查虚函数重写是否正确。
+
 ## 当前实现边界与维护事项
 
 - 球队、场上球员和门将各自持有 FSM；没有嵌套状态或父子状态的层次状态机语义。
@@ -195,7 +217,7 @@ make clean
 - 球员注册到 `EntityManager` 后，析构时没有注销。按 `R` 重建比赛会在注册表中留下旧对象指针，需要补全生命周期清理。
 - 延迟消息没有接入主循环，依赖的帧计数也没有推进；队列比较规则还可能丢弃同一派发时间的不同消息。
 - Makefile 未跟踪头文件依赖。修改头文件后应完整重建；对象文件按文件名展平，不支持不同目录中的同名源文件。
-- 仓库目前没有自动化测试或 CI 配置。上述结构说明来自静态代码核对，不代表已完成运行验证。
+- `make test` 检查状态生命周期、更新顺序、消息回退、实例隔离及三场比赛共 9000 次无窗口更新。集成测试销毁比赛后显式清空既有实体注册表；它不代表运行时注销缺陷已经修复。仓库尚无 CI 配置。
 
 目录只保留足球仿真所需的模块；未使用的图搜索演示、历史重命名脚本和临时验证文件已移除。构建输出位于 Git 忽略的 `obj/`，源码与资源文件不混放。
 
